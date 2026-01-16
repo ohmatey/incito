@@ -59,8 +59,6 @@ jobs:
           GIST_ID: ${{ vars.GIST_ID }}
         with:
           script: |
-            const { Octokit } = require('@octokit/rest');
-
             // Get release by tag
             const tag = context.ref.replace('refs/tags/', '');
             const release = await github.rest.repos.getReleaseByTag({
@@ -93,14 +91,9 @@ jobs:
               );
 
               if (bundleAsset && sigAsset) {
-                // Download signature content
-                const sigResponse = await github.request('GET ' + sigAsset.url, {
-                  headers: {
-                    Accept: 'application/octet-stream'
-                  }
-                });
-
-                const signature = Buffer.from(sigResponse.data).toString('utf-8').trim();
+                // Download signature content via fetch
+                const sigResponse = await fetch(sigAsset.browser_download_url);
+                const signature = (await sigResponse.text()).trim();
 
                 platforms[platform] = {
                   signature: signature,
@@ -124,16 +117,25 @@ jobs:
             console.log('\nConstructed latest.json:');
             console.log(JSON.stringify(latestJson, null, 2));
 
-            // Update Gist
-            const gistOctokit = new Octokit({ auth: process.env.GIST_TOKEN });
-
-            await gistOctokit.gists.update({
-              gist_id: process.env.GIST_ID,
-              files: {
-                'latest.json': {
-                  content: JSON.stringify(latestJson, null, 2)
+            // Update Gist using fetch
+            const gistResponse = await fetch(`https://api.github.com/gists/${process.env.GIST_ID}`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `token ${process.env.GIST_TOKEN}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github+json'
+              },
+              body: JSON.stringify({
+                files: {
+                  'latest.json': {
+                    content: JSON.stringify(latestJson, null, 2)
+                  }
                 }
-              }
+              })
             });
+
+            if (!gistResponse.ok) {
+              throw new Error(`Failed to update Gist: ${gistResponse.status} ${await gistResponse.text()}`);
+            }
 
             console.log('\n✓ Successfully updated Gist');
