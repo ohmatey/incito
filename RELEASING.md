@@ -64,7 +64,7 @@ The version is kept in sync between:
 - `package.json` (source of truth)
 - `src-tauri/tauri.conf.json` (synced automatically)
 
-The sync script at `scripts/sync-version.js` handles this automatically when you use `npm version`.
+The sync script at `scripts/sync-version.cjs` handles this automatically when you use `npm version`.
 
 ## Generating Signing Keys
 
