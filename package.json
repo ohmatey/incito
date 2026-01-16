@@ -1,7 +1,7 @@
 {
   "name": "incito",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,7 @@
     "tauri": "tauri",
     "test": "vitest",
     "test:run": "vitest run",
-    "version": "node scripts/sync-version.js && git add src-tauri/tauri.conf.json"
+    "version": "node scripts/sync-version.cjs && git add src-tauri/tauri.conf.json"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.15",
