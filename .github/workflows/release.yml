@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, windows-latest, ubuntu-22.04]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build and Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Incito ${{ github.ref_name }}'
+          releaseDraft: false
+          prerelease: false
+
+  update-gist:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update latest.json Gist
+        uses: actions/github-script@v7
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ vars.GIST_ID }}
+        with:
+          script: |
+            const { Octokit } = require('@octokit/rest');
+
+            // Get release by tag
+            const tag = context.ref.replace('refs/tags/', '');
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+
+            const assets = release.data.assets;
+
+            // Platform mapping: asset pattern -> Tauri platform identifier
+            const platformMap = {
+              '_aarch64.app.tar.gz': 'darwin-aarch64',
+              '_x64.app.tar.gz': 'darwin-x86_64',
+              '_x64-setup.nsis.zip': 'windows-x86_64',
+              '_amd64.AppImage.tar.gz': 'linux-x86_64'
+            };
+
+            const platforms = {};
+
+            for (const [pattern, platform] of Object.entries(platformMap)) {
+              // Find the update bundle asset (not .sig)
+              const bundleAsset = assets.find(a =>
+                a.name.endsWith(pattern) && !a.name.endsWith('.sig')
+              );
+
+              // Find the corresponding signature file
+              const sigAsset = assets.find(a =>
+                a.name.endsWith(pattern + '.sig')
+              );
+
+              if (bundleAsset && sigAsset) {
+                // Download signature content
+                const sigResponse = await github.request('GET ' + sigAsset.url, {
+                  headers: {
+                    Accept: 'application/octet-stream'
+                  }
+                });
+
+                const signature = Buffer.from(sigResponse.data).toString('utf-8').trim();
+
+                platforms[platform] = {
+                  signature: signature,
+                  url: bundleAsset.browser_download_url
+                };
+
+                console.log(`✓ Found ${platform}: ${bundleAsset.name}`);
+              } else {
+                console.log(`⚠ Skipping ${platform}: bundle or signature not found`);
+              }
+            }
+
+            // Construct latest.json
+            const latestJson = {
+              version: tag,
+              notes: release.data.body || '',
+              pub_date: release.data.published_at || new Date().toISOString(),
+              platforms: platforms
+            };
+
+            console.log('\nConstructed latest.json:');
+            console.log(JSON.stringify(latestJson, null, 2));
+
+            // Update Gist
+            const gistOctokit = new Octokit({ auth: process.env.GIST_TOKEN });
+
+            await gistOctokit.gists.update({
+              gist_id: process.env.GIST_ID,
+              files: {
+                'latest.json': {
+                  content: JSON.stringify(latestJson, null, 2)
+                }
+              }
+            });
+
+            console.log('\n✓ Successfully updated Gist');
