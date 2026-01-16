@@ -7,7 +7,7 @@ variables:
     type: text
     required: true
     placeholder: "What are you building?"
-    preview: "Prompt Studio"
+    preview: "Incito"
   - key: problem
     label: "Problem Statement"
     type: textarea

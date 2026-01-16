@@ -24,7 +24,7 @@ export function FolderSelect({ onFolderSelect }: FolderSelectProps) {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
       <Card className="w-[400px] bg-white border-gray-200 shadow-lg dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-gray-800 dark:text-gray-100">Prompt Studio</CardTitle>
+          <CardTitle className="text-2xl text-gray-800 dark:text-gray-100">Incito</CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
             Select your prompts folder to get started
           </CardDescription>

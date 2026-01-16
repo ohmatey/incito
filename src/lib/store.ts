@@ -5,11 +5,37 @@ import { isValidTagName } from './constants'
 // Result type for operations that can fail
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string }
 
+// AI Provider types
+export type AIProvider = 'openai' | 'anthropic' | 'google'
+
+export interface AISettings {
+  provider: AIProvider | null
+  apiKey: string | null
+  model: string | null
+}
+
+// Available models per provider
+export const AI_MODELS: Record<AIProvider, { id: string; name: string }[]> = {
+  openai: [
+    { id: 'gpt-4o', name: 'GPT-4o' },
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+  ],
+  anthropic: [
+    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
+    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
+  ],
+  google: [
+    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+  ],
+}
+
 let db: Database | null = null
 
 async function getDb(): Promise<Database> {
   if (!db) {
-    db = await Database.load('sqlite:promptstudio.db')
+    db = await Database.load('sqlite:incito.db')
     await db.execute(`
       CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -214,5 +240,92 @@ export async function getTagUsageCounts(): Promise<Result<Map<string, number>>> 
     return { ok: true, data: new Map(result.map(r => [r.tag_id, r.count])) }
   } catch (err) {
     return { ok: false, error: `Failed to get tag counts: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// AI Settings operations
+
+export async function getAISettings(): Promise<Result<AISettings>> {
+  try {
+    const database = await getDb()
+    const providerResult = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['ai_provider']
+    )
+    const apiKeyResult = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['ai_api_key']
+    )
+    const modelResult = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['ai_model']
+    )
+
+    return {
+      ok: true,
+      data: {
+        provider: providerResult.length > 0 ? (providerResult[0].value as AIProvider) : null,
+        apiKey: apiKeyResult.length > 0 ? apiKeyResult[0].value : null,
+        model: modelResult.length > 0 ? modelResult[0].value : null,
+      },
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get AI settings: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveAISettings(settings: Partial<AISettings>): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+
+    if (settings.provider !== undefined) {
+      if (settings.provider === null) {
+        await database.execute('DELETE FROM settings WHERE key = ?', ['ai_provider'])
+      } else {
+        await database.execute(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+          ['ai_provider', settings.provider]
+        )
+      }
+    }
+
+    if (settings.apiKey !== undefined) {
+      if (settings.apiKey === null) {
+        await database.execute('DELETE FROM settings WHERE key = ?', ['ai_api_key'])
+      } else {
+        await database.execute(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+          ['ai_api_key', settings.apiKey]
+        )
+      }
+    }
+
+    if (settings.model !== undefined) {
+      if (settings.model === null) {
+        await database.execute('DELETE FROM settings WHERE key = ?', ['ai_model'])
+      } else {
+        await database.execute(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+          ['ai_model', settings.model]
+        )
+      }
+    }
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save AI settings: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function hasAIConfigured(): Promise<Result<boolean>> {
+  try {
+    const settings = await getAISettings()
+    if (!settings.ok) return settings
+    return {
+      ok: true,
+      data: settings.data.provider !== null && settings.data.apiKey !== null && settings.data.apiKey.length > 0,
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to check AI configuration: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

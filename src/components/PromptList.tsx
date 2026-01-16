@@ -61,9 +61,19 @@ export function PromptList({
       {/* Logo and collapse button */}
       <div className="flex items-center justify-between border-b border-gray-200 px-3 py-3 dark:border-gray-700">
         {!isCollapsed && (
-          <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            Prompt Studio
-          </span>
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 512 512"
+            fill="none"
+            className="text-gray-800 dark:text-gray-100"
+          >
+            <path
+              d="M33.346 427.526L253.376 84.4732L478.654 427.527M33.346 427.526L478.654 427.527M33.346 427.526L253.274 339.649L478.654 427.527M253.274 92.0396V339.882"
+              stroke="currentColor"
+              strokeWidth="31.3647"
+            />
+          </svg>
         )}
         <Button
           variant="ghost"

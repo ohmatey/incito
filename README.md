@@ -1,4 +1,4 @@
-# Prompt Studio
+# Incito
 
 A desktop application for managing markdown-based prompt templates with variable interpolation.
 
@@ -60,3 +60,7 @@ Use Handlebars-style conditionals:
 ```
 {{#if optional_var}}This content appears when optional_var has a value{{/if}}
 ```
+
+## Releasing
+
+See [RELEASING.md](./RELEASING.md) for instructions on shipping new versions.

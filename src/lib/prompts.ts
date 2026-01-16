@@ -2,7 +2,15 @@ import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin
 import { join } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
 import { syncPromptTags } from './store'
-import type { PromptFile } from '../types/prompt'
+import type { PromptFile, Variable } from '../types/prompt'
+
+export interface InitialPromptContent {
+  name?: string
+  description?: string
+  template?: string
+  variables?: Variable[]
+  tags?: string[]
+}
 
 export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   const entries = await readDir(folderPath)
@@ -32,12 +40,26 @@ export async function savePrompt(prompt: PromptFile): Promise<void> {
 export async function createPrompt(
   folderPath: string,
   existingFileNames: string[],
-  existingDisplayNames: string[]
+  existingDisplayNames: string[],
+  initialContent?: InitialPromptContent
 ): Promise<PromptFile> {
-  const fileName = generateUniqueFileName('new-prompt', existingFileNames)
-  const displayName = generateUniqueDisplayName('New Prompt', existingDisplayNames)
+  const baseName = initialContent?.name
+    ? toKebabCase(initialContent.name)
+    : 'new-prompt'
+  const fileName = generateUniqueFileName(baseName, existingFileNames)
+  const displayName = generateUniqueDisplayName(
+    initialContent?.name || 'New Prompt',
+    existingDisplayNames
+  )
   const path = await join(folderPath, fileName)
-  const template = getNewPromptTemplate(displayName)
+
+  let template: string
+  if (initialContent) {
+    template = getPromptTemplateFromContent(displayName, initialContent)
+  } else {
+    template = getNewPromptTemplate(displayName)
+  }
+
   await writeTextFile(path, template)
 
   // Read back to ensure consistency
@@ -121,4 +143,52 @@ Write your prompt template here.
 
 Use {{topic}} to insert variable values.
 `
+}
+
+function getPromptTemplateFromContent(displayName: string, content: InitialPromptContent): string {
+  const yamlVariables = (content.variables || []).map((v) => {
+    const lines = [`  - key: ${v.key}`, `    label: "${v.label}"`, `    type: ${v.type}`]
+    if (v.required !== undefined) lines.push(`    required: ${v.required}`)
+    if (v.placeholder) lines.push(`    placeholder: "${escapeYamlString(v.placeholder)}"`)
+    if (v.preview) lines.push(`    preview: "${escapeYamlString(String(v.preview))}"`)
+    if (v.default !== undefined) {
+      if (typeof v.default === 'string') {
+        lines.push(`    default: "${escapeYamlString(v.default)}"`)
+      } else {
+        lines.push(`    default: ${v.default}`)
+      }
+    }
+    if (v.options && v.options.length > 0) {
+      lines.push(`    options:`)
+      v.options.forEach((opt) => lines.push(`      - "${escapeYamlString(opt)}"`))
+    }
+    return lines.join('\n')
+  })
+
+  const tags = content.tags || []
+  const tagsYaml = tags.length > 0 ? `tags:\n${tags.map((t) => `  - "${escapeYamlString(t)}"`).join('\n')}` : 'tags: []'
+
+  return `---
+name: "${escapeYamlString(displayName)}"
+description: "${escapeYamlString(content.description || '')}"
+${tagsYaml}
+variables:
+${yamlVariables.length > 0 ? yamlVariables.join('\n') : '  []'}
+---
+
+${content.template || ''}
+`
+}
+
+function toKebabCase(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function escapeYamlString(str: string): string {
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }

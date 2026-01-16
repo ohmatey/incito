@@ -19,8 +19,10 @@ import { PromptEditor } from '@/components/PromptEditor'
 import { VariablesPanel } from '@/components/VariablesPanel'
 import { TagsPage } from '@/components/TagsPage'
 import { SettingsPage } from '@/components/SettingsPage'
+import { NewPromptDialog } from '@/components/NewPromptDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
+import type { GeneratedPrompt } from '@/lib/mastra-client'
 
 export default function App() {
   const [folderPath, setFolderPath] = useState<string | null>(null)
@@ -35,6 +37,7 @@ export default function App() {
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null)
   const [activeVariableKey, setActiveVariableKey] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showNewPromptDialog, setShowNewPromptDialog] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Local edit state
@@ -93,11 +96,11 @@ export default function App() {
         e.preventDefault()
         searchInputRef.current?.focus()
       }
-      // Cmd+N / Ctrl+N - Create new prompt
+      // Cmd+N / Ctrl+N - Open new prompt dialog
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault()
         if (folderPath) {
-          handleCreatePrompt()
+          setShowNewPromptDialog(true)
         }
       }
     }
@@ -231,6 +234,40 @@ export default function App() {
       toast.success('Deleted prompt')
     } catch (err) {
       toast.error('Failed to delete prompt')
+    }
+  }
+
+  async function handleCreateFromAI(generated: GeneratedPrompt) {
+    if (!folderPath) return
+
+    try {
+      const existingFileNames = prompts.map((p) => p.fileName)
+      const existingDisplayNames = prompts.map((p) => p.name)
+
+      // Create the prompt file with generated content
+      const newPrompt = await createPrompt(folderPath, existingFileNames, existingDisplayNames, {
+        name: generated.name,
+        description: generated.description,
+        template: generated.template,
+        variables: generated.variables.map((v) => ({
+          key: v.key,
+          label: v.label,
+          type: v.type,
+          required: v.required ?? false,
+          placeholder: v.placeholder,
+          preview: v.preview,
+          default: v.default,
+          options: v.options,
+        })),
+        tags: generated.tags,
+      })
+
+      setPrompts((prev) => [...prev, newPrompt].sort((a, b) => a.name.localeCompare(b.name)))
+      setSelectedPrompt(newPrompt)
+      setIsEditMode(true)
+      toast.success('Generated prompt template')
+    } catch (err) {
+      toast.error('Failed to create prompt from AI')
     }
   }
 
@@ -491,7 +528,7 @@ export default function App() {
           searchInputRef={searchInputRef}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onNewPrompt={handleCreatePrompt}
+          onNewPrompt={() => setShowNewPromptDialog(true)}
         />
 
         {/* Right side - Content area */}
@@ -554,6 +591,13 @@ export default function App() {
           </div>
         )}
       </div>
+      <NewPromptDialog
+        open={showNewPromptDialog}
+        onOpenChange={setShowNewPromptDialog}
+        onCreateBlank={handleCreatePrompt}
+        onCreateFromAI={handleCreateFromAI}
+        onOpenSettings={() => setCurrentView('settings')}
+      />
       <Toaster />
     </>
   )

@@ -17,9 +17,10 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@mastra/*": ["./mastra/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "mastra/src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

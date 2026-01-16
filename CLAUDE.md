@@ -20,7 +20,7 @@ npx shadcn-ui@latest add <component-name>
 
 ## Architecture
 
-Prompt Studio is a Tauri v2 desktop application for managing markdown-based prompt templates with variable interpolation.
+Incito is a Tauri v2 desktop application for managing markdown-based prompt templates with variable interpolation.
 
 ### Tech Stack
 - **Desktop Framework:** Tauri v2
