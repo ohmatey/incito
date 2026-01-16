@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background colors - warm tinted */
+    --background: 40 20% 98%;          /* #FAFAF9 warm off-white */
+    --foreground: 20 14% 10%;          /* #1C1917 warm near-black */
+
+    /* Card backgrounds */
+    --card: 40 20% 98%;
+    --card-foreground: 20 14% 10%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
+
+    /* Primary - Coral/Red (FF6B5B) */
+    --primary: 6 100% 68%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Teal (14B8A6) */
+    --secondary: 173 58% 39%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted - Warm gray */
+    --muted: 30 6% 96%;                /* #F5F5F4 */
+    --muted-foreground: 25 6% 45%;     /* #78716C */
+
+    /* Accent - Purple (8B5CF6) */
+    --accent: 258 90% 66%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border & Input */
+    --border: 30 6% 90%;               /* #E7E5E4 */
+    --input: 30 6% 90%;
+    --ring: 6 100% 68%;                /* Primary coral for focus rings */
+
+    --radius: 8px;
+  }
+
+  .dark {
+    /* Background colors - dark warm */
+    --background: 20 14% 10%;          /* #1C1917 */
+    --foreground: 40 20% 98%;          /* #FAFAF9 */
+
+    /* Card backgrounds */
+    --card: 20 10% 14%;                /* #292524 */
+    --card-foreground: 40 20% 98%;
+
+    /* Popover */
+    --popover: 20 10% 14%;
+    --popover-foreground: 40 20% 98%;
+
+    /* Primary - Coral (slightly brighter for dark mode) */
+    --primary: 6 100% 68%;
+    --primary-foreground: 20 14% 10%;
+
+    /* Secondary - Teal */
+    --secondary: 173 58% 39%;
+    --secondary-foreground: 20 14% 10%;
+
+    /* Muted - Dark warm gray */
+    --muted: 20 10% 18%;               /* Slightly lighter than card */
+    --muted-foreground: 25 5% 64%;     /* #A8A29E */
+
+    /* Accent - Purple */
+    --accent: 258 90% 66%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border & Input */
+    --border: 20 6% 22%;               /* Subtle border in dark */
+    --input: 20 6% 22%;
+    --ring: 6 100% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+/* Prevent text selection on drag */
+.no-select {
+  user-select: none;
+}
+
+/* Monospace for editor */
+.font-mono {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+}
+
+/* Custom gradient utilities */
+@layer utilities {
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary-500 to-primary-400;
+  }
+
+  .gradient-primary-hover {
+    @apply bg-gradient-to-r from-primary-600 to-primary-500;
+  }
+
+  .gradient-selected {
+    @apply bg-gradient-to-r from-primary-500/10 to-transparent;
+  }
+
+  .gradient-card-hover {
+    background: linear-gradient(135deg, rgba(255,107,91,0.05) 0%, rgba(139,92,246,0.05) 100%);
+  }
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Card hover lift */
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
