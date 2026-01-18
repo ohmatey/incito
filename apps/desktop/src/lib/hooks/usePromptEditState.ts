@@ -81,7 +81,7 @@ export function usePromptEditState(
   const [activeVariableKey, setActiveVariableKey] = useState<string | null>(null)
 
   // Debounce timer ref for auto-saving drafts
-  const saveDraftTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveDraftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Sync local state when prompt changes (and load draft if exists)
   useEffect(() => {
