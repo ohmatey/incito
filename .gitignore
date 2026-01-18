@@ -3,7 +3,12 @@ node_modules/
 
 # Build outputs
 dist/
-src-tauri/target/
+.next/
+out/
+
+# Tauri
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/Cargo.lock
 
 # IDE
 .idea/
@@ -24,5 +29,5 @@ npm-debug.log*
 .env.local
 .env.*.local
 
-# Tauri
-src-tauri/Cargo.lock
+# Next.js
+.vercel

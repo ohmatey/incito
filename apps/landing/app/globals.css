@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 250 250 249;
+  --foreground: 28 25 23;
+  --muted: 120 113 108;
+  --primary: 255 107 91;
+  --secondary: 20 184 166;
+  --accent: 139 92 246;
+}
+
+.dark {
+  --background: 28 25 23;
+  --foreground: 250 250 249;
+  --muted: 168 162 158;
+  --primary: 255 107 91;
+  --secondary: 20 184 166;
+  --accent: 139 92 246;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, #FF6B5B, #8B5CF6);
+  }
+}

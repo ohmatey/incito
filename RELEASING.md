@@ -18,33 +18,35 @@ Before your first release, ensure these are configured:
 
 ## Release Commands
 
+Run these commands from the repository root:
+
 ### Bug Fix Release (v1.0.0 → v1.0.1)
 
 ```bash
-npm version patch
+cd apps/desktop && npm version patch && cd ../..
 git push --follow-tags
 ```
 
 ### Feature Release (v1.0.0 → v1.1.0)
 
 ```bash
-npm version minor
+cd apps/desktop && npm version minor && cd ../..
 git push --follow-tags
 ```
 
 ### Major Release (v1.0.0 → v2.0.0)
 
 ```bash
-npm version major
+cd apps/desktop && npm version major && cd ../..
 git push --follow-tags
 ```
 
 ## What Happens Automatically
 
-When you run `npm version`:
+When you run `npm version` in `apps/desktop`:
 
-1. npm bumps the version in `package.json`
-2. The `version` script runs and syncs the version to `tauri.conf.json`
+1. npm bumps the version in `apps/desktop/package.json`
+2. The `version` script runs and syncs the version to `apps/desktop/src-tauri/tauri.conf.json`
 3. npm commits both files with the version as the commit message
 4. npm creates a git tag (e.g., `v1.0.1`)
 
@@ -61,10 +63,10 @@ When you run `git push --follow-tags`:
 
 The version is kept in sync between:
 
-- `package.json` (source of truth)
-- `src-tauri/tauri.conf.json` (synced automatically)
+- `apps/desktop/package.json` (source of truth)
+- `apps/desktop/src-tauri/tauri.conf.json` (synced automatically)
 
-The sync script at `scripts/sync-version.cjs` handles this automatically when you use `npm version`.
+The sync script at `apps/desktop/scripts/sync-version.cjs` handles this automatically when you use `npm version`.
 
 ## Generating Signing Keys
 
@@ -90,7 +92,7 @@ This creates:
 - Verify the Gist contains valid JSON
 - Check that the `GIST_TOKEN` has `gist` scope
 - Ensure `GIST_ID` matches your Gist's ID
-- Verify `tauri.conf.json` has the correct updater endpoint URL
+- Verify `apps/desktop/src-tauri/tauri.conf.json` has the correct updater endpoint URL
 
 ### Build failures
 
