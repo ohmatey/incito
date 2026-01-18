@@ -4,7 +4,8 @@ import { Buffer } from 'buffer'
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import { RouterProvider } from '@tanstack/react-router'
+import { router } from './router'
 import { PlatformProvider } from './context/PlatformContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -15,7 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <PlatformProvider>
-          <App />
+          <RouterProvider router={router} />
         </PlatformProvider>
       </ThemeProvider>
     </ErrorBoundary>

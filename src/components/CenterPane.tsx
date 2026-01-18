@@ -12,7 +12,7 @@ import { AVAILABLE_LAUNCHERS, getLaunchersByIds, type Launcher } from '@/lib/lau
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { toast } from 'sonner'
-import { Copy, Check, ExternalLink, MoreHorizontal } from 'lucide-react'
+import { Copy, Check, ExternalLink, MoreHorizontal, Pin } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,8 @@ import {
 
 interface CenterPaneProps {
   prompt: PromptFile | null
+  prompts: PromptFile[]
+  pinnedPromptIds: string[]
   values: Record<string, unknown>
   isEditMode: boolean
   localName: string
@@ -39,10 +41,14 @@ interface CenterPaneProps {
   onLocalTemplateChange: (template: string) => void
   onLocalTagsChange: (tags: string[]) => void
   onCreateTag: (name: string, color: string) => void
+  onSelectPrompt: (prompt: PromptFile) => void
+  onPromptCompleted?: () => void
 }
 
 export function CenterPane({
   prompt,
+  prompts,
+  pinnedPromptIds,
   values,
   isEditMode,
   localName,
@@ -59,6 +65,8 @@ export function CenterPane({
   onLocalTemplateChange,
   onLocalTagsChange,
   onCreateTag,
+  onSelectPrompt,
+  onPromptCompleted,
 }: CenterPaneProps) {
   const [copied, setCopied] = useState(false)
 
@@ -94,6 +102,10 @@ export function CenterPane({
     const requiredVars = prompt.variables.filter((v) => v.required)
     const filledVars = requiredVars.filter((v) => {
       const value = values[v.key]
+      // Sliders always have a value (either set, default, or min), so they're always "filled"
+      if (v.type === 'slider') {
+        return true
+      }
       return value !== undefined && value !== ''
     })
     return {
@@ -112,6 +124,7 @@ export function CenterPane({
     setCopied(true)
     toast.success('Copied to clipboard')
     setTimeout(() => setCopied(false), 2000)
+    onPromptCompleted?.()
   }
 
   // Get default launchers for this prompt
@@ -131,6 +144,7 @@ export function CenterPane({
         await openUrl(app.getUrl(content))
         toast.success(`Opened in ${app.name}`)
       }
+      onPromptCompleted?.()
     } catch (error) {
       console.error(`Failed to open ${app.name}:`, error)
       toast.error(`Failed to open ${app.name}`)
@@ -138,9 +152,39 @@ export function CenterPane({
   }
 
   if (!prompt) {
+    const pinnedPrompts = prompts.filter((p) => pinnedPromptIds.includes(p.id))
+
     return (
       <div className="flex h-full flex-1 flex-col bg-gray-100 dark:bg-gray-900">
-        <div className="flex flex-1 items-center justify-center p-6">
+        <div className="flex flex-1 flex-col items-center justify-center p-6">
+          {pinnedPrompts.length > 0 && (
+            <div className="mb-8 w-full max-w-md">
+              <h3 className="mb-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                Pinned Prompts
+              </h3>
+              <div className="grid gap-2">
+                {pinnedPrompts.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onSelectPrompt(p)}
+                    className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+                  >
+                    <Pin className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-gray-900 dark:text-gray-100">
+                        {p.name}
+                      </div>
+                      {p.description && (
+                        <div className="truncate text-sm text-gray-500 dark:text-gray-400">
+                          {p.description}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Select a prompt to get started
           </p>
@@ -153,21 +197,23 @@ export function CenterPane({
     return (
       <div className="flex h-full flex-1 flex-col bg-gray-100 dark:bg-gray-900">
         <div className="flex-1 p-6">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-            <h3 className="font-medium text-red-600 dark:text-red-400">Parse Errors</h3>
-            <ul className="mt-2 space-y-1 text-sm text-red-600 dark:text-red-400">
-              {prompt.errors.map((error, i) => (
-                <li key={i}>
-                  <span className="font-mono text-xs">{error.field}</span>: {error.message}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-4">
-            <h3 className="mb-2 font-medium text-gray-700 dark:text-gray-300">Raw Content</h3>
-            <pre className="overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 shadow-inner dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-200">
-              {prompt.rawContent}
-            </pre>
+          <div className="mx-auto max-w-2xl space-y-4">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+              <h3 className="font-medium text-red-600 dark:text-red-400">Parse Errors</h3>
+              <ul className="mt-2 space-y-1 text-sm text-red-600 dark:text-red-400">
+                {prompt.errors.map((error, i) => (
+                  <li key={i}>
+                    <span className="font-mono text-xs">{error.field}</span>: {error.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="mb-2 font-medium text-gray-700 dark:text-gray-300">Raw Content</h3>
+              <pre className="overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 shadow-inner dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-200">
+                {prompt.rawContent}
+              </pre>
+            </div>
           </div>
         </div>
       </div>
@@ -178,7 +224,8 @@ export function CenterPane({
     return (
       <div className="flex h-full flex-1 flex-col bg-gray-100 dark:bg-gray-900">
         <ScrollArea className="flex-1">
-          <div className="p-6 space-y-4">
+          <div className="p-6">
+            <div className="mx-auto max-w-2xl space-y-4">
             {/* Name input */}
             <div>
               <Input
@@ -235,6 +282,7 @@ export function CenterPane({
                 placeholder="Write your prompt template here. Use {{variable}} to add variables."
               />
             </div>
+            </div>
           </div>
         </ScrollArea>
       </div>
@@ -245,7 +293,8 @@ export function CenterPane({
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
       <ScrollArea className="min-h-0 flex-1 overflow-auto">
-        <div className="p-6 space-y-4">
+        <div className="p-6">
+          <div className="mx-auto max-w-2xl space-y-4">
           {/* Description */}
           {prompt.description && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -281,12 +330,13 @@ export function CenterPane({
               ))
             )}
           </div>
+          </div>
         </div>
       </ScrollArea>
 
       {/* Action bar */}
-      <div className="shrink-0 p-4 pt-0">
-        <div className="rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <div className="shrink-0 px-6 pb-6">
+        <div className="mx-auto max-w-2xl rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
           {/* Status bar - only show when there are required variables */}
           {completionStatus.total > 0 && (
             <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2 dark:border-gray-700">

@@ -25,6 +25,7 @@ interface RightPanelProps {
   onVariableUpdate?: (variable: Variable) => void
   onVariableMove?: (fromIndex: number, toIndex: number) => void
   onDefaultLaunchersChange: (launchers: string[]) => void
+  width?: number
 }
 
 export function RightPanel({
@@ -44,11 +45,15 @@ export function RightPanel({
   onVariableUpdate,
   onVariableMove,
   onDefaultLaunchersChange,
+  width = 300,
 }: RightPanelProps) {
   const [isAddingNote, setIsAddingNote] = useState(false)
 
   return (
-    <div className="flex h-full w-[300px] flex-col border-l border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+    <div
+      className="flex h-full flex-col border-l border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+      style={{ width: `${width}px`, minWidth: '200px', maxWidth: '600px' }}
+    >
       <RightPanelHeader
         activeTab={activeTab}
         onTabChange={onTabChange}

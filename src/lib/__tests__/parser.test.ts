@@ -224,6 +224,7 @@ describe('syncVariablesWithTemplate', () => {
 describe('serializePrompt', () => {
   it('serializes prompt to valid frontmatter', () => {
     const prompt = {
+      id: 'test-id-1',
       fileName: 'test.md',
       path: '/path/test.md',
       name: 'Test Prompt',
@@ -246,6 +247,7 @@ describe('serializePrompt', () => {
 
   it('omits empty description', () => {
     const prompt = {
+      id: 'test-id-2',
       fileName: 'test.md',
       path: '/path/test.md',
       name: 'Test',
@@ -266,6 +268,7 @@ describe('serializePrompt', () => {
 
   it('omits empty tags array', () => {
     const prompt = {
+      id: 'test-id-3',
       fileName: 'test.md',
       path: '/path/test.md',
       name: 'Test',

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { PromptFile, Variable } from '@/types/prompt'
 import { getDefaultValues } from '@/lib/interpolate'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { isDisplayNameUnique } from '@/lib/prompts'
+import { getPromptDraft, savePromptDraft, deletePromptDraft } from '@/lib/store'
 
 export interface UsePromptEditStateResult {
   // Edit mode
@@ -48,6 +49,9 @@ export interface UsePromptEditStateResult {
   resetToSaved: (prompt: PromptFile, updateVariables: (vars: Variable[]) => void) => void
   syncFromPrompt: (prompt: PromptFile | null) => void
   resetVariableValues: () => void
+
+  // Draft management
+  clearDraft: () => Promise<void>
 }
 
 export function usePromptEditState(
@@ -76,7 +80,10 @@ export function usePromptEditState(
   // Active variable tracking
   const [activeVariableKey, setActiveVariableKey] = useState<string | null>(null)
 
-  // Sync local state when prompt changes
+  // Debounce timer ref for auto-saving drafts
+  const saveDraftTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sync local state when prompt changes (and load draft if exists)
   useEffect(() => {
     if (selectedPrompt) {
       setLocalNameState(selectedPrompt.name)
@@ -85,8 +92,28 @@ export function usePromptEditState(
       setLocalTags(selectedPrompt.tags || [])
       setOriginalVariables(JSON.parse(JSON.stringify(selectedPrompt.variables)))
       setOriginalTags([...(selectedPrompt.tags || [])])
-      setVariableValues(getDefaultValues(selectedPrompt.variables))
       setNameError(null)
+
+      // Load draft if exists, otherwise use defaults
+      const defaultValues = getDefaultValues(selectedPrompt.variables)
+      const variableKeys = selectedPrompt.variables.map((v) => v.key)
+
+      getPromptDraft(selectedPrompt.id).then((result) => {
+        if (result.ok && result.data) {
+          // Filter draft values to only include keys that still exist in the prompt
+          const filteredDraftValues: Record<string, unknown> = {}
+          for (const key of variableKeys) {
+            if (key in result.data.variable_values) {
+              filteredDraftValues[key] = result.data.variable_values[key]
+            } else if (key in defaultValues) {
+              filteredDraftValues[key] = defaultValues[key]
+            }
+          }
+          setVariableValues(filteredDraftValues)
+        } else {
+          setVariableValues(defaultValues)
+        }
+      })
     } else {
       setLocalNameState('')
       setLocalDescription('')
@@ -156,10 +183,41 @@ export function usePromptEditState(
     updateVariables(syncedVariables)
   }, [])
 
-  // Value change handler
+  // Value change handler with auto-save draft
   const handleValueChange = useCallback((key: string, value: unknown) => {
-    setVariableValues((prev) => ({ ...prev, [key]: value }))
-  }, [])
+    setVariableValues((prev) => {
+      const newValues = { ...prev, [key]: value }
+
+      // Auto-save draft with debounce
+      if (selectedPrompt) {
+        if (saveDraftTimeoutRef.current) {
+          clearTimeout(saveDraftTimeoutRef.current)
+        }
+
+        saveDraftTimeoutRef.current = setTimeout(() => {
+          // Check if values differ from defaults before saving
+          const defaults = getDefaultValues(selectedPrompt.variables)
+          const hasChanges = Object.keys(newValues).some((k) => {
+            const newVal = newValues[k]
+            const defaultVal = defaults[k]
+            // Handle empty strings and undefined as equivalent for comparison
+            const normalizedNew = newVal === '' ? undefined : newVal
+            const normalizedDefault = defaultVal === '' ? undefined : defaultVal
+            return normalizedNew !== normalizedDefault
+          })
+
+          if (hasChanges) {
+            savePromptDraft(selectedPrompt.id, newValues)
+          } else {
+            // If no changes from defaults, remove the draft
+            deletePromptDraft(selectedPrompt.id)
+          }
+        }, 500)
+      }
+
+      return newValues
+    })
+  }, [selectedPrompt])
 
   // Unsaved changes detection
   const variablesChanged = useMemo(() => {
@@ -210,6 +268,27 @@ export function usePromptEditState(
     }
   }, [selectedPrompt])
 
+  // Clear draft for current prompt
+  const clearDraft = useCallback(async () => {
+    if (selectedPrompt) {
+      // Cancel any pending save
+      if (saveDraftTimeoutRef.current) {
+        clearTimeout(saveDraftTimeoutRef.current)
+        saveDraftTimeoutRef.current = null
+      }
+      await deletePromptDraft(selectedPrompt.id)
+    }
+  }, [selectedPrompt])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveDraftTimeoutRef.current) {
+        clearTimeout(saveDraftTimeoutRef.current)
+      }
+    }
+  }, [])
+
   return {
     // Edit mode
     isEditMode,
@@ -254,5 +333,8 @@ export function usePromptEditState(
     resetToSaved,
     syncFromPrompt,
     resetVariableValues,
+
+    // Draft management
+    clearDraft,
   }
 }

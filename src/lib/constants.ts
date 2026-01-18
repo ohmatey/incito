@@ -25,8 +25,20 @@ export const VARIABLE_PATTERN = /\{\{([\w-]+)\}\}/g
 
 /**
  * Regex pattern for conditional blocks: {{#if key}}...{{/if}}
+ * @deprecated Use Handlebars directly instead
  */
 export const CONDITIONAL_PATTERN = /\{\{#if ([\w-]+)\}\}([\s\S]*?)\{\{\/if\}\}/g
+
+/**
+ * Regex pattern for Handlebars block helpers: {{#if key}}, {{#unless key}}, {{#each key}}, {{#with key}}
+ */
+export const BLOCK_HELPER_PATTERN = /\{\{#(?:if|unless|each|with)\s+([\w-]+)\}\}/g
+
+/**
+ * Regex pattern for Handlebars comparison helpers: {{#if (eq key "value")}}, {{#if (gt key 5)}}
+ * Captures the variable name in helpers like eq, ne, gt, gte, lt, lte, contains, and, or
+ */
+export const HELPER_VARIABLE_PATTERN = /\{\{#(?:if|unless)\s+\((?:eq|ne|gt|gte|lt|lte|contains|and|or|not)\s+([\w-]+)/g
 
 /**
  * Validation pattern for variable keys

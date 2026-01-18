@@ -222,15 +222,14 @@ export function NewPromptDialog({
             Cancel
           </Button>
           {creationType === 'blank' ? (
-            <Button onClick={handleCreateBlank} className="gap-2">
-              <FileText className="h-4 w-4" />
+            <Button onClick={handleCreateBlank}>
               Create Blank
             </Button>
           ) : (
             <Button
               onClick={handleGenerateWithAI}
               disabled={isGenerating || !aiConfigured || !description.trim()}
-              className="gap-2"
+              className={isGenerating ? "gap-2" : ""}
             >
               {isGenerating ? (
                 <>
@@ -238,10 +237,7 @@ export function NewPromptDialog({
                   Generating...
                 </>
               ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Generate
-                </>
+                "Generate"
               )}
             </Button>
           )}

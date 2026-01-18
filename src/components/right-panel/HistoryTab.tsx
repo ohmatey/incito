@@ -23,6 +23,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
   const [loading, setLoading] = useState(false)
   const [expandedVersionId, setExpandedVersionId] = useState<string | null>(null)
   const [restoreDialogVersion, setRestoreDialogVersion] = useState<PromptVersionRow | null>(null)
+  const [hoveredTimestampId, setHoveredTimestampId] = useState<string | null>(null)
 
   useEffect(() => {
     if (prompt) {
@@ -41,43 +42,42 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
     setLoading(false)
   }
 
-  function formatDate(isoString: string): string {
+  function formatTimestamp(isoString: string): string {
     const date = new Date(isoString)
     const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / (1000 * 60))
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const isToday = date.toDateString() === now.toDateString()
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday = date.toDateString() === yesterday.toDateString()
 
-    if (diffMins < 1) {
-      return 'Just now'
-    } else if (diffMins < 60) {
-      return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`
-    } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-    } else if (diffDays === 1) {
-      return 'Yesterday'
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`
+    const timeStr = date.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+
+    if (isToday) {
+      return `Today at ${timeStr}`
+    } else if (isYesterday) {
+      return `Yesterday at ${timeStr}`
     } else {
-      return date.toLocaleDateString(undefined, {
+      const dateStr = date.toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
       })
+      return `${dateStr} at ${timeStr}`
     }
   }
 
   function formatFullDate(isoString: string): string {
     const date = new Date(isoString)
-    return date.toLocaleString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    })
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear().toString().slice(-2)
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${day}/${month}/${year} ${hours}:${minutes}`
   }
 
   function handleRestore(version: PromptVersionRow) {
@@ -125,15 +125,15 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
         {/* Versions list */}
         <ScrollArea className="flex-1">
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {versions.map((version, index) => {
+            {versions.map((version) => {
               const isExpanded = expandedVersionId === version.id
-              const isFirst = index === 0
+              const isActive = prompt?.rawContent === version.content
 
               return (
                 <div key={version.id} className="group">
                   <div
                     className={`flex items-center justify-between p-3 ${
-                      isFirst ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''
+                      isActive ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''
                     }`}
                   >
                     <div className="flex-1 min-w-0">
@@ -141,14 +141,20 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           v{version.version_number}
                         </span>
-                        {isFirst && (
-                          <span className="text-xs bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded dark:bg-primary-900/30 dark:text-primary-400">
-                            Latest
+                        {isActive && (
+                          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded dark:bg-green-900/30 dark:text-green-400">
+                            Active
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        {formatDate(version.created_at)}
+                      <p
+                        className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 cursor-default"
+                        onMouseEnter={() => setHoveredTimestampId(version.id)}
+                        onMouseLeave={() => setHoveredTimestampId(null)}
+                      >
+                        {hoveredTimestampId === version.id
+                          ? formatFullDate(version.created_at)
+                          : formatTimestamp(version.created_at)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">

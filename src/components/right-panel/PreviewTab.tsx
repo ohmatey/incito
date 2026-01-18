@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
-import type { PromptFile } from '@/types/prompt'
+import type { PromptFile, Variable } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { VARIABLE_PATTERN } from '@/lib/constants'
 import {
   Tooltip,
   TooltipContent,
@@ -16,44 +15,117 @@ interface PreviewTabProps {
   onActiveVariableChange: (key: string | null) => void
 }
 
-export function PreviewTab({
-  prompt,
-  values,
-  activeVariableKey,
-  onActiveVariableChange,
-}: PreviewTabProps) {
-  // Render template with highlighted variable values
-  const renderHighlightedContent = useMemo(() => {
-    if (!prompt) return null
+// Token types for template parsing
+type Token =
+  | { type: 'text'; content: string }
+  | { type: 'variable'; key: string }
+  | { type: 'block_start'; helper: string; key: string; inverted?: boolean }
+  | { type: 'block_else' }
+  | { type: 'block_end' }
 
-    const template = prompt.template
-    const variablePattern = new RegExp(VARIABLE_PATTERN.source, 'g')
-    const parts: React.ReactNode[] = []
-    let lastIndex = 0
-    let match
+// Parse template into tokens
+function tokenizeTemplate(template: string): Token[] {
+  const tokens: Token[] = []
+  // Match: {{#helper key}}, {{else}}, {{/helper}}, {{variable}}, {{#if (helper var ...)}}}
+  const regex = /\{\{(#(?:if|unless|each|with)\s+(?:\([^)]+\)|[\w-]+)|else|\/(?:if|unless|each|with)|[\w-]+)\}\}/g
+  let lastIndex = 0
+  let match
 
-    while ((match = variablePattern.exec(template)) !== null) {
-      // Add text before the variable
-      if (match.index > lastIndex) {
-        parts.push(template.slice(lastIndex, match.index))
+  while ((match = regex.exec(template)) !== null) {
+    // Add text before this match
+    if (match.index > lastIndex) {
+      tokens.push({ type: 'text', content: template.slice(lastIndex, match.index) })
+    }
+
+    const content = match[1]
+
+    if (content === 'else') {
+      tokens.push({ type: 'block_else' })
+    } else if (content.startsWith('/')) {
+      tokens.push({ type: 'block_end' })
+    } else if (content.startsWith('#')) {
+      // Parse block helper: #if key or #if (eq key "value")
+      const blockMatch = content.match(/^#(if|unless|each|with)\s+(?:\([\w]+\s+)?([\w-]+)/)
+      if (blockMatch) {
+        tokens.push({
+          type: 'block_start',
+          helper: blockMatch[1],
+          key: blockMatch[2],
+          inverted: blockMatch[1] === 'unless',
+        })
       }
+    } else {
+      // Simple variable
+      tokens.push({ type: 'variable', key: content })
+    }
 
-      const varKey = match[1]
-      const variable = prompt.variables.find((v) => v.key === varKey)
-      const value = values[varKey]
-      const displayValue = value !== undefined && value !== ''
-        ? String(value)
-        : variable?.default !== undefined
-          ? String(variable.default)
-          : `{{${varKey}}}`
+    lastIndex = match.index + match[0].length
+  }
 
-      const hasValue = value !== undefined && value !== ''
-      const hasDefault = !hasValue && variable?.default !== undefined
-      const isActive = activeVariableKey === varKey
+  // Add remaining text
+  if (lastIndex < template.length) {
+    tokens.push({ type: 'text', content: template.slice(lastIndex) })
+  }
 
-      // Add highlighted variable value
-      parts.push(
-        <Tooltip key={`${varKey}-${match.index}`}>
+  return tokens
+}
+
+// Check if a value is truthy for Handlebars
+function isTruthy(value: unknown): boolean {
+  if (value === undefined || value === null || value === false || value === '') return false
+  if (Array.isArray(value)) return value.length > 0
+  return true
+}
+
+// Get display value for a variable
+function getDisplayValue(
+  key: string,
+  values: Record<string, unknown>,
+  variables: Variable[]
+): { value: string; hasValue: boolean; hasDefault: boolean } {
+  const variable = variables.find(v => v.key === key)
+  const rawValue = values[key]
+
+  if (rawValue !== undefined && rawValue !== '' && (!Array.isArray(rawValue) || rawValue.length > 0)) {
+    return { value: String(rawValue), hasValue: true, hasDefault: false }
+  }
+  if (variable?.default !== undefined) {
+    return { value: String(variable.default), hasValue: false, hasDefault: true }
+  }
+  return { value: `{{${key}}}`, hasValue: false, hasDefault: false }
+}
+
+interface RenderContext {
+  values: Record<string, unknown>
+  variables: Variable[]
+  activeVariableKey: string | null
+  onActiveVariableChange: (key: string | null) => void
+  keyCounter: { current: number }
+}
+
+// Recursively render tokens
+function renderTokens(
+  tokens: Token[],
+  ctx: RenderContext,
+  startIndex: number = 0
+): { elements: React.ReactNode[]; endIndex: number } {
+  const elements: React.ReactNode[] = []
+  let i = startIndex
+
+  while (i < tokens.length) {
+    const token = tokens[i]
+
+    if (token.type === 'text') {
+      elements.push(token.content)
+      i++
+    } else if (token.type === 'variable') {
+      const { value, hasValue, hasDefault } = getDisplayValue(token.key, ctx.values, ctx.variables)
+      const variable = ctx.variables.find(v => v.key === token.key)
+      const isActive = ctx.activeVariableKey === token.key
+      const key = ctx.keyCounter.current++
+
+      elements.push(
+        <Tooltip key={key}>
           <TooltipTrigger asChild>
             <span
               className={`cursor-pointer rounded px-1 py-0.5 transition-all duration-150 font-mono text-sm ${
@@ -66,33 +138,123 @@ export function PreviewTab({
                       : 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
               }`}
               onClick={() => {
-                const input = document.getElementById(`var-${varKey}`)
+                const input = document.getElementById(`var-${token.key}`)
                 if (input) {
                   input.focus()
                   input.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }
               }}
-              onMouseEnter={() => onActiveVariableChange(varKey)}
-              onMouseLeave={() => onActiveVariableChange(null)}
+              onMouseEnter={() => ctx.onActiveVariableChange(token.key)}
+              onMouseLeave={() => ctx.onActiveVariableChange(null)}
             >
-              {displayValue}
+              {value}
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="font-mono text-xs">{variable?.label || varKey}</p>
+            <p className="font-mono text-xs">{variable?.label || token.key}</p>
           </TooltipContent>
         </Tooltip>
       )
+      i++
+    } else if (token.type === 'block_start') {
+      // Find the matching end and optional else
+      const rawValue = ctx.values[token.key]
+      const isConditionTrue = token.inverted ? !isTruthy(rawValue) : isTruthy(rawValue)
+      const variable = ctx.variables.find(v => v.key === token.key)
+      const isActive = ctx.activeVariableKey === token.key
+      const blockKey = ctx.keyCounter.current++
 
-      lastIndex = match.index + match[0].length
+      // Collect content until block_end, handling else
+      i++
+      const mainContent = renderTokens(tokens, ctx, i)
+      i = mainContent.endIndex
+
+      let elseContent: { elements: React.ReactNode[]; endIndex: number } | null = null
+      if (tokens[i]?.type === 'block_else') {
+        i++
+        elseContent = renderTokens(tokens, ctx, i)
+        i = elseContent.endIndex
+      }
+
+      // Skip the block_end token
+      if (tokens[i]?.type === 'block_end') {
+        i++
+      }
+
+      // Render the block with visual indicator
+      const activeContent = isConditionTrue ? mainContent.elements : (elseContent?.elements || [])
+      const hasContent = activeContent.length > 0 &&
+        !(activeContent.length === 1 && typeof activeContent[0] === 'string' && !activeContent[0].trim())
+
+      elements.push(
+        <Tooltip key={blockKey}>
+          <TooltipTrigger asChild>
+            <span
+              className={`relative cursor-pointer transition-all duration-150 ${
+                isActive
+                  ? 'ring-2 ring-primary-400 rounded'
+                  : ''
+              }`}
+              onClick={() => {
+                const input = document.getElementById(`var-${token.key}`)
+                if (input) {
+                  input.focus()
+                  input.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+              }}
+              onMouseEnter={() => ctx.onActiveVariableChange(token.key)}
+              onMouseLeave={() => ctx.onActiveVariableChange(null)}
+            >
+              {hasContent && (
+                <span
+                  className={`border-l-2 pl-1 ${
+                    isConditionTrue
+                      ? 'border-green-400 dark:border-green-500'
+                      : 'border-orange-300 dark:border-orange-500'
+                  }`}
+                >
+                  {activeContent}
+                </span>
+              )}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs">
+              {token.helper} {variable?.label || token.key}: {isConditionTrue ? 'showing' : 'hidden'}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      )
+    } else if (token.type === 'block_else' || token.type === 'block_end') {
+      // These signal end of current block content
+      break
+    }
+  }
+
+  return { elements, endIndex: i }
+}
+
+export function PreviewTab({
+  prompt,
+  values,
+  activeVariableKey,
+  onActiveVariableChange,
+}: PreviewTabProps) {
+  // Render template with highlighted variables and conditional blocks
+  const renderHighlightedContent = useMemo(() => {
+    if (!prompt) return null
+
+    const tokens = tokenizeTemplate(prompt.template)
+    const ctx: RenderContext = {
+      values,
+      variables: prompt.variables,
+      activeVariableKey,
+      onActiveVariableChange,
+      keyCounter: { current: 0 },
     }
 
-    // Add remaining text after last variable
-    if (lastIndex < template.length) {
-      parts.push(template.slice(lastIndex))
-    }
-
-    return parts
+    const { elements } = renderTokens(tokens, ctx)
+    return elements
   }, [prompt, values, activeVariableKey, onActiveVariableChange])
 
   if (!prompt) {

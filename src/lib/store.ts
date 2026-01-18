@@ -71,6 +71,13 @@ async function getDb(): Promise<Database> {
     await db.execute(`
       CREATE INDEX IF NOT EXISTS idx_prompt_versions_path ON prompt_versions(prompt_path)
     `)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS prompt_drafts (
+        prompt_id TEXT PRIMARY KEY,
+        variable_values TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `)
   }
   return db
 }
@@ -430,5 +437,246 @@ export async function deletePromptVersions(promptPath: string): Promise<Result<v
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to delete versions: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Recently used prompts operations
+
+const MAX_RECENT_PROMPTS = 10
+
+export async function getRecentPromptIds(): Promise<Result<string[]>> {
+  try {
+    const database = await getDb()
+    // Ensure the table exists
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS recent_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        last_used_at TEXT NOT NULL
+      )
+    `)
+    const result = await database.select<{ prompt_id: string }[]>(
+      'SELECT prompt_id FROM recent_prompts ORDER BY last_used_at DESC LIMIT ?',
+      [MAX_RECENT_PROMPTS]
+    )
+    return { ok: true, data: result.map(r => r.prompt_id) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get recent prompts: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function addRecentPrompt(promptId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    // Ensure the table exists
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS recent_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        last_used_at TEXT NOT NULL
+      )
+    `)
+    // Insert or update the prompt
+    await database.execute(
+      'INSERT OR REPLACE INTO recent_prompts (prompt_id, last_used_at) VALUES (?, ?)',
+      [promptId, new Date().toISOString()]
+    )
+    // Clean up old entries
+    await database.execute(
+      `DELETE FROM recent_prompts WHERE prompt_id NOT IN (
+        SELECT prompt_id FROM recent_prompts ORDER BY last_used_at DESC LIMIT ?
+      )`,
+      [MAX_RECENT_PROMPTS]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to add recent prompt: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function removeRecentPrompt(promptId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute('DELETE FROM recent_prompts WHERE prompt_id = ?', [promptId])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to remove recent prompt: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Prompt drafts operations (for tracking in-progress prompts)
+
+export interface PromptDraft {
+  prompt_id: string
+  variable_values: Record<string, unknown>
+  updated_at: string
+}
+
+interface PromptDraftRow {
+  prompt_id: string
+  variable_values: string
+  updated_at: string
+}
+
+export async function getAllPromptDrafts(): Promise<Result<PromptDraft[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PromptDraftRow[]>(
+      'SELECT prompt_id, variable_values, updated_at FROM prompt_drafts ORDER BY updated_at DESC'
+    )
+    return {
+      ok: true,
+      data: result.map((row) => ({
+        prompt_id: row.prompt_id,
+        variable_values: JSON.parse(row.variable_values),
+        updated_at: row.updated_at,
+      })),
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt drafts: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getPromptDraft(promptId: string): Promise<Result<PromptDraft | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PromptDraftRow[]>(
+      'SELECT prompt_id, variable_values, updated_at FROM prompt_drafts WHERE prompt_id = ?',
+      [promptId]
+    )
+    if (result.length === 0) {
+      return { ok: true, data: null }
+    }
+    return {
+      ok: true,
+      data: {
+        prompt_id: result[0].prompt_id,
+        variable_values: JSON.parse(result[0].variable_values),
+        updated_at: result[0].updated_at,
+      },
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt draft: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function savePromptDraft(
+  promptId: string,
+  variableValues: Record<string, unknown>
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO prompt_drafts (prompt_id, variable_values, updated_at) VALUES (?, ?, ?)',
+      [promptId, JSON.stringify(variableValues), new Date().toISOString()]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save prompt draft: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deletePromptDraft(promptId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute('DELETE FROM prompt_drafts WHERE prompt_id = ?', [promptId])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete prompt draft: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Panel width settings
+
+export interface PanelWidths {
+  promptList: number
+  rightPanel: number
+}
+
+const DEFAULT_PANEL_WIDTHS: PanelWidths = {
+  promptList: 200,
+  rightPanel: 300,
+}
+
+export async function getPanelWidths(): Promise<Result<PanelWidths>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['panel_widths']
+    )
+    if (result.length > 0) {
+      const parsed = JSON.parse(result[0].value) as Partial<PanelWidths>
+      return {
+        ok: true,
+        data: {
+          promptList: parsed.promptList ?? DEFAULT_PANEL_WIDTHS.promptList,
+          rightPanel: parsed.rightPanel ?? DEFAULT_PANEL_WIDTHS.rightPanel,
+        },
+      }
+    }
+    return { ok: true, data: DEFAULT_PANEL_WIDTHS }
+  } catch (err) {
+    return { ok: false, error: `Failed to get panel widths: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function savePanelWidths(widths: PanelWidths): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['panel_widths', JSON.stringify(widths)]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save panel widths: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Pinned prompts operations
+
+export async function getPinnedPromptIds(): Promise<Result<string[]>> {
+  try {
+    const database = await getDb()
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS pinned_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        pinned_at TEXT NOT NULL
+      )
+    `)
+    const result = await database.select<{ prompt_id: string }[]>(
+      'SELECT prompt_id FROM pinned_prompts ORDER BY pinned_at ASC'
+    )
+    return { ok: true, data: result.map(r => r.prompt_id) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get pinned prompts: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function addPinnedPrompt(promptId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS pinned_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        pinned_at TEXT NOT NULL
+      )
+    `)
+    await database.execute(
+      'INSERT OR REPLACE INTO pinned_prompts (prompt_id, pinned_at) VALUES (?, ?)',
+      [promptId, new Date().toISOString()]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to pin prompt: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function removePinnedPrompt(promptId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute('DELETE FROM pinned_prompts WHERE prompt_id = ?', [promptId])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to unpin prompt: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

@@ -17,20 +17,24 @@ import { cn } from '@/lib/utils'
 interface SearchPageProps {
   prompts: PromptFile[]
   tags: Tag[]
+  pinnedPromptIds: string[]
   selectedPrompt: PromptFile | null
   onSelectPrompt: (prompt: PromptFile) => void
   onDuplicatePrompt: (prompt: PromptFile) => void
   onDeletePrompt: (prompt: PromptFile) => void
+  onTogglePinPrompt: (promptId: string) => void
   focusTrigger?: number
 }
 
 export function SearchPage({
   prompts,
   tags,
+  pinnedPromptIds,
   selectedPrompt,
   onSelectPrompt,
   onDuplicatePrompt,
   onDeletePrompt,
+  onTogglePinPrompt,
   focusTrigger,
 }: SearchPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -219,9 +223,11 @@ export function SearchPage({
                   <PromptListItem
                     prompt={prompt}
                     isSelected={selectedPrompt?.path === prompt.path}
+                    isPinned={pinnedPromptIds.includes(prompt.id)}
                     onSelect={() => onSelectPrompt(prompt)}
                     onDuplicate={() => onDuplicatePrompt(prompt)}
                     onDelete={() => onDeletePrompt(prompt)}
+                    onTogglePin={() => onTogglePinPrompt(prompt.id)}
                   />
                 </div>
               ))}

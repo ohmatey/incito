@@ -349,10 +349,12 @@ export default function App() {
         {currentView === 'prompts' && (
           <PromptList
             prompts={promptManager.prompts}
+            pinnedPromptIds={[]}
             selectedPrompt={selectedPrompt}
             onSelectPrompt={handleSelectPrompt}
             onDuplicatePrompt={handleDuplicatePrompt}
             onDeletePrompt={handleDeletePrompt}
+            onTogglePinPrompt={() => {}}
             onNewPrompt={() => setShowNewPromptDialog(true)}
           />
         )}
@@ -362,10 +364,12 @@ export default function App() {
           <SearchPage
             prompts={promptManager.prompts}
             tags={tags}
+            pinnedPromptIds={[]}
             selectedPrompt={selectedPrompt}
             onSelectPrompt={handleSelectPrompt}
             onDuplicatePrompt={handleDuplicatePrompt}
             onDeletePrompt={handleDeletePrompt}
+            onTogglePinPrompt={() => {}}
             focusTrigger={searchFocusTrigger}
           />
         ) : currentView === 'tags' ? (
@@ -401,6 +405,8 @@ export default function App() {
 
               <CenterPane
                 prompt={selectedPrompt}
+                prompts={promptManager.prompts}
+                pinnedPromptIds={[]}
                 values={editState.variableValues}
                 isEditMode={editState.isEditMode}
                 localName={editState.localName}
@@ -417,6 +423,7 @@ export default function App() {
                 onLocalTemplateChange={handleLocalTemplateChange}
                 onLocalTagsChange={editState.setLocalTags}
                 onCreateTag={handleCreateTag}
+                onSelectPrompt={handleSelectPrompt}
               />
             </div>
 

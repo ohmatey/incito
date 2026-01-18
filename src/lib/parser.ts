@@ -1,6 +1,6 @@
 import matter from 'gray-matter'
 import type { PromptFile, Variable, ParseError, SelectOption, SerializationFormat, Note } from '../types/prompt'
-import { VARIABLE_PATTERN, isValidVariableKey, isValidTagName } from './constants'
+import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, isValidVariableKey, isValidTagName } from './constants'
 import { AVAILABLE_LAUNCHERS } from './launchers'
 
 const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select']
@@ -29,7 +29,11 @@ export function parsePromptFile(
     const notes = validateNotes(data.notes)
     const defaultLaunchers = validateDefaultLaunchers(data.defaultLaunchers)
 
+    // Use existing id or generate a new one
+    const id = data.id && typeof data.id === 'string' ? data.id : crypto.randomUUID()
+
     return {
+      id,
       fileName,
       path,
       name: data.name || fileName.replace('.md', ''),
@@ -46,6 +50,7 @@ export function parsePromptFile(
   } catch (e) {
     console.error('Frontmatter parse error:', e)
     return {
+      id: crypto.randomUUID(),
       fileName,
       path,
       name: fileName.replace('.md', ''),
@@ -266,6 +271,7 @@ function validateVariables(variables: unknown[]): {
 
 export function serializePrompt(prompt: PromptFile): string {
   const frontmatter: Record<string, unknown> = {
+    id: prompt.id,
     name: prompt.name,
   }
 
@@ -303,22 +309,33 @@ export function serializePrompt(prompt: PromptFile): string {
 
 /**
  * Extract variable keys from template text by finding {{variable}} patterns
+ * Also detects variables in Handlebars helpers like {{#if var}}, {{#each var}}, {{#if (eq var "value")}}
  * Returns unique variable keys found in the template
  * Only includes keys that pass validation
  */
 export function extractVariablesFromTemplate(template: string): string[] {
-  // Create a new regex instance to avoid issues with global flag state
-  const regex = new RegExp(VARIABLE_PATTERN.source, 'g')
   const keys = new Set<string>()
-  let match
 
-  while ((match = regex.exec(template)) !== null) {
-    const key = match[1]
-    // Only add valid keys
-    if (isValidVariableKey(key)) {
-      keys.add(key)
+  // Helper to extract keys from a pattern
+  const extractWithPattern = (pattern: RegExp) => {
+    const regex = new RegExp(pattern.source, 'g')
+    let match
+    while ((match = regex.exec(template)) !== null) {
+      const key = match[1]
+      if (isValidVariableKey(key)) {
+        keys.add(key)
+      }
     }
   }
+
+  // Match simple variables: {{variable}}
+  extractWithPattern(VARIABLE_PATTERN)
+
+  // Match block helpers: {{#if variable}}, {{#unless variable}}, {{#each variable}}, {{#with variable}}
+  extractWithPattern(BLOCK_HELPER_PATTERN)
+
+  // Match comparison helpers: {{#if (eq variable "value")}}
+  extractWithPattern(HELPER_VARIABLE_PATTERN)
 
   return Array.from(keys)
 }

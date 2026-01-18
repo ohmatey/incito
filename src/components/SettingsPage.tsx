@@ -146,7 +146,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Provider</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Configure an AI provider to generate prompt templates with AI assistance.
+                Connect an AI service to power prompt generation and suggestions.
               </p>
 
               {isLoading ? (

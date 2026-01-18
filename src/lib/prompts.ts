@@ -68,11 +68,12 @@ export async function createPrompt(
   )
   const path = await join(folderPath, fileName)
 
+  const id = crypto.randomUUID()
   let template: string
   if (initialContent) {
-    template = getPromptTemplateFromContent(displayName, initialContent)
+    template = getPromptTemplateFromContent(displayName, id, initialContent)
   } else {
-    template = getNewPromptTemplate(displayName)
+    template = getNewPromptTemplate(displayName, id)
   }
 
   await writeTextFile(path, template)
@@ -95,6 +96,7 @@ export async function duplicatePrompt(
 
   const newPrompt: PromptFile = {
     ...original,
+    id: crypto.randomUUID(),
     fileName: newFileName,
     path: newPath,
     name: newDisplayName,
@@ -144,8 +146,9 @@ export function isDisplayNameUnique(name: string, existingNames: string[], curre
   return !existingNames.includes(name)
 }
 
-function getNewPromptTemplate(displayName: string): string {
+function getNewPromptTemplate(displayName: string, id: string): string {
   return `---
+id: "${id}"
 name: "${displayName}"
 description: "Describe your prompt here"
 tags: []
@@ -163,7 +166,7 @@ Use {{topic}} to insert variable values.
 `
 }
 
-function getPromptTemplateFromContent(displayName: string, content: InitialPromptContent): string {
+function getPromptTemplateFromContent(displayName: string, id: string, content: InitialPromptContent): string {
   const yamlVariables = (content.variables || []).map((v) => {
     const lines = [`  - key: ${v.key}`, `    label: "${v.label}"`, `    type: ${v.type}`]
     if (v.required !== undefined) lines.push(`    required: ${v.required}`)
@@ -204,6 +207,7 @@ function getPromptTemplateFromContent(displayName: string, content: InitialPromp
   const tagsYaml = tags.length > 0 ? `tags:\n${tags.map((t) => `  - "${escapeYamlString(t)}"`).join('\n')}` : 'tags: []'
 
   return `---
+id: "${id}"
 name: "${escapeYamlString(displayName)}"
 description: "${escapeYamlString(content.description || '')}"
 ${tagsYaml}

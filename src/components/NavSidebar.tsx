@@ -21,7 +21,10 @@ export function NavSidebar({
     <TooltipProvider delayDuration={300}>
       <div className="flex h-full w-[60px] flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {/* Logo */}
-        <div className="flex h-14 items-center justify-center border-b border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => onViewChange('prompts')}
+          className="flex h-14 w-full items-center justify-center border-b border-gray-200 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700"
+        >
           <svg
             width="28"
             height="28"
@@ -35,7 +38,7 @@ export function NavSidebar({
               strokeWidth="31.3647"
             />
           </svg>
-        </div>
+        </button>
 
         {/* Navigation Items */}
         <div className="flex flex-1 flex-col items-center gap-1 py-3">

@@ -2,6 +2,66 @@
 
 All notable changes to Incito will be documented in this file.
 
+## [0.2.0] - 2026-01-18
+
+### Added
+
+#### Handlebars Templating Engine
+- **Full Handlebars Integration** - Replaced custom regex-based parsing with Handlebars.compile()
+- **Comparison Helpers** - `eq`, `ne`, `gt`, `gte`, `lt`, `lte` for conditional logic
+- **Logical Helpers** - `and`, `or`, `not` for complex conditions
+- **Array Helpers** - `contains`, `length`, `formatArray` for array manipulation
+- **Block Helpers** - Full support for `#if`, `#unless`, `#each`, `#with`, and `else`
+- **Raw Array Access** - Use `{{variable_array}}` suffix for iteration in `#each` blocks
+
+#### Draft Auto-Save System
+- **Automatic Draft Persistence** - Variable values auto-save as you type
+- **SQLite Storage** - Drafts stored in `prompt_drafts` table
+- **Debounced Saving** - 500ms debounce prevents excessive writes
+- **Draft Restoration** - Drafts load automatically when reopening a prompt
+- **Clear on Action** - Drafts cleared after copy/run to start fresh next time
+
+#### Pinned Prompts
+- **Pin/Unpin Functionality** - Right-click context menu to pin prompts
+- **Pinned Section** - Pinned prompts appear at top of list with separator
+- **Persistent State** - Pin state saved to SQLite database
+
+#### Recent Prompts Tracking
+- **Usage History** - Track last 10 recently used prompts
+- **History Tab Integration** - View recent prompts in History tab
+- **Automatic Cleanup** - Old entries pruned automatically
+
+#### Unique Prompt IDs
+- **Stable Identifiers** - Each prompt gets a unique ID for reliable tracking
+- **ID-Based References** - Drafts, pins, and history use IDs instead of paths
+
+#### Resizable Panels
+- **Draggable Resize Handle** - Adjust prompt list sidebar width
+- **Width Constraints** - Min 150px, max 400px for usability
+- **Persistent Width** - (Future: save preferred width)
+
+### Changed
+
+#### Preview Tab Rewrite
+- **Token-Based Parsing** - Complete rewrite of template tokenization
+- **Nested Block Support** - Properly handles nested `#if`/`#each` blocks
+- **Handlebars Truthiness** - Accurate evaluation matching Handlebars behavior
+- **Improved Highlighting** - Better visual feedback for active variables
+
+#### Interpolation Engine
+- **Handlebars.compile()** - More reliable template processing
+- **Complex Nested Conditions** - Proper handling of deeply nested logic
+- **Array Formatting** - Both formatted string and raw array available
+
+### Fixed
+
+- History tab layout and scrolling improvements
+- Select component styling consistency
+- Parser test coverage for edge cases
+- Variable sync when switching prompts with drafts
+
+---
+
 ## [0.1.0] - 2026-01-18
 
 ### Major Architectural Changes

@@ -6,23 +6,35 @@ import { Plus } from 'lucide-react'
 
 interface PromptListProps {
   prompts: PromptFile[]
+  pinnedPromptIds: string[]
   selectedPrompt: PromptFile | null
   onSelectPrompt: (prompt: PromptFile) => void
   onDuplicatePrompt: (prompt: PromptFile) => void
   onDeletePrompt: (prompt: PromptFile) => void
+  onTogglePinPrompt: (promptId: string) => void
   onNewPrompt: () => void
+  width?: number
 }
 
 export function PromptList({
   prompts,
+  pinnedPromptIds,
   selectedPrompt,
   onSelectPrompt,
   onDuplicatePrompt,
   onDeletePrompt,
+  onTogglePinPrompt,
   onNewPrompt,
+  width = 200,
 }: PromptListProps) {
+  // Split prompts into pinned and unpinned
+  const pinnedPrompts = prompts.filter((p) => pinnedPromptIds.includes(p.id))
+  const unpinnedPrompts = prompts.filter((p) => !pinnedPromptIds.includes(p.id))
   return (
-    <div className="flex h-full w-[200px] flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+    <div
+      className="flex h-full flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+      style={{ width: `${width}px`, minWidth: '150px', maxWidth: '400px' }}
+    >
       {/* Header */}
       <div className="flex h-14 items-center justify-between border-b border-gray-200 px-3 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Prompts</h2>
@@ -38,23 +50,49 @@ export function PromptList({
       </div>
 
       {/* Prompts list */}
-      <ScrollArea className="flex-1 px-2 pt-2">
-        <div className="space-y-0.5 pb-2">
+      <ScrollArea className="flex-1 [&>div>div]:!block">
+        <div className="space-y-0.5 px-2 py-2">
           {prompts.length === 0 ? (
             <p className="px-2 py-2 text-xs text-gray-500 dark:text-gray-400">
               No prompts found
             </p>
           ) : (
-            prompts.map((prompt) => (
-              <PromptListItem
-                key={prompt.path}
-                prompt={prompt}
-                isSelected={selectedPrompt?.path === prompt.path}
-                onSelect={() => onSelectPrompt(prompt)}
-                onDuplicate={() => onDuplicatePrompt(prompt)}
-                onDelete={() => onDeletePrompt(prompt)}
-              />
-            ))
+            <>
+              {pinnedPrompts.length > 0 && (
+                <>
+                  <div className="px-2 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Pinned
+                  </div>
+                  {pinnedPrompts.map((prompt) => (
+                    <PromptListItem
+                      key={prompt.path}
+                      prompt={prompt}
+                      isSelected={selectedPrompt?.path === prompt.path}
+                      isPinned={true}
+                      onSelect={() => onSelectPrompt(prompt)}
+                      onDuplicate={() => onDuplicatePrompt(prompt)}
+                      onDelete={() => onDeletePrompt(prompt)}
+                      onTogglePin={() => onTogglePinPrompt(prompt.id)}
+                    />
+                  ))}
+                  {unpinnedPrompts.length > 0 && (
+                    <div className="mx-1 my-2 border-t border-gray-200 dark:border-gray-700" />
+                  )}
+                </>
+              )}
+              {unpinnedPrompts.map((prompt) => (
+                <PromptListItem
+                  key={prompt.path}
+                  prompt={prompt}
+                  isSelected={selectedPrompt?.path === prompt.path}
+                  isPinned={false}
+                  onSelect={() => onSelectPrompt(prompt)}
+                  onDuplicate={() => onDuplicatePrompt(prompt)}
+                  onDelete={() => onDeletePrompt(prompt)}
+                  onTogglePin={() => onTogglePinPrompt(prompt.id)}
+                />
+              ))}
+            </>
           )}
         </div>
       </ScrollArea>

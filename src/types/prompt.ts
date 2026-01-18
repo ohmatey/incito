@@ -54,6 +54,7 @@ export interface ParseError {
 }
 
 export interface PromptFile {
+  id: string
   fileName: string
   path: string
   name: string
