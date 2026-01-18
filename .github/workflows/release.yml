@@ -62,10 +62,22 @@ jobs:
         uses: actions/github-script@v7
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-          GIST_ID: ${{ vars.GIST_ID }}
+          GIST_ID: ${{ secrets.GIST_ID }}
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         with:
           script: |
+            // Debug: Check environment variables
+            const gistId = process.env.GIST_ID;
+            const gistToken = process.env.GIST_TOKEN;
+
+            console.log('=== DEBUG INFO ===');
+            console.log(`GIST_ID set: ${!!gistId}`);
+            console.log(`GIST_ID length: ${gistId ? gistId.length : 0}`);
+            console.log(`GIST_ID value: ${gistId ? gistId.substring(0, 4) + '...' + gistId.substring(gistId.length - 4) : 'NOT SET'}`);
+            console.log(`GIST_TOKEN set: ${!!gistToken}`);
+            console.log(`GIST_TOKEN length: ${gistToken ? gistToken.length : 0}`);
+            console.log('==================\n');
+
             // Get release by tag
             const tag = process.env.RELEASE_TAG;
             const release = await github.rest.repos.getReleaseByTag({
@@ -124,8 +136,15 @@ jobs:
             console.log('\nConstructed latest.json:');
             console.log(JSON.stringify(latestJson, null, 2));
 
+            // Debug: Show the Gist URL being called
+            const gistUrl = `https://api.github.com/gists/${gistId}`;
+            console.log(`\n=== GIST API CALL ===`);
+            console.log(`URL: ${gistUrl}`);
+            console.log(`Method: PATCH`);
+            console.log(`=====================\n`);
+
             // Update Gist using fetch
-            const gistResponse = await fetch(`https://api.github.com/gists/${process.env.GIST_ID}`, {
+            const gistResponse = await fetch(gistUrl, {
               method: 'PATCH',
               headers: {
                 'Authorization': `token ${process.env.GIST_TOKEN}`,
@@ -142,7 +161,15 @@ jobs:
             });
 
             if (!gistResponse.ok) {
-              throw new Error(`Failed to update Gist: ${gistResponse.status} ${await gistResponse.text()}`);
+              const responseText = await gistResponse.text();
+              console.log(`\n=== GIST API ERROR ===`);
+              console.log(`Status: ${gistResponse.status}`);
+              console.log(`Status Text: ${gistResponse.statusText}`);
+              console.log(`Response: ${responseText}`);
+              console.log(`X-RateLimit-Remaining: ${gistResponse.headers.get('x-ratelimit-remaining')}`);
+              console.log(`X-OAuth-Scopes: ${gistResponse.headers.get('x-oauth-scopes')}`);
+              console.log(`======================\n`);
+              throw new Error(`Failed to update Gist: ${gistResponse.status} ${responseText}`);
             }
 
             console.log('\n✓ Successfully updated Gist');

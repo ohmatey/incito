@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Variable types supported by the prompt template
-export const VariableTypeSchema = z.enum(['text', 'textarea', 'select', 'number', 'checkbox'])
+export const VariableTypeSchema = z.enum(['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select'])
 export type VariableType = z.infer<typeof VariableTypeSchema>
 
 // Variable definition for a prompt template
@@ -12,7 +12,7 @@ export const GeneratedVariableSchema = z.object({
   required: z.boolean().optional().describe('Whether this variable is required'),
   placeholder: z.string().optional().describe('Placeholder text for the input'),
   preview: z.string().optional().describe('Example value shown in preview mode'),
-  default: z.union([z.string(), z.number(), z.boolean()]).optional().describe('Default value'),
+  default: z.union([z.string(), z.number(), z.array(z.string())]).optional().describe('Default value'),
   options: z.array(z.string()).optional().describe('Options for select type variables'),
 })
 

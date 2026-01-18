@@ -1,7 +1,6 @@
 import type { Variable } from '@/types/prompt'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -92,26 +91,12 @@ export function VariableInput({ variable, value, onChange }: VariableInputProps)
           </SelectTrigger>
           <SelectContent>
             {variable.options.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      )}
-
-      {variable.type === 'checkbox' && (
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id={id}
-            checked={(value as boolean) ?? false}
-            onCheckedChange={onChange}
-            aria-required={variable.required ? true : undefined}
-          />
-          <Label htmlFor={id} className="text-sm font-normal">
-            {variable.placeholder || 'Enable'}
-          </Label>
-        </div>
       )}
 
       {hasError && (

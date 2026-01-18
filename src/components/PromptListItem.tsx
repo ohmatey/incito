@@ -1,4 +1,4 @@
-import type { PromptFile, Tag } from '@/types/prompt'
+import type { PromptFile } from '@/types/prompt'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,7 +25,6 @@ interface PromptListItemProps {
   onSelect: () => void
   onDuplicate: () => void
   onDelete: () => void
-  tags?: Tag[]
 }
 
 export function PromptListItem({
@@ -34,14 +33,8 @@ export function PromptListItem({
   onSelect,
   onDuplicate,
   onDelete,
-  tags = [],
 }: PromptListItemProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
-  // Get tag colors for this prompt's tags
-  const promptTags = (prompt.tags || [])
-    .map((tagName) => tags.find((t) => t.name === tagName))
-    .filter((t): t is Tag => !!t)
 
   return (
     <>
@@ -61,23 +54,6 @@ export function PromptListItem({
               <AlertTriangle className="h-4 w-4 flex-shrink-0 text-yellow-500" />
             )}
             <span className="flex-1 truncate">{prompt.name}</span>
-            {promptTags.length > 0 && (
-              <span className="flex items-center gap-0.5 flex-shrink-0">
-                {promptTags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: tag.color }}
-                    title={tag.name}
-                  />
-                ))}
-                {promptTags.length > 3 && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    +{promptTags.length - 3}
-                  </span>
-                )}
-              </span>
-            )}
           </button>
         </ContextMenuTrigger>
         <ContextMenuContent>

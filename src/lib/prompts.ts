@@ -1,7 +1,7 @@
 import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
-import { syncPromptTags } from './store'
+import { syncPromptTags, createPromptVersion, deletePromptVersions } from './store'
 import type { PromptFile, Variable } from '../types/prompt'
 
 export interface InitialPromptContent {
@@ -30,8 +30,23 @@ export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   return prompts.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export async function savePrompt(prompt: PromptFile): Promise<void> {
+export async function savePrompt(prompt: PromptFile, skipVersion = false): Promise<void> {
   const content = serializePrompt(prompt)
+
+  // Create a version before saving (unless skipping, e.g., for restores)
+  if (!skipVersion) {
+    // Read the current content first to save as the "before" state
+    try {
+      const currentContent = await readTextFile(prompt.path)
+      // Only create a version if content actually changed
+      if (currentContent !== content) {
+        await createPromptVersion(prompt.path, currentContent)
+      }
+    } catch {
+      // File might not exist yet (new prompt), skip version creation
+    }
+  }
+
   await writeTextFile(prompt.path, content)
   // Sync tags to SQLite
   await syncPromptTags(prompt.path, prompt.tags || [])
@@ -84,6 +99,7 @@ export async function duplicatePrompt(
     path: newPath,
     name: newDisplayName,
     tags: [...(original.tags || [])],
+    notes: [...(original.notes || [])],
   }
 
   await savePrompt(newPrompt)
@@ -92,6 +108,8 @@ export async function duplicatePrompt(
 
 export async function deletePrompt(prompt: PromptFile): Promise<void> {
   await remove(prompt.path)
+  // Clean up versions when prompt is deleted
+  await deletePromptVersions(prompt.path)
 }
 
 function generateUniqueFileName(baseName: string, existingNames: string[]): string {
@@ -154,13 +172,30 @@ function getPromptTemplateFromContent(displayName: string, content: InitialPromp
     if (v.default !== undefined) {
       if (typeof v.default === 'string') {
         lines.push(`    default: "${escapeYamlString(v.default)}"`)
+      } else if (Array.isArray(v.default)) {
+        lines.push(`    default:`)
+        v.default.forEach((item) => lines.push(`      - "${escapeYamlString(String(item))}"`))
       } else {
         lines.push(`    default: ${v.default}`)
       }
     }
+    // Slider properties
+    if (v.min !== undefined) lines.push(`    min: ${v.min}`)
+    if (v.max !== undefined) lines.push(`    max: ${v.max}`)
+    if (v.step !== undefined) lines.push(`    step: ${v.step}`)
+    // Array/multi-select format
+    if (v.format) lines.push(`    format: ${v.format}`)
     if (v.options && v.options.length > 0) {
       lines.push(`    options:`)
-      v.options.forEach((opt) => lines.push(`      - "${escapeYamlString(opt)}"`))
+      v.options.forEach((opt) => {
+        // Support both SelectOption objects and legacy string format
+        if (typeof opt === 'string') {
+          lines.push(`      - "${escapeYamlString(opt)}"`)
+        } else {
+          lines.push(`      - label: "${escapeYamlString(opt.label)}"`)
+          lines.push(`        value: "${escapeYamlString(opt.value)}"`)
+        }
+      })
     }
     return lines.join('\n')
   })

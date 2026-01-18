@@ -57,6 +57,20 @@ async function getDb(): Promise<Database> {
         FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
       )
     `)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS prompt_versions (
+        id TEXT PRIMARY KEY,
+        prompt_path TEXT NOT NULL,
+        version_number INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        description TEXT,
+        UNIQUE(prompt_path, version_number)
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_prompt_versions_path ON prompt_versions(prompt_path)
+    `)
   }
   return db
 }
@@ -327,5 +341,94 @@ export async function hasAIConfigured(): Promise<Result<boolean>> {
     }
   } catch (err) {
     return { ok: false, error: `Failed to check AI configuration: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Prompt Version operations
+
+export interface PromptVersionRow {
+  id: string
+  prompt_path: string
+  version_number: number
+  content: string
+  created_at: string
+  description: string | null
+}
+
+const MAX_VERSIONS_PER_PROMPT = 50
+
+export async function createPromptVersion(
+  promptPath: string,
+  content: string,
+  description?: string
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+
+    // Get the next version number
+    const maxVersionResult = await database.select<{ max_version: number | null }[]>(
+      'SELECT MAX(version_number) as max_version FROM prompt_versions WHERE prompt_path = ?',
+      [promptPath]
+    )
+    const nextVersion = (maxVersionResult[0]?.max_version ?? 0) + 1
+
+    // Insert the new version
+    const id = crypto.randomUUID()
+    await database.execute(
+      'INSERT INTO prompt_versions (id, prompt_path, version_number, content, created_at, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, promptPath, nextVersion, content, new Date().toISOString(), description ?? null]
+    )
+
+    // Clean up old versions (keep only last MAX_VERSIONS_PER_PROMPT)
+    await database.execute(
+      `DELETE FROM prompt_versions
+       WHERE prompt_path = ? AND version_number <= (
+         SELECT version_number FROM prompt_versions
+         WHERE prompt_path = ?
+         ORDER BY version_number DESC
+         LIMIT 1 OFFSET ?
+       )`,
+      [promptPath, promptPath, MAX_VERSIONS_PER_PROMPT]
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to create version: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getPromptVersions(promptPath: string): Promise<Result<PromptVersionRow[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PromptVersionRow[]>(
+      'SELECT id, prompt_path, version_number, content, created_at, description FROM prompt_versions WHERE prompt_path = ? ORDER BY version_number DESC',
+      [promptPath]
+    )
+    return { ok: true, data: result }
+  } catch (err) {
+    return { ok: false, error: `Failed to get versions: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getPromptVersion(id: string): Promise<Result<PromptVersionRow | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PromptVersionRow[]>(
+      'SELECT id, prompt_path, version_number, content, created_at, description FROM prompt_versions WHERE id = ?',
+      [id]
+    )
+    return { ok: true, data: result.length > 0 ? result[0] : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get version: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deletePromptVersions(promptPath: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute('DELETE FROM prompt_versions WHERE prompt_path = ?', [promptPath])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete versions: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

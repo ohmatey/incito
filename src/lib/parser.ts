@@ -1,6 +1,10 @@
 import matter from 'gray-matter'
-import type { PromptFile, Variable, ParseError } from '../types/prompt'
+import type { PromptFile, Variable, ParseError, SelectOption, SerializationFormat, Note } from '../types/prompt'
 import { VARIABLE_PATTERN, isValidVariableKey, isValidTagName } from './constants'
+import { AVAILABLE_LAUNCHERS } from './launchers'
+
+const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select']
+const VALID_FORMATS: SerializationFormat[] = ['newline', 'comma', 'numbered', 'bullet']
 
 export function parsePromptFile(
   content: string,
@@ -22,6 +26,8 @@ export function parsePromptFile(
 
     const variables = validateVariables(data.variables || [])
     const tags = validateTags(data.tags)
+    const notes = validateNotes(data.notes)
+    const defaultLaunchers = validateDefaultLaunchers(data.defaultLaunchers)
 
     return {
       fileName,
@@ -30,10 +36,12 @@ export function parsePromptFile(
       description: data.description || '',
       tags: tags.valid,
       variables: variables.valid,
+      notes: notes.valid,
+      defaultLaunchers: defaultLaunchers.valid,
       template: template.trim(),
       rawContent: content,
-      isValid: errors.length === 0 && variables.errors.length === 0 && tags.errors.length === 0,
-      errors: [...errors, ...variables.errors, ...tags.errors],
+      isValid: errors.length === 0 && variables.errors.length === 0 && tags.errors.length === 0 && notes.errors.length === 0,
+      errors: [...errors, ...variables.errors, ...tags.errors, ...notes.errors],
     }
   } catch (e) {
     console.error('Frontmatter parse error:', e)
@@ -44,6 +52,8 @@ export function parsePromptFile(
       description: '',
       tags: [],
       variables: [],
+      notes: [],
+      defaultLaunchers: [],
       template: content,
       rawContent: content,
       isValid: false,
@@ -84,6 +94,100 @@ function validateTags(tags: unknown): {
   return { valid, errors }
 }
 
+function validateNotes(notes: unknown): {
+  valid: Note[]
+  errors: ParseError[]
+} {
+  const errors: ParseError[] = []
+
+  if (notes === undefined || notes === null) {
+    return { valid: [], errors: [] }
+  }
+
+  if (!Array.isArray(notes)) {
+    errors.push({ field: 'notes', message: 'Notes must be an array' })
+    return { valid: [], errors }
+  }
+
+  const valid: Note[] = []
+  notes.forEach((note, i) => {
+    if (typeof note !== 'object' || note === null) {
+      errors.push({ field: `notes[${i}]`, message: 'Note must be an object' })
+      return
+    }
+
+    const n = note as Record<string, unknown>
+
+    if (!n.id || typeof n.id !== 'string') {
+      errors.push({ field: `notes[${i}]`, message: 'Note must have an id' })
+      return
+    }
+
+    if (!n.content || typeof n.content !== 'string') {
+      errors.push({ field: `notes[${i}]`, message: 'Note must have content' })
+      return
+    }
+
+    if (!n.createdAt || typeof n.createdAt !== 'string') {
+      errors.push({ field: `notes[${i}]`, message: 'Note must have a createdAt timestamp' })
+      return
+    }
+
+    valid.push({
+      id: n.id,
+      content: n.content,
+      createdAt: n.createdAt,
+    })
+  })
+
+  return { valid, errors }
+}
+
+function validateDefaultLaunchers(launchers: unknown): {
+  valid: string[]
+  errors: ParseError[]
+} {
+  if (launchers === undefined || launchers === null) {
+    return { valid: [], errors: [] }
+  }
+
+  if (!Array.isArray(launchers)) {
+    return { valid: [], errors: [{ field: 'defaultLaunchers', message: 'defaultLaunchers must be an array' }] }
+  }
+
+  const validLauncherIds = AVAILABLE_LAUNCHERS.map((l) => l.id)
+  const valid: string[] = []
+
+  launchers.forEach((launcher) => {
+    if (typeof launcher === 'string' && validLauncherIds.includes(launcher)) {
+      valid.push(launcher)
+    }
+    // Silently filter out invalid launcher IDs as per plan
+  })
+
+  return { valid, errors: [] }
+}
+
+function isValidSelectOption(opt: unknown): opt is SelectOption {
+  if (typeof opt !== 'object' || opt === null) return false
+  const o = opt as Record<string, unknown>
+  return typeof o.label === 'string' && typeof o.value === 'string'
+}
+
+// Convert string options to SelectOption format
+function normalizeOptions(options: unknown[]): SelectOption[] {
+  return options.map(opt => {
+    if (typeof opt === 'string') {
+      return { label: opt, value: opt }
+    }
+    if (isValidSelectOption(opt)) {
+      return opt
+    }
+    // Fallback - convert to string
+    return { label: String(opt), value: String(opt) }
+  })
+}
+
 function validateVariables(variables: unknown[]): {
   valid: Variable[]
   errors: ParseError[]
@@ -107,13 +211,51 @@ function validateVariables(variables: unknown[]): {
       errors.push({ field: `variables[${i}]`, message: 'Variable missing label' })
       return
     }
-    if (!['text', 'textarea', 'select', 'number', 'checkbox'].includes(variable.type as string)) {
+    if (!VALID_TYPES.includes(variable.type as string)) {
       errors.push({ field: `variables[${i}]`, message: `Invalid type: ${variable.type}` })
       return
     }
-    if (variable.type === 'select' && (!variable.options || !Array.isArray(variable.options))) {
-      errors.push({ field: `variables[${i}]`, message: 'Select type requires options array' })
-      return
+
+    // Validate select and multi-select options
+    if (variable.type === 'select' || variable.type === 'multi-select') {
+      if (!variable.options || !Array.isArray(variable.options)) {
+        errors.push({ field: `variables[${i}]`, message: `${variable.type} type requires options array` })
+        return
+      }
+      if (variable.options.length === 0) {
+        errors.push({ field: `variables[${i}]`, message: `${variable.type} type requires at least one option` })
+        return
+      }
+      // Normalize options to SelectOption format (supports both string[] and SelectOption[])
+      variable.options = normalizeOptions(variable.options)
+    }
+
+    // Validate slider
+    if (variable.type === 'slider') {
+      if (typeof variable.min !== 'number') {
+        errors.push({ field: `variables[${i}]`, message: 'Slider type requires min (number)' })
+        return
+      }
+      if (typeof variable.max !== 'number') {
+        errors.push({ field: `variables[${i}]`, message: 'Slider type requires max (number)' })
+        return
+      }
+      if (variable.min >= variable.max) {
+        errors.push({ field: `variables[${i}]`, message: 'Slider min must be less than max' })
+        return
+      }
+      if (variable.step !== undefined && (typeof variable.step !== 'number' || variable.step <= 0)) {
+        errors.push({ field: `variables[${i}]`, message: 'Slider step must be a positive number' })
+        return
+      }
+    }
+
+    // Validate format for array and multi-select
+    if ((variable.type === 'array' || variable.type === 'multi-select') && variable.format !== undefined) {
+      if (!VALID_FORMATS.includes(variable.format as SerializationFormat)) {
+        errors.push({ field: `variables[${i}]`, message: `Invalid format: ${variable.format}. Must be one of: ${VALID_FORMATS.join(', ')}` })
+        return
+      }
     }
 
     valid.push(variable as unknown as Variable)
@@ -146,6 +288,14 @@ export function serializePrompt(prompt: PromptFile): string {
       }
       return cleaned
     })
+  }
+
+  if (prompt.notes && prompt.notes.length > 0) {
+    frontmatter.notes = prompt.notes
+  }
+
+  if (prompt.defaultLaunchers && prompt.defaultLaunchers.length > 0) {
+    frontmatter.defaultLaunchers = prompt.defaultLaunchers
   }
 
   return matter.stringify(prompt.template, frontmatter)

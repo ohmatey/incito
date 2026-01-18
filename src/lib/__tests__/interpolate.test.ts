@@ -187,13 +187,13 @@ describe('getDefaultValues', () => {
     expect(result).toEqual({})
   })
 
-  it('handles boolean defaults', () => {
+  it('handles array defaults', () => {
     const variables: Variable[] = [
-      { key: 'enabled', label: 'Enabled', type: 'checkbox', default: true },
+      { key: 'tags', label: 'Tags', type: 'array', default: ['one', 'two'] },
     ]
 
     const result = getDefaultValues(variables)
 
-    expect(result).toEqual({ enabled: true })
+    expect(result).toEqual({ tags: ['one', 'two'] })
   })
 })

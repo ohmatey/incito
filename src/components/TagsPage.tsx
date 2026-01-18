@@ -80,11 +80,8 @@ export function TagsPage({
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Tags</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Manage tags for organizing your prompts
-        </p>
+      <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Tags</h1>
       </div>
 
       {/* Content */}
