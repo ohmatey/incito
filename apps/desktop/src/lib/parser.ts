@@ -1,4 +1,5 @@
 import matter from 'gray-matter'
+import yaml from 'js-yaml'
 import type { PromptFile, Variable, ParseError, SelectOption, SerializationFormat, Note } from '../types/prompt'
 import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, isValidVariableKey, isValidTagName } from './constants'
 import { AVAILABLE_LAUNCHERS } from './launchers'
@@ -354,7 +355,12 @@ export function serializePrompt(prompt: PromptFile): string {
     frontmatter.variant_of = prompt.variantOf
   }
 
-  return matter.stringify(prompt.template, frontmatter)
+  // Manually construct the output to avoid gray-matter's stringify parsing the template content.
+  // matter.stringify() first parses the content string, which corrupts templates that contain
+  // YAML-like syntax (e.g., "---" delimiters or "key:" patterns).
+  const yamlStr = yaml.dump(frontmatter, { lineWidth: -1 }).trim()
+  const template = prompt.template.endsWith('\n') ? prompt.template : prompt.template + '\n'
+  return `---\n${yamlStr}\n---\n${template}`
 }
 
 /**

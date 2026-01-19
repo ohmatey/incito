@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
@@ -15,10 +16,11 @@ import { TagBadge } from './TagBadge'
 import { TagSelector } from './TagSelector'
 import { interpolate } from '@/lib/interpolate'
 import { AVAILABLE_LAUNCHERS, getLaunchersByIds, type Launcher } from '@/lib/launchers'
+import { hasAIConfigured } from '@/lib/store'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { toast } from 'sonner'
-import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus, RotateCcw } from 'lucide-react'
+import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus, RotateCcw, Sparkles, Loader2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +52,7 @@ interface CenterPaneProps {
   onSelectPrompt: (prompt: PromptFile) => void
   onPromptCompleted?: () => void
   onResetForm?: () => void
+  onRefineWithAI?: (template: string, instruction: string) => Promise<string>
 }
 
 export function CenterPane({
@@ -75,8 +78,13 @@ export function CenterPane({
   onSelectPrompt,
   onPromptCompleted,
   onResetForm,
+  onRefineWithAI,
 }: CenterPaneProps) {
   const [copied, setCopied] = useState(false)
+  const [aiInstruction, setAiInstruction] = useState('')
+  const [isRefining, setIsRefining] = useState(false)
+  const [aiConfigured, setAiConfigured] = useState(false)
+  const [showAiPanel, setShowAiPanel] = useState(false)
 
   // Keyboard navigation between variables (Cmd/Ctrl+Shift+Up/Down)
   useEffect(() => {
@@ -150,6 +158,42 @@ export function CenterPane({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [prompt, isEditMode, values, onPromptCompleted])
+
+  // Load AI configuration status
+  useEffect(() => {
+    async function checkAI() {
+      const result = await hasAIConfigured()
+      if (result.ok) {
+        setAiConfigured(result.data)
+      }
+    }
+    checkAI()
+  }, [isEditMode])
+
+  // Reset AI panel state when exiting edit mode
+  useEffect(() => {
+    if (!isEditMode) {
+      setShowAiPanel(false)
+      setAiInstruction('')
+    }
+  }, [isEditMode])
+
+  const handleRefine = useCallback(async () => {
+    if (!onRefineWithAI || !aiInstruction.trim()) return
+
+    setIsRefining(true)
+    try {
+      const refined = await onRefineWithAI(localTemplate, aiInstruction)
+      onLocalTemplateChange(refined)
+      setAiInstruction('')
+      toast.success('Template refined')
+    } catch (error) {
+      console.error('Failed to refine:', error)
+      toast.error('Failed to refine template')
+    } finally {
+      setIsRefining(false)
+    }
+  }, [localTemplate, aiInstruction, onRefineWithAI, onLocalTemplateChange])
 
   // Get Tag objects for display from tag names
   const promptTagObjects = localTags
@@ -385,17 +429,72 @@ export function CenterPane({
               />
             </div>
 
-            {/* Template editor */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Template
-              </label>
+            {/* Template editor with AI refinement */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Template
+                </Label>
+                {aiConfigured && onRefineWithAI && !showAiPanel && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 h-7 text-xs"
+                    onClick={() => setShowAiPanel(true)}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Refine with AI
+                  </Button>
+                )}
+              </div>
+
               <Textarea
                 value={localTemplate}
                 onChange={(e) => onLocalTemplateChange(e.target.value)}
                 className="min-h-[300px] w-full resize-y border-gray-200 bg-white font-mono text-sm dark:border-gray-700 dark:bg-gray-800"
                 placeholder="Write your prompt template here. Use {{variable}} to add variables."
               />
+
+              {/* AI Refinement Panel */}
+              {aiConfigured && onRefineWithAI && showAiPanel && (
+                <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Refine with AI
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setShowAiPanel(false)}
+                    >
+                      Hide
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Describe how to improve the template:
+                  </p>
+                  <Textarea
+                    value={aiInstruction}
+                    onChange={(e) => setAiInstruction(e.target.value)}
+                    className="min-h-[100px] text-sm resize-none border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900"
+                    placeholder="Make it more formal and professional..."
+                  />
+                  <Button
+                    onClick={handleRefine}
+                    disabled={isRefining || !aiInstruction.trim()}
+                    className="mt-3 gap-2"
+                    size="sm"
+                  >
+                    {isRefining ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    {isRefining ? 'Refining...' : 'Refine'}
+                  </Button>
+                </div>
+              )}
             </div>
             </div>
           </div>

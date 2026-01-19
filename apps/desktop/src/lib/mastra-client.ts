@@ -4,7 +4,8 @@ import { getAISettings, type AISettings } from './store'
 export type { GeneratedPrompt, GeneratePromptResult, RefineTemplateResult }
 
 export async function generatePromptTemplate(
-  description: string
+  description: string,
+  existingTags?: string[]
 ): Promise<GeneratePromptResult> {
   // Get AI settings from store
   const settingsResult = await getAISettings()
@@ -31,7 +32,7 @@ export async function generatePromptTemplate(
     model: settings.model || getDefaultModel(settings.provider),
   }
 
-  return generatePrompt({ description }, config)
+  return generatePrompt({ description, existingTags }, config)
 }
 
 function getDefaultModel(provider: AISettings['provider']): string {

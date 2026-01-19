@@ -100,8 +100,8 @@ export function PromptHeader({
 
       {/* Right side - Controls */}
       <div className="flex items-center gap-1">
-        {/* Save/Cancel buttons - only shown in edit mode */}
-        {isEditMode && (
+        {/* Save/Cancel buttons - shown in edit mode when panel is open */}
+        {isEditMode && rightPanelOpen && (
           <>
             <Button
               variant="ghost"
@@ -148,6 +148,30 @@ export function PromptHeader({
             {tabLabels[tab]}
           </Button>
         ))}
+
+        {/* Save/Cancel buttons with divider - shown in edit mode when panel is closed */}
+        {isEditMode && !rightPanelOpen && (
+          <>
+            <div className="ml-2 h-6 w-px bg-gray-200 dark:bg-gray-700" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelClick}
+              className="ml-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={!hasUnsavedChanges || !!nameError}
+              className="gap-1.5"
+            >
+              <Save className="h-4 w-4" />
+              Save
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Unsaved changes confirmation dialog */}

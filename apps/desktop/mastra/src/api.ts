@@ -144,7 +144,7 @@ export async function generatePrompt(
   try {
     const userMessage = `Generate a prompt template based on this description:\n\n${input.description}`
 
-    const responseText = await generate(userMessage, config)
+    const responseText = await generate(userMessage, config, input.existingTags)
 
     // Try to parse the JSON response
     let parsed

@@ -42,7 +42,7 @@ Guidelines for generating templates:
 6. Provide helpful placeholder and preview values
 7. Use {{#if variable}}content{{/if}} for conditional sections
 8. Create clear, reusable templates that solve real problems
-9. Add 1-3 relevant tags for categorization
+9. IMPORTANT for tags: You will be given a list of existing tags. ONLY use tags from that list. If no existing tags are provided or none are relevant, set "tags" to an empty array []. Never invent new tags.
 10. For select/multi-select types, always provide an "options" array with at least 2 non-empty options
 
 Always respond with ONLY the JSON object, no additional text or markdown formatting.`
@@ -67,13 +67,21 @@ function getModel(config: AIConfig): any {
   }
 }
 
-export async function generate(userMessage: string, config: AIConfig): Promise<string> {
+export async function generate(userMessage: string, config: AIConfig, existingTags?: string[]): Promise<string> {
   const model = getModel(config)
+
+  // Build the full prompt with existing tags information
+  let fullPrompt = userMessage
+  if (existingTags && existingTags.length > 0) {
+    fullPrompt += `\n\nExisting tags you can use (only use tags from this list): ${existingTags.join(', ')}`
+  } else {
+    fullPrompt += `\n\nNo existing tags are defined. Set "tags" to an empty array [].`
+  }
 
   const { text } = await generateText({
     model,
     system: SYSTEM_PROMPT,
-    prompt: userMessage,
+    prompt: fullPrompt,
   })
 
   return text

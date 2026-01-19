@@ -1,6 +1,6 @@
 'use client'
 
-import { HardDrive, Zap, Braces, Sparkles, Keyboard, Paintbrush } from 'lucide-react'
+import { HardDrive, Zap, Braces, Sparkles, Keyboard, Paintbrush, GitBranch } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { FadeIn } from '@/components/shared/FadeIn'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,12 @@ const features = [
     title: 'Handlebars Templating',
     description: 'Use {{variables}}, conditionals, and helpers. Your prompts become smart templates.',
     color: 'accent',
+  },
+  {
+    icon: GitBranch,
+    title: 'Prompt Variants',
+    description: 'Create multiple versions of any prompt. Test different tones, styles, or approaches side by side.',
+    color: 'primary',
   },
   {
     icon: Sparkles,

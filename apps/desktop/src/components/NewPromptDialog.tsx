@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FileText, Sparkles, Loader2, AlertCircle, Settings } from 'lucide-react'
 import { hasAIConfigured } from '@/lib/store'
 import { generatePromptTemplate, type GeneratedPrompt } from '@/lib/mastra-client'
+import { useAppContext } from '@/context/AppContext'
 
 type CreationType = 'blank' | 'ai'
 
@@ -32,6 +33,7 @@ export function NewPromptDialog({
   onCreateFromAI,
   onOpenSettings,
 }: NewPromptDialogProps) {
+  const { tagManager } = useAppContext()
   const [creationType, setCreationType] = useState<CreationType>('blank')
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
   const [description, setDescription] = useState('')
@@ -73,7 +75,9 @@ export function NewPromptDialog({
     setError(null)
 
     try {
-      const result = await generatePromptTemplate(description)
+      // Get existing tag names to pass to the generator
+      const existingTags = tagManager.tags.map(tag => tag.name)
+      const result = await generatePromptTemplate(description, existingTags)
 
       if (result.ok) {
         onCreateFromAI(result.data)

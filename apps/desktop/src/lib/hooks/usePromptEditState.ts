@@ -4,6 +4,7 @@ import { getDefaultValues } from '@/lib/interpolate'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { isDisplayNameUnique } from '@/lib/prompts'
 import { getPromptDraft, savePromptDraft, deletePromptDraft } from '@/lib/store'
+import { useFormHistory, type ChangeSource } from './useFormHistory'
 
 export interface UsePromptEditStateResult {
   // Edit mode
@@ -35,6 +36,14 @@ export interface UsePromptEditStateResult {
   variableValues: Record<string, unknown>
   setVariableValues: React.Dispatch<React.SetStateAction<Record<string, unknown>>>
   handleValueChange: (key: string, value: unknown) => void
+
+  // Form history (undo/redo)
+  setValuesWithSource: (changes: Record<string, unknown>, source: ChangeSource) => void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+  getLastChangeSource: (key: string) => ChangeSource | null
 
   // Active variable tracking
   activeVariableKey: string | null
@@ -74,14 +83,70 @@ export function usePromptEditState(
   // Validation
   const [nameError, setNameError] = useState<string | null>(null)
 
-  // Variable values for preview
-  const [variableValues, setVariableValues] = useState<Record<string, unknown>>({})
-
   // Active variable tracking
   const [activeVariableKey, setActiveVariableKey] = useState<string | null>(null)
 
   // Debounce timer ref for auto-saving drafts
   const saveDraftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Track selected prompt for draft saving callback
+  const selectedPromptRef = useRef(selectedPrompt)
+  selectedPromptRef.current = selectedPrompt
+
+  // Auto-save draft when values change
+  const handleValuesChange = useCallback((newValues: Record<string, unknown>) => {
+    const prompt = selectedPromptRef.current
+    if (!prompt) return
+
+    if (saveDraftTimeoutRef.current) {
+      clearTimeout(saveDraftTimeoutRef.current)
+    }
+
+    saveDraftTimeoutRef.current = setTimeout(() => {
+      const defaults = getDefaultValues(prompt.variables)
+      const hasChanges = Object.keys(newValues).some((k) => {
+        const newVal = newValues[k]
+        const defaultVal = defaults[k]
+        const normalizedNew = newVal === '' ? undefined : newVal
+        const normalizedDefault = defaultVal === '' ? undefined : defaultVal
+        return normalizedNew !== normalizedDefault
+      })
+
+      if (hasChanges) {
+        savePromptDraft(prompt.id, newValues)
+      } else {
+        deletePromptDraft(prompt.id)
+      }
+    }, 500)
+  }, [])
+
+  // Form history for variable values with undo/redo
+  const {
+    values: variableValues,
+    setValue: setVariableValue,
+    setValues: setValuesWithSource,
+    replaceValues: replaceVariableValues,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    getLastChangeSource,
+  } = useFormHistory({}, {
+    maxHistorySize: 50,
+    debounceMs: 500,
+    onValuesChange: handleValuesChange,
+  })
+
+  // Wrapper to maintain backwards compatibility
+  const setVariableValues: React.Dispatch<React.SetStateAction<Record<string, unknown>>> = useCallback((action) => {
+    if (typeof action === 'function') {
+      // For function updates, we need to get current values
+      const newValues = action(variableValues)
+      replaceVariableValues(newValues)
+    } else {
+      replaceVariableValues(action)
+    }
+  }, [variableValues, replaceVariableValues])
 
   // Sync local state when prompt changes (and load draft if exists)
   useEffect(() => {
@@ -109,9 +174,9 @@ export function usePromptEditState(
               filteredDraftValues[key] = defaultValues[key]
             }
           }
-          setVariableValues(filteredDraftValues)
+          replaceVariableValues(filteredDraftValues)
         } else {
-          setVariableValues(defaultValues)
+          replaceVariableValues(defaultValues)
         }
       })
     } else {
@@ -121,10 +186,10 @@ export function usePromptEditState(
       setLocalTags([])
       setOriginalVariables([])
       setOriginalTags([])
-      setVariableValues({})
+      replaceVariableValues({})
       setNameError(null)
     }
-  }, [selectedPrompt?.path])
+  }, [selectedPrompt?.path, replaceVariableValues])
 
   // Edit mode handlers
   const enterEditMode = useCallback(() => {
@@ -183,41 +248,10 @@ export function usePromptEditState(
     updateVariables(syncedVariables)
   }, [])
 
-  // Value change handler with auto-save draft
+  // Value change handler (draft auto-save is handled by useFormHistory's onValuesChange)
   const handleValueChange = useCallback((key: string, value: unknown) => {
-    setVariableValues((prev) => {
-      const newValues = { ...prev, [key]: value }
-
-      // Auto-save draft with debounce
-      if (selectedPrompt) {
-        if (saveDraftTimeoutRef.current) {
-          clearTimeout(saveDraftTimeoutRef.current)
-        }
-
-        saveDraftTimeoutRef.current = setTimeout(() => {
-          // Check if values differ from defaults before saving
-          const defaults = getDefaultValues(selectedPrompt.variables)
-          const hasChanges = Object.keys(newValues).some((k) => {
-            const newVal = newValues[k]
-            const defaultVal = defaults[k]
-            // Handle empty strings and undefined as equivalent for comparison
-            const normalizedNew = newVal === '' ? undefined : newVal
-            const normalizedDefault = defaultVal === '' ? undefined : defaultVal
-            return normalizedNew !== normalizedDefault
-          })
-
-          if (hasChanges) {
-            savePromptDraft(selectedPrompt.id, newValues)
-          } else {
-            // If no changes from defaults, remove the draft
-            deletePromptDraft(selectedPrompt.id)
-          }
-        }, 500)
-      }
-
-      return newValues
-    })
-  }, [selectedPrompt])
+    setVariableValue(key, value)
+  }, [setVariableValue])
 
   // Unsaved changes detection
   const variablesChanged = useMemo(() => {
@@ -264,9 +298,9 @@ export function usePromptEditState(
   // Reset variable values to defaults
   const resetVariableValues = useCallback(() => {
     if (selectedPrompt) {
-      setVariableValues(getDefaultValues(selectedPrompt.variables))
+      replaceVariableValues(getDefaultValues(selectedPrompt.variables))
     }
-  }, [selectedPrompt])
+  }, [selectedPrompt, replaceVariableValues])
 
   // Clear draft for current prompt
   const clearDraft = useCallback(async () => {
@@ -319,6 +353,14 @@ export function usePromptEditState(
     variableValues,
     setVariableValues,
     handleValueChange,
+
+    // Form history (undo/redo)
+    setValuesWithSource,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    getLastChangeSource,
 
     // Active variable
     activeVariableKey,

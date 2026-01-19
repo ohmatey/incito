@@ -38,7 +38,7 @@ export function SearchPage({
   focusTrigger,
 }: SearchPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null)
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [focusedIndex, setFocusedIndex] = useState<number>(-1)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -51,26 +51,33 @@ export function SearchPage({
   // Reset focused index when search query or tag filter changes
   useEffect(() => {
     setFocusedIndex(-1)
-  }, [searchQuery, selectedTagFilter])
+  }, [searchQuery, selectedTags])
 
-  // Filter prompts by search query and selected tag
+  // Toggle a tag in the filter
+  const toggleTag = (tagName: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagName) ? prev.filter((t) => t !== tagName) : [...prev, tagName]
+    )
+  }
+
+  // Filter prompts by search query and selected tags
   const filteredPrompts = prompts.filter((prompt) => {
     const matchesSearch =
       prompt.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       prompt.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesTag = selectedTagFilter
-      ? prompt.tags?.includes(selectedTagFilter)
+    const matchesTags = selectedTags.length > 0
+      ? prompt.tags?.some((tag) => selectedTags.includes(tag))
       : true
 
-    return matchesSearch && matchesTag
+    return matchesSearch && matchesTags
   })
 
-  const hasFilters = searchQuery || selectedTagFilter
+  const hasFilters = searchQuery || selectedTags.length > 0
 
   function clearFilters() {
     setSearchQuery('')
-    setSelectedTagFilter(null)
+    setSelectedTags([])
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -145,35 +152,22 @@ export function SearchPage({
                 <Button
                   variant="outline"
                   size="icon"
-                  className={cn('h-9 w-9 shrink-0 relative', selectedTagFilter && 'border-primary-500')}
+                  className={cn('h-9 w-9 shrink-0 relative', selectedTags.length > 0 && 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400')}
                 >
                   <Filter className="h-4 w-4" />
-                  {selectedTagFilter && (
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary-500 text-[9px] font-medium text-white">
-                      1
+                  {selectedTags.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
+                      {selectedTags.length}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {selectedTagFilter && (
-                  <>
-                    <DropdownMenuCheckboxItem
-                      checked={false}
-                      onCheckedChange={() => setSelectedTagFilter(null)}
-                    >
-                      Clear filter
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
                 {tags.map((tag) => (
                   <DropdownMenuCheckboxItem
                     key={tag.id}
-                    checked={selectedTagFilter === tag.name}
-                    onCheckedChange={() =>
-                      setSelectedTagFilter(selectedTagFilter === tag.name ? null : tag.name)
-                    }
+                    checked={selectedTags.includes(tag.name)}
+                    onCheckedChange={() => toggleTag(tag.name)}
                   >
                     <span className="flex items-center gap-2">
                       <span
@@ -184,6 +178,18 @@ export function SearchPage({
                     </span>
                   </DropdownMenuCheckboxItem>
                 ))}
+                {selectedTags.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={false}
+                      onCheckedChange={() => setSelectedTags([])}
+                      className="text-gray-500"
+                    >
+                      Clear filters
+                    </DropdownMenuCheckboxItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

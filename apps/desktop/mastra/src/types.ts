@@ -41,6 +41,7 @@ export interface AIConfig {
 // Input for generating a prompt
 export interface GeneratePromptInput {
   description: string
+  existingTags?: string[]  // Tags already defined in the system - AI will only use these
 }
 
 // Generation result

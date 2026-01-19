@@ -73,9 +73,6 @@ export function PromptsEmptyState() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      {/* Spacer to match header height on other pages */}
-      <div className="h-14 shrink-0" />
-
       <ScrollArea className="flex-1">
         <div className="p-6">
           <div className="mx-auto max-w-2xl space-y-8">
@@ -155,11 +152,21 @@ export function PromptsEmptyState() {
             {/* In Progress Section */}
             {inProgressPrompts.length > 0 && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <PlayCircle className="h-4 w-4 text-amber-500" />
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    In Progress
-                  </h2>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PlayCircle className="h-4 w-4 text-amber-500" />
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      In Progress
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => {
+                      inProgressPrompts.forEach(({ prompt }) => clearDraftById(prompt.id))
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    Clear all
+                  </button>
                 </div>
                 <div className="space-y-2">
                   {inProgressPrompts.map(({ draft, prompt }) => {

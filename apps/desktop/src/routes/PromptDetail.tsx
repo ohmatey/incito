@@ -107,6 +107,12 @@ export function PromptDetail() {
           onSelectPrompt={handleSelectPrompt}
           onPromptCompleted={handlePromptCompleted}
           onResetForm={handleResetForm}
+          onRefineWithAI={async (template, instruction) => {
+            const { refinePromptTemplate } = await import('@/lib/mastra-client')
+            const result = await refinePromptTemplate(template, instruction)
+            if (!result.ok) throw new Error(result.error)
+            return result.data
+          }}
         />
       </div>
 
