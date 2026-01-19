@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
 import { PromptHeader } from '@/components/PromptHeader'
@@ -59,12 +60,15 @@ export function PromptDetail() {
     navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
 
+  // Redirect to prompts list if prompt not found
+  useEffect(() => {
+    if (!selectedPrompt) {
+      navigate({ to: '/prompts' })
+    }
+  }, [selectedPrompt, navigate])
+
   if (!selectedPrompt) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-white dark:bg-gray-800">
-        <p className="text-gray-500 dark:text-gray-400">Prompt not found</p>
-      </div>
-    )
+    return null
   }
 
   return (
