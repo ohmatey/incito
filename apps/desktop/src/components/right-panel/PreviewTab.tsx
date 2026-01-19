@@ -318,8 +318,8 @@ export function PreviewTab({
   return (
     <div className="flex h-full flex-col">
       {/* Variant Bar */}
-      <div className="shrink-0 border-b border-gray-200 p-3 dark:border-gray-700">
-        <div className="flex items-center gap-2">
+      <div className="shrink-0 border-b border-gray-200 px-3 py-1.5 dark:border-gray-700">
+        <div className="flex items-center gap-1.5">
           {/* Variant Selector */}
           {hasVariants && onSelectVariant ? (
             <Select
@@ -329,7 +329,7 @@ export function PreviewTab({
                 if (selected) onSelectVariant(selected)
               }}
             >
-              <SelectTrigger className="h-8 flex-1 text-sm">
+              <SelectTrigger className="h-7 flex-1 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -341,7 +341,7 @@ export function PreviewTab({
               </SelectContent>
             </Select>
           ) : (
-            <span className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+            <span className="flex-1 text-xs text-gray-600 dark:text-gray-400">
               {hasVariants ? getVariantLabel(prompt, variantFamily.indexOf(prompt)) : 'Original'}
             </span>
           )}
@@ -351,11 +351,11 @@ export function PreviewTab({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5 px-2"
+              className="h-7 gap-1 px-2 text-xs"
               onClick={onNewVariant}
             >
-              <Plus className="h-4 w-4" />
-              New Variant
+              <Plus className="h-3.5 w-3.5" />
+              New
             </Button>
           )}
         </div>

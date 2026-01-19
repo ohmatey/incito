@@ -27,9 +27,23 @@ export function PromptList({
   onNewPrompt,
   width = 200,
 }: PromptListProps) {
+  // Filter out variants - only show original prompts
+  const originalPrompts = prompts.filter((p) => !p.variantOf)
+
   // Split prompts into pinned and unpinned
-  const pinnedPrompts = prompts.filter((p) => pinnedPromptIds.includes(p.id))
-  const unpinnedPrompts = prompts.filter((p) => !pinnedPromptIds.includes(p.id))
+  const pinnedPrompts = originalPrompts.filter((p) => pinnedPromptIds.includes(p.id))
+  const unpinnedPrompts = originalPrompts.filter((p) => !pinnedPromptIds.includes(p.id))
+
+  // Helper to check if a prompt should be shown as selected
+  // (either directly selected, or its variant is selected)
+  const isPromptSelected = (prompt: PromptFile) => {
+    if (!selectedPrompt) return false
+    // Direct selection
+    if (selectedPrompt.path === prompt.path) return true
+    // Variant of this prompt is selected
+    if (selectedPrompt.variantOf === prompt.fileName) return true
+    return false
+  }
   return (
     <div
       className="flex h-full flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -52,7 +66,7 @@ export function PromptList({
       {/* Prompts list */}
       <ScrollArea className="flex-1 [&>div>div]:!block">
         <div className="space-y-0.5 px-2 py-2">
-          {prompts.length === 0 ? (
+          {originalPrompts.length === 0 ? (
             <p className="px-2 py-2 text-xs text-gray-500 dark:text-gray-400">
               No prompts found
             </p>
@@ -67,7 +81,7 @@ export function PromptList({
                     <PromptListItem
                       key={prompt.path}
                       prompt={prompt}
-                      isSelected={selectedPrompt?.path === prompt.path}
+                      isSelected={isPromptSelected(prompt)}
                       isPinned={true}
                       onSelect={() => onSelectPrompt(prompt)}
                       onDuplicate={() => onDuplicatePrompt(prompt)}
@@ -84,7 +98,7 @@ export function PromptList({
                 <PromptListItem
                   key={prompt.path}
                   prompt={prompt}
-                  isSelected={selectedPrompt?.path === prompt.path}
+                  isSelected={isPromptSelected(prompt)}
                   isPinned={false}
                   onSelect={() => onSelectPrompt(prompt)}
                   onDuplicate={() => onDuplicatePrompt(prompt)}

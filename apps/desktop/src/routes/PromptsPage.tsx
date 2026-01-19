@@ -19,6 +19,7 @@ export function PromptsPage() {
     handlePanelResizeEnd,
     pinnedPromptIds,
     togglePinPrompt,
+    getRememberedVariantId,
   } = useAppContext()
 
   // Derive selected prompt from URL param
@@ -35,7 +36,10 @@ export function PromptsPage() {
   }
 
   function handleSelectPrompt(prompt: PromptFile) {
-    navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
+    // Check if there's a remembered variant for this prompt
+    const rememberedVariantId = getRememberedVariantId(prompt.fileName)
+    const targetId = rememberedVariantId || prompt.id
+    navigate({ to: '/prompts/$promptId', params: { promptId: targetId } })
   }
 
   async function handleDuplicateAndNavigate(prompt: PromptFile) {

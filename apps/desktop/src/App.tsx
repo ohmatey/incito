@@ -426,7 +426,6 @@ export default function App() {
                 onTabChange={setRightPanelTab}
                 onSave={handleSave}
                 onCancel={handleCancel}
-                onResetForm={editState.resetVariableValues}
               />
 
               <CenterPane
@@ -450,6 +449,7 @@ export default function App() {
                 onLocalTagsChange={editState.setLocalTags}
                 onCreateTag={handleCreateTag}
                 onSelectPrompt={handleSelectPrompt}
+                onResetForm={editState.resetVariableValues}
               />
             </div>
 

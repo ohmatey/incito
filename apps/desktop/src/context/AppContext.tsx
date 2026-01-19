@@ -94,6 +94,7 @@ interface AppContextValue {
   variantEditorOpen: boolean
   setVariantEditorOpen: (open: boolean) => void
   handleOpenVariantEditor: () => void
+  getRememberedVariantId: (parentFileName: string) => string | undefined
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -135,6 +136,9 @@ export function AppProvider({ children }: AppProviderProps) {
 
   // Variant editor dialog state
   const [variantEditorOpen, setVariantEditorOpen] = useState(false)
+
+  // Track selected variant for each parent prompt (parentFileName -> variantId)
+  const [selectedVariantByParent, setSelectedVariantByParent] = useState<Record<string, string>>({})
 
   // Custom hooks
   const promptManager = usePromptManager()
@@ -220,6 +224,7 @@ export function AppProvider({ children }: AppProviderProps) {
     editState.setVariableValues({})
     editState.setIsEditMode(false)
     setInProgressPrompts([])
+    setSelectedVariantByParent({})
   }
 
   // Refresh drafts (in-progress prompts)
@@ -247,6 +252,19 @@ export function AppProvider({ children }: AppProviderProps) {
   async function clearDraftById(promptId: string) {
     await deletePromptDraft(promptId)
     await refreshDrafts()
+
+    // Clear variant memory for this prompt
+    const prompt = promptManager.prompts.find((p) => p.id === promptId)
+    if (prompt) {
+      setSelectedVariantByParent((prev) => {
+        const next = { ...prev }
+        delete next[prompt.fileName]
+        if (prompt.variantOf && prev[prompt.variantOf] === prompt.id) {
+          delete next[prompt.variantOf]
+        }
+        return next
+      })
+    }
   }
 
   // Prompt operations
@@ -298,6 +316,18 @@ export function AppProvider({ children }: AppProviderProps) {
     // Remove from pinned prompts
     await removePinnedPrompt(prompt.id)
     setPinnedPromptIds((prev) => prev.filter((id) => id !== prompt.id))
+
+    // Clear variant memory for this prompt
+    setSelectedVariantByParent((prev) => {
+      const next = { ...prev }
+      // If this was a parent prompt, remove its entry
+      delete next[prompt.fileName]
+      // If this was a variant, remove it if it was the remembered one for its parent
+      if (prompt.variantOf && prev[prompt.variantOf] === prompt.id) {
+        delete next[prompt.variantOf]
+      }
+      return next
+    })
   }
 
   async function togglePinPrompt(promptId: string) {
@@ -490,6 +520,26 @@ export function AppProvider({ children }: AppProviderProps) {
     // Select variant while preserving current edit/run mode
     promptManager.selectPrompt(prompt)
     setRightPanelOpen(true)
+
+    // Remember which variant was selected for its parent
+    if (prompt.variantOf) {
+      // User selected a variant - remember it
+      setSelectedVariantByParent((prev) => ({
+        ...prev,
+        [prompt.variantOf!]: prompt.id,
+      }))
+    } else {
+      // User selected the original - clear any remembered variant
+      setSelectedVariantByParent((prev) => {
+        const next = { ...prev }
+        delete next[prompt.fileName]
+        return next
+      })
+    }
+  }
+
+  function getRememberedVariantId(parentFileName: string): string | undefined {
+    return selectedVariantByParent[parentFileName]
   }
 
   async function handleCreateVariant(variantLabel: string, template: string) {
@@ -632,6 +682,7 @@ export function AppProvider({ children }: AppProviderProps) {
     variantEditorOpen,
     setVariantEditorOpen,
     handleOpenVariantEditor,
+    getRememberedVariantId,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

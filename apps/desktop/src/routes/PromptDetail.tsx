@@ -38,6 +38,7 @@ export function PromptDetail() {
     variantEditorOpen,
     setVariantEditorOpen,
     handleOpenVariantEditor,
+    handleSelectVariant,
     refreshDrafts,
     pinnedPromptIds,
   } = useAppContext()
@@ -52,8 +53,9 @@ export function PromptDetail() {
     await refreshDrafts()
   }
 
-  // Handler for selecting a variant - navigates to the variant's URL
+  // Handler for selecting a variant - stores memory and navigates to the variant's URL
   function handleVariantSelect(prompt: import('@/types/prompt').PromptFile) {
+    handleSelectVariant(prompt) // Store variant memory in context
     navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
 
@@ -80,7 +82,6 @@ export function PromptDetail() {
           onTabChange={setRightPanelTab}
           onSave={handleSave}
           onCancel={handleCancel}
-          onResetForm={handleResetForm}
         />
 
         <CenterPane
@@ -105,6 +106,7 @@ export function PromptDetail() {
           onCreateTag={handleCreateTag}
           onSelectPrompt={handleSelectPrompt}
           onPromptCompleted={handlePromptCompleted}
+          onResetForm={handleResetForm}
         />
       </div>
 

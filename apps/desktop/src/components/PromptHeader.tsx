@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Pencil, Eye, History, StickyNote, Settings2, List, Save, RotateCcw } from 'lucide-react'
+import { Pencil, Eye, History, StickyNote, Settings2, List, Save } from 'lucide-react'
 
 export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions'
 
@@ -26,7 +26,6 @@ interface PromptHeaderProps {
   onTabChange: (tab: RightPanelTab) => void
   onSave: () => void
   onCancel: () => void
-  onResetForm: () => void
 }
 
 export function PromptHeader({
@@ -40,7 +39,6 @@ export function PromptHeader({
   onTabChange,
   onSave,
   onCancel,
-  onResetForm,
 }: PromptHeaderProps) {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
 
@@ -124,29 +122,17 @@ export function PromptHeader({
           </>
         )}
 
-        {/* Reset and Edit buttons - only show when not in edit mode */}
+        {/* Edit button - only show when not in edit mode */}
         {!isEditMode && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onResetForm}
-              className="gap-1.5"
-              title="Reset form to defaults"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEditModeChange(true)}
-              className="gap-1.5"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
-          </>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEditModeChange(true)}
+            className="gap-1.5"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Button>
         )}
 
         {/* Tab buttons - only show when panel is closed */}

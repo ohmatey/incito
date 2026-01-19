@@ -18,7 +18,7 @@ import { AVAILABLE_LAUNCHERS, getLaunchersByIds, type Launcher } from '@/lib/lau
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { toast } from 'sonner'
-import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus } from 'lucide-react'
+import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus, RotateCcw } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +49,7 @@ interface CenterPaneProps {
   onCreateTag: (name: string, color: string) => void
   onSelectPrompt: (prompt: PromptFile) => void
   onPromptCompleted?: () => void
+  onResetForm?: () => void
 }
 
 export function CenterPane({
@@ -73,6 +74,7 @@ export function CenterPane({
   onCreateTag,
   onSelectPrompt,
   onPromptCompleted,
+  onResetForm,
 }: CenterPaneProps) {
   const [copied, setCopied] = useState(false)
 
@@ -426,6 +428,21 @@ export function CenterPane({
 
           {/* Variable inputs */}
           <div className="space-y-3 pt-2">
+            {/* Reset button - top right above fields */}
+            {onResetForm && prompt.variables.length > 0 && (
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onResetForm}
+                  className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  title="Reset form to defaults"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset
+                </Button>
+              </div>
+            )}
             {prompt.variables.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 No variables defined. Add {"{{variableName}}"} in the template.
