@@ -18,6 +18,8 @@ function RootLayoutInner() {
     triggerSearchFocus,
     handleCreatePrompt,
     handleCreateFromAI,
+    rightPanelOpen,
+    setRightPanelOpen,
   } = useAppContext()
 
   // Keyboard shortcuts
@@ -36,11 +38,16 @@ function RootLayoutInner() {
           setShowNewPromptDialog(true)
         }
       }
+      // Cmd+\ / Ctrl+\ - Toggle right panel
+      if ((e.metaKey || e.ctrlKey) && (e.key === '\\' || e.code === 'Backslash')) {
+        e.preventDefault()
+        setRightPanelOpen(!rightPanelOpen)
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [folderPath, navigate, triggerSearchFocus, setShowNewPromptDialog])
+  }, [folderPath, navigate, triggerSearchFocus, setShowNewPromptDialog, rightPanelOpen, setRightPanelOpen])
 
   // Loading state
   if (isLoading) {

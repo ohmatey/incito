@@ -1,5 +1,16 @@
+import { useState } from 'react'
 import type { PromptFile } from '@/types/prompt'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Pencil, Eye, History, StickyNote, Settings2, List, Save, RotateCcw } from 'lucide-react'
 
 export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions'
@@ -31,6 +42,21 @@ export function PromptHeader({
   onCancel,
   onResetForm,
 }: PromptHeaderProps) {
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+
+  function handleCancelClick() {
+    if (hasUnsavedChanges) {
+      setShowCancelDialog(true)
+    } else {
+      onCancel()
+    }
+  }
+
+  function handleConfirmCancel() {
+    setShowCancelDialog(false)
+    onCancel()
+  }
+
   const tabLabels: Record<RightPanelTab, string> = {
     preview: 'Prompt',
     history: 'History',
@@ -82,7 +108,7 @@ export function PromptHeader({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onCancel}
+              onClick={handleCancelClick}
             >
               Cancel
             </Button>
@@ -137,6 +163,24 @@ export function PromptHeader({
           </Button>
         ))}
       </div>
+
+      {/* Unsaved changes confirmation dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to cancel? Your changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCancel}>
+              Discard changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

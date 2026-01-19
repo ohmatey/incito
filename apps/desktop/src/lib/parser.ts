@@ -32,6 +32,10 @@ export function parsePromptFile(
     // Use existing id or generate a new one
     const id = data.id && typeof data.id === 'string' ? data.id : crypto.randomUUID()
 
+    // Parse variant fields
+    const variants = validateVariants(data.variants)
+    const variantOf = validateVariantOf(data.variant_of)
+
     return {
       id,
       fileName,
@@ -46,6 +50,8 @@ export function parsePromptFile(
       rawContent: content,
       isValid: errors.length === 0 && variables.errors.length === 0 && tags.errors.length === 0 && notes.errors.length === 0,
       errors: [...errors, ...variables.errors, ...tags.errors, ...notes.errors],
+      variants: variants.valid.length > 0 ? variants.valid : undefined,
+      variantOf: variantOf || undefined,
     }
   } catch (e) {
     console.error('Frontmatter parse error:', e)
@@ -171,6 +177,41 @@ function validateDefaultLaunchers(launchers: unknown): {
   })
 
   return { valid, errors: [] }
+}
+
+function validateVariants(variants: unknown): {
+  valid: string[]
+  errors: ParseError[]
+} {
+  if (variants === undefined || variants === null) {
+    return { valid: [], errors: [] }
+  }
+
+  if (!Array.isArray(variants)) {
+    return { valid: [], errors: [{ field: 'variants', message: 'variants must be an array' }] }
+  }
+
+  const valid: string[] = []
+  variants.forEach((variant) => {
+    if (typeof variant === 'string' && variant.trim() && variant.endsWith('.md')) {
+      valid.push(variant.trim())
+    }
+    // Silently filter out invalid variant filenames
+  })
+
+  return { valid, errors: [] }
+}
+
+function validateVariantOf(variantOf: unknown): string | undefined {
+  if (variantOf === undefined || variantOf === null) {
+    return undefined
+  }
+
+  if (typeof variantOf === 'string' && variantOf.trim() && variantOf.endsWith('.md')) {
+    return variantOf.trim()
+  }
+
+  return undefined
 }
 
 function isValidSelectOption(opt: unknown): opt is SelectOption {
@@ -302,6 +343,15 @@ export function serializePrompt(prompt: PromptFile): string {
 
   if (prompt.defaultLaunchers && prompt.defaultLaunchers.length > 0) {
     frontmatter.defaultLaunchers = prompt.defaultLaunchers
+  }
+
+  // Variant fields
+  if (prompt.variants && prompt.variants.length > 0) {
+    frontmatter.variants = prompt.variants
+  }
+
+  if (prompt.variantOf) {
+    frontmatter.variant_of = prompt.variantOf
   }
 
   return matter.stringify(prompt.template, frontmatter)

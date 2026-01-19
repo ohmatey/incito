@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { Variable } from '@/types/prompt'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface VariableInputCardProps {
@@ -31,10 +31,34 @@ export function VariableInputCard({
   onActiveChange,
 }: VariableInputCardProps) {
   const [arrayInputValue, setArrayInputValue] = useState('')
+  const [touched, setTouched] = useState(false)
+
+  // Validation
+  const validationError = useMemo(() => {
+    if (!variable.required) return null
+    if (!touched) return null
+
+    // Check if value is empty
+    if (value === undefined || value === null || value === '') {
+      return `${variable.label} is required`
+    }
+
+    // Check arrays
+    if (Array.isArray(value) && value.length === 0) {
+      return `${variable.label} requires at least one item`
+    }
+
+    return null
+  }, [variable, value, touched])
+
+  const hasError = !!validationError
 
   const focusHandlers = {
     onFocus: () => onActiveChange(true),
-    onBlur: () => onActiveChange(false),
+    onBlur: () => {
+      onActiveChange(false)
+      setTouched(true)
+    },
   }
 
   // Array input handlers
@@ -174,9 +198,10 @@ export function VariableInputCard({
                       <button
                         type="button"
                         onClick={() => handleMultiSelectToggle(val)}
+                        aria-label={`Remove ${opt?.label || val}`}
                         className="hover:text-secondary-900 dark:hover:text-secondary-100"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </span>
                   )
@@ -219,9 +244,10 @@ export function VariableInputCard({
                     <button
                       type="button"
                       onClick={() => handleRemoveArrayItem(index)}
+                      aria-label={`Remove ${item}`}
                       className="hover:text-gray-900 dark:hover:text-gray-100"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -244,8 +270,9 @@ export function VariableInputCard({
                 size="sm"
                 onClick={handleAddArrayItem}
                 disabled={!arrayInputValue.trim()}
+                aria-label="Add item"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -271,9 +298,11 @@ export function VariableInputCard({
     <div
       className={cn(
         'rounded-lg border bg-white p-3 shadow-sm transition-all duration-150 dark:bg-gray-800',
-        isActive
-          ? 'border-secondary-300 ring-1 ring-secondary-200 dark:border-secondary-600 dark:ring-secondary-900'
-          : 'border-gray-200 dark:border-gray-700'
+        hasError
+          ? 'border-red-300 ring-1 ring-red-200 dark:border-red-600 dark:ring-red-900'
+          : isActive
+            ? 'border-secondary-300 ring-1 ring-secondary-200 dark:border-secondary-600 dark:ring-secondary-900'
+            : 'border-gray-200 dark:border-gray-700'
       )}
       onMouseEnter={() => onActiveChange(true)}
       onMouseLeave={() => onActiveChange(false)}
@@ -293,6 +322,12 @@ export function VariableInputCard({
         )}
       </div>
       {renderInput()}
+      {hasError && (
+        <div className="mt-2 flex items-center gap-1.5 text-red-600 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <span className="text-xs">{validationError}</span>
+        </div>
+      )}
     </div>
   )
 }

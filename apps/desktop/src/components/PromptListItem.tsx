@@ -46,6 +46,7 @@ export function PromptListItem({
         <ContextMenuTrigger asChild>
           <button
             onClick={onSelect}
+            aria-label={`Select prompt: ${prompt.name}${!prompt.isValid ? ' (has errors)' : ''}`}
             className={cn(
               'group flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-md px-3 py-2 text-left text-sm transition-colors duration-150',
               isSelected
@@ -55,20 +56,21 @@ export function PromptListItem({
             )}
           >
             {!prompt.isValid && (
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-yellow-500" />
+              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-yellow-500" aria-hidden="true" />
             )}
             <span className="flex-1 truncate">{prompt.name}</span>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
+              aria-label={isPinned ? `Unpin ${prompt.name}` : `Pin ${prompt.name}`}
               className={cn(
                 'h-6 w-6 flex-shrink-0 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-opacity',
                 'opacity-0 group-hover:opacity-100'
               )}
             >
               {isPinned ? (
-                <PinOff className="h-3.5 w-3.5 text-gray-500" />
+                <PinOff className="h-4 w-4 text-gray-500" aria-hidden="true" />
               ) : (
-                <Pin className="h-3.5 w-3.5 text-gray-500" />
+                <Pin className="h-4 w-4 text-gray-500" aria-hidden="true" />
               )}
             </button>
           </button>

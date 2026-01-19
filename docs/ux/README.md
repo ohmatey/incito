@@ -1,0 +1,31 @@
+# UX Documentation
+
+This directory contains all UX research, design proposals, and reference documentation for the Incito project.
+
+## Directory Structure
+
+- **`/research-reports/`** - UX research findings and analysis reports
+- **`/proposals/`** - UX design proposals and recommendations
+- **`/templates/`** - Reusable templates for UX documentation
+- **`/reference/`** - UX frameworks, principles, and methodologies
+
+## Living Documents
+
+These documents are continuously updated to reflect the current state of UX understanding:
+
+- **`jtbd.md`** - Jobs-to-be-Done framework and user goals
+- **`personas.md`** - User personas and ICP definitions
+- **`workflows.md`** - User workflows and journey maps
+- **`user-stories.md`** - User stories and acceptance criteria
+
+## Recent Work
+
+### Research Reports
+
+- **2026-01-19**: [Incito Desktop App - Initial UX Review](/docs/ux/research-reports/incito-desktop-ux-review-2026-01-19.md)
+
+## Quick Links
+
+- [UX Evaluation Framework](/docs/ux/reference/ux-evaluation-framework.md)
+- [Design Principles](/docs/ux/reference/design-principles.md)
+- [Research Report Template](/docs/ux/templates/research-report-template.md)

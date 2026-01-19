@@ -7,6 +7,8 @@ export type {
   AIConfig,
   GeneratePromptInput,
   GeneratePromptResult,
+  RefineTemplateInput,
+  RefineTemplateResult,
 } from './types'
 
 export {
@@ -16,7 +18,7 @@ export {
 } from './types'
 
 // API
-export { generatePrompt } from './api'
+export { generatePrompt, refineTemplate } from './api'
 
 // Generator utilities
 export { generate, getModel, SYSTEM_PROMPT } from './agents/prompt-generator'

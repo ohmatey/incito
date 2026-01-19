@@ -390,9 +390,10 @@ export function VariableConfig({
                       <button
                         type="button"
                         onClick={() => handleMultiSelectToggle(val)}
+                        aria-label={`Remove ${opt?.label || val}`}
                         className="hover:text-secondary-900 dark:hover:text-secondary-100"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </span>
                   )
@@ -435,9 +436,10 @@ export function VariableConfig({
                     <button
                       type="button"
                       onClick={() => handleRemoveArrayItem(index)}
+                      aria-label={`Remove ${item}`}
                       className="hover:text-gray-900 dark:hover:text-gray-100"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -460,8 +462,9 @@ export function VariableConfig({
                 size="sm"
                 onClick={handleAddArrayItem}
                 disabled={!arrayInputValue.trim()}
+                aria-label="Add item"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -581,9 +584,10 @@ export function VariableConfig({
                       <button
                         type="button"
                         onClick={() => handleArrayDefaultRemove(index)}
+                        aria-label={`Remove default item ${item}`}
                         className="hover:text-gray-900 dark:hover:text-gray-100"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </span>
                   ))}
@@ -614,8 +618,9 @@ export function VariableConfig({
                   }}
                   disabled={!arrayDefaultInputValue.trim()}
                   className="h-8"
+                  aria-label="Add default item"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -707,7 +712,7 @@ export function VariableConfig({
                 onClick={handleAddOption}
                 className="h-6 text-xs"
               >
-                <Plus className="h-3 w-3 mr-1" />
+                <Plus className="h-4 w-4 mr-1" />
                 Add
               </Button>
             </div>
@@ -731,10 +736,11 @@ export function VariableConfig({
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveOption(index)}
-                    className="h-7 w-7"
+                    className="h-8 w-8"
                     disabled={(variable.options || []).length <= 1}
+                    aria-label={`Remove option ${opt.label || opt.value || index + 1}`}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               ))}
@@ -846,20 +852,22 @@ export function VariableConfig({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-8 w-8"
               disabled={isFirst}
               onClick={onMoveUp}
+              aria-label={`Move ${variable.label} up`}
             >
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-8 w-8"
               disabled={isLast}
               onClick={onMoveDown}
+              aria-label={`Move ${variable.label} down`}
             >
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}

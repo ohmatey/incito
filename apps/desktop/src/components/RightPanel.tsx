@@ -10,6 +10,7 @@ import { InstructionsTab } from './right-panel/InstructionsTab'
 
 interface RightPanelProps {
   prompt: PromptFile | null
+  allPrompts: PromptFile[]
   values: Record<string, unknown>
   activeTab: RightPanelTab
   activeVariableKey: string | null
@@ -25,11 +26,14 @@ interface RightPanelProps {
   onVariableUpdate?: (variable: Variable) => void
   onVariableMove?: (fromIndex: number, toIndex: number) => void
   onDefaultLaunchersChange: (launchers: string[]) => void
+  onSelectVariant?: (prompt: PromptFile) => void
+  onNewVariant?: () => void
   width?: number
 }
 
 export function RightPanel({
   prompt,
+  allPrompts,
   values,
   activeTab,
   activeVariableKey,
@@ -45,6 +49,8 @@ export function RightPanel({
   onVariableUpdate,
   onVariableMove,
   onDefaultLaunchersChange,
+  onSelectVariant,
+  onNewVariant,
   width = 300,
 }: RightPanelProps) {
   const [isAddingNote, setIsAddingNote] = useState(false)
@@ -64,9 +70,12 @@ export function RightPanel({
         {activeTab === 'preview' && (
           <PreviewTab
             prompt={prompt}
+            allPrompts={allPrompts}
             values={values}
             activeVariableKey={activeVariableKey}
             onActiveVariableChange={onActiveVariableChange}
+            onSelectVariant={onSelectVariant}
+            onNewVariant={onNewVariant}
           />
         )}
         {activeTab === 'history' && <HistoryTab prompt={prompt} onRestore={onRestoreVersion} />}

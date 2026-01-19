@@ -48,7 +48,7 @@ export function RightPanelHeader({
           <Button variant="ghost" size="sm" className="gap-1.5 px-2">
             {tabIcons[activeTab]}
             <span className="font-medium">{tabLabels[activeTab]}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+            <ChevronDown className="h-4 w-4 text-gray-500" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -74,8 +74,9 @@ export function RightPanelHeader({
             size="icon"
             onClick={onAddNote}
             className="h-8 w-8"
+            aria-label="Add note"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
 
@@ -85,8 +86,9 @@ export function RightPanelHeader({
           size="icon"
           onClick={onClose}
           className="h-8 w-8"
+          aria-label="Close panel"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
     </div>

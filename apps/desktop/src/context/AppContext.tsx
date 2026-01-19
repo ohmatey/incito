@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { RightPanelTab } from '@/components/PromptHeader'
 import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, type PromptDraft, type PanelWidths } from '@/lib/store'
-import { savePrompt } from '@/lib/prompts'
+import { savePrompt, createVariant } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
 import { toast } from 'sonner'
@@ -87,6 +87,13 @@ interface AppContextValue {
 
   // Version restore handler
   handleRestoreVersion: (content: string) => Promise<void>
+
+  // Variant handlers
+  handleSelectVariant: (prompt: PromptFile) => void
+  handleCreateVariant: (variantLabel: string, template: string) => Promise<void>
+  variantEditorOpen: boolean
+  setVariantEditorOpen: (open: boolean) => void
+  handleOpenVariantEditor: () => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -125,6 +132,9 @@ export function AppProvider({ children }: AppProviderProps) {
 
   // In-progress prompts state (drafts matched with their prompts)
   const [inProgressPrompts, setInProgressPrompts] = useState<Array<{ draft: PromptDraft; prompt: PromptFile }>>([])
+
+  // Variant editor dialog state
+  const [variantEditorOpen, setVariantEditorOpen] = useState(false)
 
   // Custom hooks
   const promptManager = usePromptManager()
@@ -475,6 +485,47 @@ export function AppProvider({ children }: AppProviderProps) {
     await promptManager.restoreVersion(content)
   }
 
+  // Variant handlers
+  function handleSelectVariant(prompt: PromptFile) {
+    // Select variant while preserving current edit/run mode
+    promptManager.selectPrompt(prompt)
+    setRightPanelOpen(true)
+  }
+
+  async function handleCreateVariant(variantLabel: string, template: string) {
+    const { selectedPrompt } = promptManager
+    if (!selectedPrompt || !folderPath) return
+
+    try {
+      const existingFileNames = promptManager.prompts.map((p) => p.fileName)
+      const { variant, updatedParent } = await createVariant(
+        selectedPrompt,
+        variantLabel,
+        template,
+        folderPath,
+        existingFileNames
+      )
+
+      // Update prompts list: add variant and update parent
+      promptManager.setPrompts((prev) => {
+        const updated = prev.map((p) => (p.path === updatedParent.path ? updatedParent : p))
+        return [...updated, variant].sort((a, b) => a.name.localeCompare(b.name))
+      })
+
+      // Select the new variant
+      promptManager.setSelectedPrompt(variant)
+      editState.syncFromPrompt(variant)
+      toast.success(`Created variant: ${variantLabel}`)
+    } catch (err) {
+      toast.error('Failed to create variant')
+      console.error(err)
+    }
+  }
+
+  function handleOpenVariantEditor() {
+    setVariantEditorOpen(true)
+  }
+
   // Trigger search focus
   function triggerSearchFocus() {
     setSearchFocusTrigger((prev) => prev + 1)
@@ -574,6 +625,13 @@ export function AppProvider({ children }: AppProviderProps) {
 
     // Version restore handler
     handleRestoreVersion,
+
+    // Variant handlers
+    handleSelectVariant,
+    handleCreateVariant,
+    variantEditorOpen,
+    setVariantEditorOpen,
+    handleOpenVariantEditor,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

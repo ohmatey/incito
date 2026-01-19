@@ -1,12 +1,14 @@
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
 import { PromptHeader } from '@/components/PromptHeader'
 import { CenterPane } from '@/components/CenterPane'
 import { RightPanel } from '@/components/RightPanel'
 import { ResizeHandle } from '@/components/ui/resize-handle'
+import { PromptEditorDialog } from '@/components/PromptEditorDialog'
 
 export function PromptDetail() {
   const { promptId } = useParams({ from: '/prompts/$promptId' })
+  const navigate = useNavigate()
   const {
     promptManager,
     tagManager,
@@ -32,6 +34,10 @@ export function PromptDetail() {
     handleDeletePrompt,
     handlePromptCompleted,
     handleSelectPrompt,
+    handleCreateVariant,
+    variantEditorOpen,
+    setVariantEditorOpen,
+    handleOpenVariantEditor,
     refreshDrafts,
     pinnedPromptIds,
   } = useAppContext()
@@ -44,6 +50,11 @@ export function PromptDetail() {
     editState.resetVariableValues()
     await editState.clearDraft()
     await refreshDrafts()
+  }
+
+  // Handler for selecting a variant - navigates to the variant's URL
+  function handleVariantSelect(prompt: import('@/types/prompt').PromptFile) {
+    navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
 
   if (!selectedPrompt) {
@@ -107,6 +118,7 @@ export function PromptDetail() {
           />
           <RightPanel
             prompt={selectedPrompt}
+            allPrompts={promptManager.prompts}
             values={editState.variableValues}
             activeTab={rightPanelTab}
             activeVariableKey={editState.activeVariableKey}
@@ -122,10 +134,31 @@ export function PromptDetail() {
             onVariableUpdate={handleVariableUpdate}
             onVariableMove={handleVariableMove}
             onDefaultLaunchersChange={handleDefaultLaunchersChange}
+            onSelectVariant={handleVariantSelect}
+            onNewVariant={handleOpenVariantEditor}
             width={panelWidths.rightPanel}
           />
         </>
       )}
+
+      {/* Variant Editor Dialog */}
+      <PromptEditorDialog
+        open={variantEditorOpen}
+        onOpenChange={setVariantEditorOpen}
+        prompt={selectedPrompt}
+        mode="new-variant"
+        onSave={() => {}}
+        onSaveAsVariant={(template, variantLabel) => {
+          handleCreateVariant(variantLabel, template)
+          setVariantEditorOpen(false)
+        }}
+        onRefineWithAI={async (template, instruction) => {
+          const { refinePromptTemplate } = await import('@/lib/mastra-client')
+          const result = await refinePromptTemplate(template, instruction)
+          if (!result.ok) throw new Error(result.error)
+          return result.data
+        }}
+      />
     </div>
   )
 }

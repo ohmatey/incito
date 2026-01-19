@@ -114,6 +114,128 @@ export async function deletePrompt(prompt: PromptFile): Promise<void> {
   await deletePromptVersions(prompt.path)
 }
 
+/**
+ * Create a variant of an existing prompt.
+ * Creates a new file with `--{label}` suffix and links it to the parent.
+ */
+export async function createVariant(
+  parent: PromptFile,
+  variantLabel: string,
+  template: string,
+  folderPath: string,
+  existingFileNames: string[]
+): Promise<{ variant: PromptFile; updatedParent: PromptFile }> {
+  // Generate variant filename: {parent-base}--{label}.md
+  const parentBaseName = parent.fileName.replace('.md', '')
+  const variantSlug = toKebabCase(variantLabel) || 'variant'
+  const baseVariantName = `${parentBaseName}--${variantSlug}`
+  const variantFileName = generateUniqueFileName(baseVariantName, existingFileNames)
+  const variantPath = await join(folderPath, variantFileName)
+
+  // Create variant prompt
+  const variantId = crypto.randomUUID()
+  const variantName = `${parent.name} (${variantLabel})`
+
+  const variant: PromptFile = {
+    id: variantId,
+    fileName: variantFileName,
+    path: variantPath,
+    name: variantName,
+    description: parent.description,
+    tags: [...(parent.tags || [])],
+    variables: JSON.parse(JSON.stringify(parent.variables)), // Deep copy variables
+    notes: [],
+    defaultLaunchers: parent.defaultLaunchers ? [...parent.defaultLaunchers] : undefined,
+    template: template,
+    rawContent: '',
+    isValid: true,
+    errors: [],
+    variantOf: parent.fileName, // Link to parent
+  }
+
+  // Save the variant
+  await savePrompt(variant)
+
+  // Update parent's variants array
+  const updatedParent: PromptFile = {
+    ...parent,
+    variants: [...(parent.variants || []), variantFileName],
+  }
+  await savePrompt(updatedParent)
+
+  // Read back the variant to ensure consistency
+  const written = await readTextFile(variantPath)
+  const parsedVariant = parsePromptFile(written, variantFileName, variantPath)
+
+  return { variant: parsedVariant, updatedParent }
+}
+
+/**
+ * Remove a variant from its parent's variants array.
+ * Call this when deleting a variant prompt.
+ */
+export async function removeVariantFromParent(
+  variant: PromptFile,
+  allPrompts: PromptFile[]
+): Promise<PromptFile | null> {
+  if (!variant.variantOf) return null
+
+  const parent = allPrompts.find(p => p.fileName === variant.variantOf)
+  if (!parent || !parent.variants) return null
+
+  const updatedParent: PromptFile = {
+    ...parent,
+    variants: parent.variants.filter(v => v !== variant.fileName),
+  }
+
+  await savePrompt(updatedParent)
+  return updatedParent
+}
+
+/**
+ * Get the parent prompt of a variant.
+ */
+export function getParentPrompt(
+  variant: PromptFile,
+  allPrompts: PromptFile[]
+): PromptFile | undefined {
+  if (!variant.variantOf) return undefined
+  return allPrompts.find(p => p.fileName === variant.variantOf)
+}
+
+/**
+ * Get all variants of a prompt.
+ */
+export function getVariants(
+  parent: PromptFile,
+  allPrompts: PromptFile[]
+): PromptFile[] {
+  if (!parent.variants || parent.variants.length === 0) return []
+  return allPrompts.filter(p => parent.variants?.includes(p.fileName))
+}
+
+/**
+ * Get the full variant family (parent + all variants).
+ * Returns prompts in order: parent first, then variants.
+ */
+export function getVariantFamily(
+  prompt: PromptFile,
+  allPrompts: PromptFile[]
+): PromptFile[] {
+  // If this is a variant, find the parent first
+  if (prompt.variantOf) {
+    const parent = getParentPrompt(prompt, allPrompts)
+    if (parent) {
+      return [parent, ...getVariants(parent, allPrompts)]
+    }
+    // Parent not found, return just this prompt (orphaned variant)
+    return [prompt]
+  }
+
+  // This is the parent
+  return [prompt, ...getVariants(prompt, allPrompts)]
+}
+
 function generateUniqueFileName(baseName: string, existingNames: string[]): string {
   let fileName = `${baseName}.md`
   let counter = 1

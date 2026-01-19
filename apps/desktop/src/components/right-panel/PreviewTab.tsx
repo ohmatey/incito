@@ -1,18 +1,31 @@
 import { useMemo } from 'react'
 import type { PromptFile, Variable } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Plus } from 'lucide-react'
+import { getVariantFamily } from '@/lib/prompts'
 
 interface PreviewTabProps {
   prompt: PromptFile | null
+  allPrompts: PromptFile[]
   values: Record<string, unknown>
   activeVariableKey: string | null
   onActiveVariableChange: (key: string | null) => void
+  onSelectVariant?: (prompt: PromptFile) => void
+  onNewVariant?: () => void
 }
 
 // Token types for template parsing
@@ -236,10 +249,39 @@ function renderTokens(
 
 export function PreviewTab({
   prompt,
+  allPrompts,
   values,
   activeVariableKey,
   onActiveVariableChange,
+  onSelectVariant,
+  onNewVariant,
 }: PreviewTabProps) {
+
+  // Get variant family for this prompt
+  const variantFamily = useMemo(() => {
+    if (!prompt) return []
+    return getVariantFamily(prompt, allPrompts)
+  }, [prompt, allPrompts])
+
+  const hasVariants = variantFamily.length > 1
+
+  // Get display label for a prompt in the variant family
+  const getVariantLabel = (p: PromptFile, index: number) => {
+    if (index === 0 && !p.variantOf) {
+      return 'Original'
+    }
+    const match = p.name.match(/\(([^)]+)\)$/)
+    if (match) return match[1]
+    const fileMatch = p.fileName.match(/--([^.]+)\.md$/)
+    if (fileMatch) {
+      return fileMatch[1]
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    }
+    return p.name
+  }
+
   // Render template with highlighted variables and conditional blocks
   const renderHighlightedContent = useMemo(() => {
     if (!prompt) return null
@@ -274,12 +316,59 @@ export function PreviewTab({
   }
 
   return (
-    <ScrollArea className="h-full">
-      <TooltipProvider delayDuration={200}>
-        <pre className="whitespace-pre-wrap p-4 font-mono text-sm text-gray-800 dark:text-gray-200">
-          {renderHighlightedContent}
-        </pre>
-      </TooltipProvider>
-    </ScrollArea>
+    <div className="flex h-full flex-col">
+      {/* Variant Bar */}
+      <div className="shrink-0 border-b border-gray-200 p-3 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          {/* Variant Selector */}
+          {hasVariants && onSelectVariant ? (
+            <Select
+              value={prompt.id}
+              onValueChange={(value) => {
+                const selected = variantFamily.find(p => p.id === value)
+                if (selected) onSelectVariant(selected)
+              }}
+            >
+              <SelectTrigger className="h-8 flex-1 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {variantFamily.map((p, index) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {getVariantLabel(p, index)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+              {hasVariants ? getVariantLabel(prompt, variantFamily.indexOf(prompt)) : 'Original'}
+            </span>
+          )}
+
+          {/* New Variant Button */}
+          {onNewVariant && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 px-2"
+              onClick={onNewVariant}
+            >
+              <Plus className="h-4 w-4" />
+              New Variant
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Preview Content */}
+      <ScrollArea className="flex-1">
+        <TooltipProvider delayDuration={200}>
+          <pre className="whitespace-pre-wrap p-4 font-mono text-sm text-gray-800 dark:text-gray-200">
+            {renderHighlightedContent}
+          </pre>
+        </TooltipProvider>
+      </ScrollArea>
+    </div>
   )
 }

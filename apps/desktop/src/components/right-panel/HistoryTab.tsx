@@ -162,7 +162,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => setExpandedVersionId(isExpanded ? null : version.id)}
-                        className="h-7 w-7"
+                        className="h-8 w-8"
                         title={isExpanded ? 'Hide preview' : 'Show preview'}
                       >
                         {isExpanded ? (
@@ -176,7 +176,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => setRestoreDialogVersion(version)}
-                          className="h-7 w-7 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                          className="h-8 w-8 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
                           title="Restore this version"
                         >
                           <RotateCcw className="h-4 w-4" />

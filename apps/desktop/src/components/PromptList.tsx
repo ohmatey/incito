@@ -42,8 +42,8 @@ export function PromptList({
           onClick={onNewPrompt}
           size="icon"
           variant="ghost"
-          className="h-7 w-7"
-          title="New Prompt"
+          className="h-8 w-8"
+          aria-label="New prompt"
         >
           <Plus className="h-4 w-4" />
         </Button>

@@ -52,3 +52,19 @@ export type GeneratePromptResult = {
   error: string
   code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED' | 'INVALID_RESPONSE'
 }
+
+// Input for refining a template
+export interface RefineTemplateInput {
+  template: string
+  instruction: string
+}
+
+// Refine result
+export type RefineTemplateResult = {
+  ok: true
+  data: string // The refined template
+} | {
+  ok: false
+  error: string
+  code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
+}

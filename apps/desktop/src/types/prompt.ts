@@ -67,6 +67,9 @@ export interface PromptFile {
   rawContent: string
   isValid: boolean
   errors: ParseError[]
+  // Variant fields
+  variants?: string[]      // Filenames of variant files (on parent prompt)
+  variantOf?: string       // Filename of parent prompt (on variant prompts)
 }
 
 export interface AppState {

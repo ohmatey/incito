@@ -79,4 +79,41 @@ export async function generate(userMessage: string, config: AIConfig): Promise<s
   return text
 }
 
+const REFINE_SYSTEM_PROMPT = `You are a prompt template editor for Incito, an application that helps users create and manage reusable prompt templates.
+
+Your task is to refine an existing prompt template based on user instructions. The template uses:
+- {{variable_name}} syntax for variable placeholders (double curly braces)
+- {{#if variable}}content{{/if}} for conditional sections
+
+Guidelines:
+1. Keep the same variable placeholders ({{variable}}) unless the user explicitly asks to change them
+2. Maintain the overall structure and purpose of the template
+3. Apply the user's requested changes (tone, style, length, focus, etc.)
+4. Do not add new variables unless explicitly requested
+5. Preserve any conditional sections unless modification is requested
+
+IMPORTANT: Respond with ONLY the refined template text. Do not include any explanations, markdown formatting, or additional text. Just output the refined template directly.`
+
+export async function refine(template: string, instruction: string, config: AIConfig): Promise<string> {
+  const model = getModel(config)
+
+  const userMessage = `Here is the current template:
+
+---
+${template}
+---
+
+Please refine this template according to this instruction: ${instruction}
+
+Remember: Output ONLY the refined template, nothing else.`
+
+  const { text } = await generateText({
+    model,
+    system: REFINE_SYSTEM_PROMPT,
+    prompt: userMessage,
+  })
+
+  return text.trim()
+}
+
 export { SYSTEM_PROMPT, getModel }

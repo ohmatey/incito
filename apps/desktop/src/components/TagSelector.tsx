@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Plus, ChevronDown } from 'lucide-react'
-import { TAG_COLORS } from '@/lib/constants'
+import { TAG_COLORS, TAG_COLOR_NAMES } from '@/lib/constants'
 
 interface TagSelectorProps {
   tags: Tag[]
@@ -39,10 +39,10 @@ export function TagSelector({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-          <Plus className="h-3 w-3" />
+        <Button variant="outline" size="sm" className="gap-1">
+          <Plus className="h-4 w-4" />
           Add tag
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
@@ -87,11 +87,14 @@ export function TagSelector({
                 }
               }}
             />
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Select tag color">
               {TAG_COLORS.slice(0, 8).map((color) => (
                 <button
                   key={color}
                   type="button"
+                  role="radio"
+                  aria-checked={newTagColor === color}
+                  aria-label={`Select ${TAG_COLOR_NAMES[color] || color} color`}
                   className={`h-5 w-5 rounded-full transition-transform ${
                     newTagColor === color ? 'ring-2 ring-ring ring-offset-1 scale-110' : ''
                   }`}
@@ -103,7 +106,7 @@ export function TagSelector({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                className="h-7 flex-1 text-xs"
+                className="flex-1"
                 onClick={handleCreateTag}
                 disabled={!newTagName.trim()}
               >
@@ -112,7 +115,7 @@ export function TagSelector({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className=""
                 onClick={() => {
                   setIsCreating(false)
                   setNewTagName('')

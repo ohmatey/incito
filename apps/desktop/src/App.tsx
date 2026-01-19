@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { RightPanelTab } from '@/components/PromptHeader'
 import { getSavedFolderPath, saveFolderPath, clearFolderPath } from '@/lib/store'
-import { savePrompt } from '@/lib/prompts'
+import { savePrompt, removeVariantFromParent } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
 import { FolderSelect } from '@/components/FolderSelect'
@@ -68,6 +68,11 @@ export default function App() {
           setShowNewPromptDialog(true)
         }
       }
+      // Cmd+\ / Ctrl+\ - Toggle right panel
+      if ((e.metaKey || e.ctrlKey) && (e.key === '\\' || e.code === 'Backslash')) {
+        e.preventDefault()
+        setRightPanelOpen((prev) => !prev)
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -126,6 +131,13 @@ export default function App() {
     setCurrentView('prompts')
   }
 
+  // Select a variant while preserving current edit/run mode
+  function handleSelectVariant(prompt: PromptFile) {
+    promptManager.selectPrompt(prompt)
+    setRightPanelOpen(true)
+    setCurrentView('prompts')
+  }
+
   async function handleDuplicatePrompt(prompt: PromptFile) {
     if (!folderPath) return
 
@@ -137,6 +149,17 @@ export default function App() {
   }
 
   async function handleDeletePrompt(prompt: PromptFile) {
+    // If this is a variant, remove it from parent's variants array
+    if (prompt.variantOf) {
+      const updatedParent = await removeVariantFromParent(prompt, promptManager.prompts)
+      if (updatedParent) {
+        // Update the parent in the prompts list
+        promptManager.setPrompts((prev) =>
+          prev.map((p) => (p.path === updatedParent.path ? updatedParent : p))
+        )
+      }
+    }
+
     await promptManager.remove(prompt)
     editState.setIsEditMode(false)
   }
@@ -434,6 +457,7 @@ export default function App() {
             {rightPanelOpen && (
               <RightPanel
                 prompt={selectedPrompt}
+                allPrompts={promptManager.prompts}
                 values={editState.variableValues}
                 activeTab={rightPanelTab}
                 activeVariableKey={editState.activeVariableKey}
@@ -449,6 +473,7 @@ export default function App() {
                 onVariableUpdate={handleVariableUpdate}
                 onVariableMove={handleVariableMove}
                 onDefaultLaunchersChange={handleDefaultLaunchersChange}
+                onSelectVariant={handleSelectVariant}
               />
             )}
           </div>

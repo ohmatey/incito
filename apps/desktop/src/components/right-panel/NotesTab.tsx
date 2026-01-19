@@ -106,7 +106,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
                 onAddingNoteChange(false)
                 setNewNoteContent('')
               }}
-              className="h-7 px-2 text-xs"
+              className=""
             >
               Cancel
             </Button>
@@ -114,7 +114,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
               size="sm"
               onClick={handleAddNote}
               disabled={!newNoteContent.trim()}
-              className="h-7 px-2 text-xs"
+              className=""
             >
               Add Note
             </Button>
@@ -162,18 +162,18 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
                         variant="ghost"
                         size="icon"
                         onClick={handleCancelEdit}
-                        className="h-7 w-7"
+                        className="h-8 w-8"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleSaveEdit}
                         disabled={!editingContent.trim()}
-                        className="h-7 w-7 text-green-600 hover:text-green-700 dark:text-green-500"
+                        className="h-8 w-8 text-green-600 hover:text-green-700 dark:text-green-500"
                       >
-                        <Check className="h-3.5 w-3.5" />
+                        <Check className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -191,17 +191,17 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
                           variant="ghost"
                           size="icon"
                           onClick={() => handleStartEdit(note)}
-                          className="h-6 w-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          className="h-8 w-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                         >
-                          <Pencil className="h-3 w-3" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteNote(note.id)}
-                          className="h-6 w-6 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                          className="h-8 w-8 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

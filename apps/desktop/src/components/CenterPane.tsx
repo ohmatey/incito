@@ -1,9 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { PromptFile, Tag } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { VariableInputCard } from './VariableInputCard'
 import { TagBadge } from './TagBadge'
 import { TagSelector } from './TagSelector'
@@ -12,7 +18,7 @@ import { AVAILABLE_LAUNCHERS, getLaunchersByIds, type Launcher } from '@/lib/lau
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { toast } from 'sonner'
-import { Copy, Check, ExternalLink, MoreHorizontal, Pin } from 'lucide-react'
+import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +75,79 @@ export function CenterPane({
   onPromptCompleted,
 }: CenterPaneProps) {
   const [copied, setCopied] = useState(false)
+
+  // Keyboard navigation between variables (Cmd/Ctrl+Shift+Up/Down)
+  useEffect(() => {
+    if (!prompt || isEditMode || prompt.variables.length === 0) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMod = e.metaKey || e.ctrlKey
+      if (!isMod || !e.shiftKey) return
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+
+      e.preventDefault()
+
+      const variables = prompt!.variables
+      const currentIndex = activeVariableKey
+        ? variables.findIndex((v) => v.key === activeVariableKey)
+        : -1
+
+      let nextIndex: number
+      if (e.key === 'ArrowUp') {
+        nextIndex = currentIndex <= 0 ? variables.length - 1 : currentIndex - 1
+      } else {
+        nextIndex = currentIndex >= variables.length - 1 ? 0 : currentIndex + 1
+      }
+
+      const nextVariable = variables[nextIndex]
+      onActiveVariableChange(nextVariable.key)
+
+      // Focus the input element
+      const inputId = `var-${nextVariable.key}`
+      const inputEl = document.getElementById(inputId) as HTMLElement | null
+      if (inputEl) {
+        inputEl.focus()
+        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [prompt, isEditMode, activeVariableKey, onActiveVariableChange])
+
+  // Keyboard shortcut for copy (Cmd/Ctrl+Enter)
+  useEffect(() => {
+    if (!prompt || isEditMode || !prompt.isValid) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMod = e.metaKey || e.ctrlKey
+      if (isMod && e.key === 'Enter') {
+        e.preventDefault()
+        // Check if all required fields are filled
+        const requiredVars = prompt!.variables.filter((v) => v.required)
+        const allFilled = requiredVars.every((v) => {
+          const value = values[v.key]
+          if (v.type === 'slider') return true
+          return value !== undefined && value !== ''
+        })
+        if (allFilled) {
+          // Trigger copy
+          const content = interpolate(prompt!.template, values, prompt!.variables)
+          writeText(content).then(() => {
+            setCopied(true)
+            toast.success('Copied to clipboard')
+            setTimeout(() => setCopied(false), 2000)
+            onPromptCompleted?.()
+          })
+        } else {
+          toast.error('Fill all required fields first')
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [prompt, isEditMode, values, onPromptCompleted])
 
   // Get Tag objects for display from tag names
   const promptTagObjects = localTags
@@ -153,41 +232,75 @@ export function CenterPane({
 
   if (!prompt) {
     const pinnedPrompts = prompts.filter((p) => pinnedPromptIds.includes(p.id))
+    const hasPrompts = prompts.length > 0
 
     return (
       <div className="flex h-full flex-1 flex-col bg-gray-100 dark:bg-gray-900">
         <div className="flex flex-1 flex-col items-center justify-center p-6">
-          {pinnedPrompts.length > 0 && (
-            <div className="mb-8 w-full max-w-md">
-              <h3 className="mb-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                Pinned Prompts
-              </h3>
-              <div className="grid gap-2">
-                {pinnedPrompts.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => onSelectPrompt(p)}
-                    className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
-                  >
-                    <Pin className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-gray-900 dark:text-gray-100">
-                        {p.name}
-                      </div>
-                      {p.description && (
-                        <div className="truncate text-sm text-gray-500 dark:text-gray-400">
-                          {p.description}
+          {hasPrompts ? (
+            <>
+              {pinnedPrompts.length > 0 && (
+                <div className="mb-8 w-full max-w-md">
+                  <h3 className="mb-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Pinned Prompts
+                  </h3>
+                  <div className="grid gap-2">
+                    {pinnedPrompts.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => onSelectPrompt(p)}
+                        className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+                      >
+                        <Pin className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium text-gray-900 dark:text-gray-100">
+                            {p.name}
+                          </div>
+                          {p.description && (
+                            <div className="truncate text-sm text-gray-500 dark:text-gray-400">
+                              {p.description}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Select a prompt to get started
+              </p>
+            </>
+          ) : (
+            <div className="w-full max-w-md">
+              <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20">
+                  <FileText className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Create your first prompt
+                </h3>
+                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+                  Prompts are reusable templates with variables. Create one to get started with organizing your AI workflows.
+                </p>
+                <Button
+                  onClick={() => {
+                    // Trigger new prompt dialog via keyboard shortcut simulation
+                    const event = new KeyboardEvent('keydown', {
+                      key: 'n',
+                      metaKey: true,
+                      bubbles: true,
+                    })
+                    document.dispatchEvent(event)
+                  }}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Prompt
+                </Button>
               </div>
             </div>
           )}
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Select a prompt to get started
-          </p>
         </div>
       </div>
     )
@@ -364,17 +477,30 @@ export function CenterPane({
 
           {/* Actions */}
           <div className="flex items-center gap-2 p-2">
-            {/* Copy button */}
-            <Button
-              onClick={handleCopy}
-              disabled={!canCopy()}
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Copied' : 'Copy Prompt'}
-            </Button>
+            {/* Copy button with tooltip */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={!canCopy() ? 0 : undefined}>
+                    <Button
+                      onClick={handleCopy}
+                      disabled={!canCopy()}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      {copied ? 'Copied' : 'Copy Prompt'}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!canCopy() && (
+                  <TooltipContent>
+                    <p>Fill all required fields to continue</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
 
             <div className="flex-1" />
 
@@ -390,7 +516,7 @@ export function CenterPane({
                   className="gap-1.5"
                 >
                   {launcher.name}
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className="h-4 w-4" />
                 </Button>
               ))}
 
@@ -402,8 +528,9 @@ export function CenterPane({
                     disabled={!canCopy()}
                     size="sm"
                     className="px-2"
+                    aria-label="More launch options"
                   >
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -415,7 +542,7 @@ export function CenterPane({
                       className="cursor-pointer"
                     >
                       <span>{launcher.name}</span>
-                      <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
+                      <ExternalLink className="ml-auto h-4 w-4 opacity-50" />
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
