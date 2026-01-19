@@ -57,15 +57,12 @@ export function PromptListItem({
             {!prompt.isValid && (
               <AlertTriangle className="h-4 w-4 flex-shrink-0 text-yellow-500" />
             )}
-            {isPinned && prompt.isValid && (
-              <Pin className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-            )}
             <span className="flex-1 truncate">{prompt.name}</span>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
               className={cn(
                 'h-6 w-6 flex-shrink-0 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-opacity',
-                isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                'opacity-0 group-hover:opacity-100'
               )}
             >
               {isPinned ? (
