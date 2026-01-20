@@ -22,5 +22,6 @@
     }
   },
   "include": ["src", "mastra/src"],
+  "exclude": ["mastra/src/mcp"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
