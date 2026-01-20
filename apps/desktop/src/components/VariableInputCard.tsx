@@ -234,22 +234,24 @@ export function VariableInputCard({
         return (
           <div className="space-y-2">
             {items.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="space-y-2">
                 {items.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                    className="flex items-start gap-2 p-2 rounded-md bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
                   >
-                    {item}
+                    <p className="flex-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words min-w-0">
+                      {item}
+                    </p>
                     <button
                       type="button"
                       onClick={() => handleRemoveArrayItem(index)}
-                      aria-label={`Remove ${item}`}
-                      className="hover:text-gray-900 dark:hover:text-gray-100"
+                      aria-label={`Remove item ${index + 1}`}
+                      className="flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
             )}
