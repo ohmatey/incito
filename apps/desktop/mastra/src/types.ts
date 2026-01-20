@@ -69,3 +69,19 @@ export type RefineTemplateResult = {
   error: string
   code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
 }
+
+// Input for summarizing changes
+export interface SummarizeChangesInput {
+  previousContent: string
+  currentContent: string
+}
+
+// Summarize changes result
+export type SummarizeChangesResult = {
+  ok: true
+  data: string // The summary description
+} | {
+  ok: false
+  error: string
+  code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
+}

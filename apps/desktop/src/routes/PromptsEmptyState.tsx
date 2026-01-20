@@ -14,7 +14,8 @@ export function PromptsEmptyState() {
     recentPromptIds,
     pinnedPromptIds,
     inProgressPrompts,
-    setShowNewPromptDialog,
+    openNewPromptDialog,
+    handleCreatePrompt,
     clearDraftById,
   } = useAppContext()
 
@@ -45,8 +46,15 @@ export function PromptsEmptyState() {
     navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
 
-  function handleCreateNew() {
-    setShowNewPromptDialog(true)
+  async function handleCreateBlank() {
+    const newPrompt = await handleCreatePrompt()
+    if (newPrompt) {
+      navigate({ to: '/prompts/$promptId', params: { promptId: newPrompt.id } })
+    }
+  }
+
+  function handleCreateWithAI() {
+    openNewPromptDialog('ai')
   }
 
   // Get completion status for an in-progress prompt
@@ -83,7 +91,7 @@ export function PromptsEmptyState() {
               </h2>
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={handleCreateNew}
+                  onClick={handleCreateBlank}
                   className="flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-left transition-all hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-primary-600 dark:hover:bg-primary-900/20"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
@@ -98,7 +106,7 @@ export function PromptsEmptyState() {
                 </button>
 
                 <button
-                  onClick={handleCreateNew}
+                  onClick={handleCreateWithAI}
                   className={`flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-left transition-all hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-primary-600 dark:hover:bg-primary-900/20 ${!aiConfigured ? 'opacity-60' : ''}`}
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">

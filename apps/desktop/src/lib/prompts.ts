@@ -1,7 +1,8 @@
 import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
-import { syncPromptTags, createPromptVersion, deletePromptVersions } from './store'
+import { syncPromptTags, createPromptVersion, deletePromptVersions, hasAIConfigured } from './store'
+import { summarizePromptChanges } from './mastra-client'
 import type { PromptFile, Variable } from '../types/prompt'
 
 export interface InitialPromptContent {
@@ -40,7 +41,16 @@ export async function savePrompt(prompt: PromptFile, skipVersion = false): Promi
       const currentContent = await readTextFile(prompt.path)
       // Only create a version if content actually changed
       if (currentContent !== content) {
-        await createPromptVersion(prompt.path, currentContent)
+        // Try to generate AI description if AI is configured
+        let description: string | undefined
+        const aiConfigured = await hasAIConfigured()
+        if (aiConfigured.ok && aiConfigured.data) {
+          const summaryResult = await summarizePromptChanges(currentContent, content)
+          if (summaryResult.ok) {
+            description = summaryResult.data
+          }
+        }
+        await createPromptVersion(prompt.path, currentContent, description)
       }
     } catch {
       // File might not exist yet (new prompt), skip version creation

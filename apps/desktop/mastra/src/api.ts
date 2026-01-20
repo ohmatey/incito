@@ -1,5 +1,5 @@
-import { generate, refine } from './agents/prompt-generator'
-import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult } from './types'
+import { generate, refine, summarizeChanges as summarize } from './agents/prompt-generator'
+import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult, type SummarizeChangesInput, type SummarizeChangesResult } from './types'
 
 // Valid variable types
 const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select'] as const
@@ -247,6 +247,43 @@ export async function refineTemplate(
     return {
       ok: false,
       error: `Failed to refine template: ${errorMessage}`,
+      code: 'GENERATION_FAILED',
+    }
+  }
+}
+
+export async function summarizeChanges(
+  input: SummarizeChangesInput,
+  config: AIConfig
+): Promise<SummarizeChangesResult> {
+  try {
+    const summary = await summarize(input.previousContent, input.currentContent, config)
+    return {
+      ok: true,
+      data: summary,
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('invalid_api_key')) {
+      return {
+        ok: false,
+        error: 'Invalid API key. Please check your API key in Settings.',
+        code: 'INVALID_API_KEY',
+      }
+    }
+
+    if (errorMessage.includes('429') || errorMessage.includes('rate_limit') || errorMessage.includes('Rate limit')) {
+      return {
+        ok: false,
+        error: 'Rate limit exceeded. Please wait a moment and try again.',
+        code: 'RATE_LIMITED',
+      }
+    }
+
+    return {
+      ok: false,
+      error: `Failed to summarize changes: ${errorMessage}`,
       code: 'GENERATION_FAILED',
     }
   }

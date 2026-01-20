@@ -40,6 +40,8 @@ interface AppContextValue {
   // UI state
   showNewPromptDialog: boolean
   setShowNewPromptDialog: (show: boolean) => void
+  newPromptDialogMode: 'blank' | 'ai'
+  openNewPromptDialog: (mode?: 'blank' | 'ai') => void
   searchFocusTrigger: number
   triggerSearchFocus: () => void
   rightPanelTab: RightPanelTab
@@ -116,7 +118,14 @@ export function AppProvider({ children }: AppProviderProps) {
   const [folderPath, setFolderPath] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showNewPromptDialog, setShowNewPromptDialog] = useState(false)
+  const [newPromptDialogMode, setNewPromptDialogMode] = useState<'blank' | 'ai'>('blank')
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0)
+
+  // Open new prompt dialog with optional mode
+  function openNewPromptDialog(mode: 'blank' | 'ai' = 'blank') {
+    setNewPromptDialogMode(mode)
+    setShowNewPromptDialog(true)
+  }
 
   // Right panel state
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('preview')
@@ -628,6 +637,8 @@ export function AppProvider({ children }: AppProviderProps) {
     // UI state
     showNewPromptDialog,
     setShowNewPromptDialog,
+    newPromptDialogMode,
+    openNewPromptDialog,
     searchFocusTrigger,
     triggerSearchFocus,
     rightPanelTab,

@@ -37,6 +37,18 @@ export const TAG_COLOR_NAMES: Record<string, string> = {
 }
 
 /**
+ * Reserved Handlebars keywords that should not be treated as variables
+ */
+export const RESERVED_KEYWORDS = new Set([
+  'else',
+  'this',
+  'true',
+  'false',
+  'null',
+  'undefined',
+])
+
+/**
  * Regex pattern for matching template variables: {{variable_name}}
  * Allows alphanumeric characters, underscores, and hyphens
  */

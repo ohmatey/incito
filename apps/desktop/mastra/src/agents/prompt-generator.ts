@@ -20,7 +20,8 @@ When generating a prompt template, you must output valid JSON with this exact st
       "placeholder": "Optional placeholder text",
       "preview": "Example value for preview (always a string)",
       "default": "Optional default value (string for most types, number for number/slider)",
-      "options": ["option1", "option2"]
+      "options": ["option1", "option2"],
+      "description": "Optional - only include if it adds context beyond the label"
     }
   ],
   "tags": ["tag1", "tag2"]
@@ -40,10 +41,15 @@ Guidelines for generating templates:
 4. IMPORTANT: "required" must be a boolean (true or false), not a string
 5. IMPORTANT: "preview" must always be a string, even for numbers (e.g., "42" not 42)
 6. Provide helpful placeholder and preview values
-7. Use {{#if variable}}content{{/if}} for conditional sections
+7. For conditional sections:
+   - Use {{#if variable}}content{{/if}} for optional variables (shows content if variable has any value)
+   - For select variables, ALWAYS use {{#if (eq variable "option_value")}}content{{else}}alternative{{/if}} to compare against specific option values
+   - Example: {{#if (eq tone "formal")}}Use formal language{{else}}Use casual language{{/if}}
+   - Available helpers: eq, ne, gt, gte, lt, lte, and, or, not
 8. Create clear, reusable templates that solve real problems
-9. IMPORTANT for tags: You will be given a list of existing tags. ONLY use tags from that list. If no existing tags are provided or none are relevant, set "tags" to an empty array []. Never invent new tags.
-10. For select/multi-select types, always provide an "options" array with at least 2 non-empty options
+9. For variable descriptions: ONLY add a "description" field when it provides context that isn't obvious from the label. Most variables should NOT have descriptions. Good examples where description helps: "target_audience" with description "Who will read this content" or "context" with description "Background information the AI should know". Bad examples (skip description): "topic", "name", "email" - these are self-explanatory from the label.
+10. IMPORTANT for tags: You will be given a list of existing tags. ONLY use tags from that list. If no existing tags are provided or none are relevant, set "tags" to an empty array []. Never invent new tags.
+11. For select/multi-select types, always provide an "options" array with at least 2 non-empty options
 
 Always respond with ONLY the JSON object, no additional text or markdown formatting.`
 
@@ -91,7 +97,8 @@ const REFINE_SYSTEM_PROMPT = `You are a prompt template editor for Incito, an ap
 
 Your task is to refine an existing prompt template based on user instructions. The template uses:
 - {{variable_name}} syntax for variable placeholders (double curly braces)
-- {{#if variable}}content{{/if}} for conditional sections
+- {{#if variable}}content{{/if}} for optional variables (shows content if variable has any value)
+- {{#if (eq variable "value")}}content{{else}}alternative{{/if}} for comparing select variables against specific options
 
 Guidelines:
 1. Keep the same variable placeholders ({{variable}}) unless the user explicitly asks to change them
@@ -118,6 +125,48 @@ Remember: Output ONLY the refined template, nothing else.`
   const { text } = await generateText({
     model,
     system: REFINE_SYSTEM_PROMPT,
+    prompt: userMessage,
+  })
+
+  return text.trim()
+}
+
+const SUMMARIZE_CHANGES_SYSTEM_PROMPT = `You are a concise change summarizer for prompt templates. Given the previous and current versions of a prompt template, describe what changed in 5-10 words.
+
+Guidelines:
+1. Focus on the most significant change
+2. Use past tense verbs (e.g., "Added", "Updated", "Removed", "Simplified", "Expanded")
+3. Be specific but brief (e.g., "Added tone variable", "Simplified introduction", "Expanded output format")
+4. If multiple changes, mention the most important one
+5. Do not use punctuation at the end
+
+Examples of good summaries:
+- "Added temperature and length controls"
+- "Simplified the system instructions"
+- "Changed output format to JSON"
+- "Removed redundant examples"
+- "Updated variable placeholders"
+
+Respond with ONLY the summary text, nothing else.`
+
+export async function summarizeChanges(previousContent: string, currentContent: string, config: AIConfig): Promise<string> {
+  const model = getModel(config)
+
+  const userMessage = `Previous version:
+---
+${previousContent}
+---
+
+Current version:
+---
+${currentContent}
+---
+
+Summarize what changed in 5-10 words.`
+
+  const { text } = await generateText({
+    model,
+    system: SUMMARIZE_CHANGES_SYSTEM_PROMPT,
     prompt: userMessage,
   })
 

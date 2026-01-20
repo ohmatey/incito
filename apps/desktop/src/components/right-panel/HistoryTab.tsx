@@ -147,6 +147,11 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                           </span>
                         )}
                       </div>
+                      {version.description && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate" title={version.description}>
+                          {version.description}
+                        </p>
+                      )}
                       <p
                         className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 cursor-default"
                         onMouseEnter={() => setHoveredTimestampId(version.id)}

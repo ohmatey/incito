@@ -21,9 +21,10 @@ type CreationType = 'blank' | 'ai'
 interface NewPromptDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreateBlank: () => void
-  onCreateFromAI: (generated: GeneratedPrompt) => void
+  onCreateBlank: () => Promise<void>
+  onCreateFromAI: (generated: GeneratedPrompt) => Promise<void>
   onOpenSettings: () => void
+  defaultMode?: 'blank' | 'ai'
 }
 
 export function NewPromptDialog({
@@ -32,6 +33,7 @@ export function NewPromptDialog({
   onCreateBlank,
   onCreateFromAI,
   onOpenSettings,
+  defaultMode = 'blank',
 }: NewPromptDialogProps) {
   const { tagManager } = useAppContext()
   const [creationType, setCreationType] = useState<CreationType>('blank')
@@ -47,9 +49,9 @@ export function NewPromptDialog({
       // Reset state when dialog opens
       setDescription('')
       setError(null)
-      setCreationType('blank')
+      setCreationType(defaultMode)
     }
-  }, [open])
+  }, [open, defaultMode])
 
   async function checkAIConfiguration() {
     const result = await hasAIConfigured()
@@ -60,8 +62,8 @@ export function NewPromptDialog({
     }
   }
 
-  function handleCreateBlank() {
-    onCreateBlank()
+  async function handleCreateBlank() {
+    await onCreateBlank()
     onOpenChange(false)
   }
 
@@ -80,7 +82,7 @@ export function NewPromptDialog({
       const result = await generatePromptTemplate(description, existingTags)
 
       if (result.ok) {
-        onCreateFromAI(result.data)
+        await onCreateFromAI(result.data)
         onOpenChange(false)
       } else {
         setError(result.error)

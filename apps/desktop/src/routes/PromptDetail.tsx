@@ -11,6 +11,7 @@ export function PromptDetail() {
   const { promptId } = useParams({ from: '/prompts/$promptId' })
   const navigate = useNavigate()
   const {
+    isLoading,
     promptManager,
     tagManager,
     editState,
@@ -45,7 +46,13 @@ export function PromptDetail() {
   } = useAppContext()
 
   // Get selected prompt from URL param
-  const selectedPrompt = promptManager.prompts.find((p) => p.id === promptId) || null
+  // First try the prompts array, then fall back to selectedPrompt (handles race condition after creation)
+  // In edit mode, prefer selectedPrompt which has live variable updates
+  const promptFromArray = promptManager.prompts.find((p) => p.id === promptId) || null
+  const promptFromSelected = promptManager.selectedPrompt?.id === promptId ? promptManager.selectedPrompt : null
+  const selectedPrompt = editState.isEditMode
+    ? (promptFromSelected || promptFromArray)
+    : (promptFromArray || promptFromSelected)
 
   // Handler for resetting form - also clears the draft
   async function handleResetForm() {
@@ -60,15 +67,25 @@ export function PromptDetail() {
     navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
 
-  // Redirect to prompts list if prompt not found
+  // Redirect to prompts list if prompt not found after a delay
+  // The delay allows state to propagate after creating a new prompt
   useEffect(() => {
-    if (!selectedPrompt) {
-      navigate({ to: '/prompts' })
+    if (!selectedPrompt && !isLoading) {
+      const timeout = setTimeout(() => {
+        navigate({ to: '/prompts' })
+      }, 500)
+      return () => clearTimeout(timeout)
     }
-  }, [selectedPrompt, navigate])
+  }, [selectedPrompt, isLoading, navigate])
 
+  // Show loading state while prompt is being found
+  // This handles the race condition after creating a new prompt
   if (!selectedPrompt) {
-    return null
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+      </div>
+    )
   }
 
   return (

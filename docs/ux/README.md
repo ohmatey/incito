@@ -22,6 +22,7 @@ These documents are continuously updated to reflect the current state of UX unde
 
 ### Research Reports
 
+- **2026-01-20**: [MCP Integration UX Research](/docs/ux/research-reports/mcp-integration-research-2026-01-20.md) - Comprehensive evaluation of Model Context Protocol integration, identifying critical discoverability and onboarding gaps
 - **2026-01-19**: [Incito Desktop App - Initial UX Review](/docs/ux/research-reports/incito-desktop-ux-review-2026-01-19.md)
 
 ## Quick Links

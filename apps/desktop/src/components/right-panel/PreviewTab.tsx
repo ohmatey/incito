@@ -32,7 +32,7 @@ interface PreviewTabProps {
 type Token =
   | { type: 'text'; content: string }
   | { type: 'variable'; key: string }
-  | { type: 'block_start'; helper: string; key: string; inverted?: boolean }
+  | { type: 'block_start'; helper: string; key: string; inverted?: boolean; comparison?: { op: string; value: string } }
   | { type: 'block_else' }
   | { type: 'block_end' }
 
@@ -58,14 +58,27 @@ function tokenizeTemplate(template: string): Token[] {
       tokens.push({ type: 'block_end' })
     } else if (content.startsWith('#')) {
       // Parse block helper: #if key or #if (eq key "value")
-      const blockMatch = content.match(/^#(if|unless|each|with)\s+(?:\([\w]+\s+)?([\w-]+)/)
-      if (blockMatch) {
+      // First try to match comparison helper: #if (op key "value")
+      const comparisonMatch = content.match(/^#(if|unless)\s+\((eq|ne|gt|gte|lt|lte)\s+([\w-]+)\s+["']([^"']+)["']\)/)
+      if (comparisonMatch) {
         tokens.push({
           type: 'block_start',
-          helper: blockMatch[1],
-          key: blockMatch[2],
-          inverted: blockMatch[1] === 'unless',
+          helper: comparisonMatch[1],
+          key: comparisonMatch[3],
+          inverted: comparisonMatch[1] === 'unless',
+          comparison: { op: comparisonMatch[2], value: comparisonMatch[4] },
         })
+      } else {
+        // Simple block helper: #if key
+        const blockMatch = content.match(/^#(if|unless|each|with)\s+([\w-]+)/)
+        if (blockMatch) {
+          tokens.push({
+            type: 'block_start',
+            helper: blockMatch[1],
+            key: blockMatch[2],
+            inverted: blockMatch[1] === 'unless',
+          })
+        }
       }
     } else {
       // Simple variable
@@ -172,7 +185,25 @@ function renderTokens(
     } else if (token.type === 'block_start') {
       // Find the matching end and optional else
       const rawValue = ctx.values[token.key]
-      const isConditionTrue = token.inverted ? !isTruthy(rawValue) : isTruthy(rawValue)
+
+      // Evaluate condition - handle comparison helpers
+      let conditionResult: boolean
+      if (token.comparison) {
+        const { op, value } = token.comparison
+        const strValue = String(rawValue ?? '')
+        switch (op) {
+          case 'eq': conditionResult = strValue === value; break
+          case 'ne': conditionResult = strValue !== value; break
+          case 'gt': conditionResult = Number(rawValue) > Number(value); break
+          case 'gte': conditionResult = Number(rawValue) >= Number(value); break
+          case 'lt': conditionResult = Number(rawValue) < Number(value); break
+          case 'lte': conditionResult = Number(rawValue) <= Number(value); break
+          default: conditionResult = isTruthy(rawValue)
+        }
+      } else {
+        conditionResult = isTruthy(rawValue)
+      }
+      const isConditionTrue = token.inverted ? !conditionResult : conditionResult
       const variable = ctx.variables.find(v => v.key === token.key)
       const isActive = ctx.activeVariableKey === token.key
       const blockKey = ctx.keyCounter.current++
@@ -233,7 +264,10 @@ function renderTokens(
           </TooltipTrigger>
           <TooltipContent>
             <p className="font-mono text-xs">
-              {token.helper} {variable?.label || token.key}: {isConditionTrue ? 'showing' : 'hidden'}
+              {token.comparison
+                ? `${token.helper} ${token.comparison.op}(${variable?.label || token.key}, "${token.comparison.value}"): ${isConditionTrue ? 'showing' : 'hidden'}`
+                : `${token.helper} ${variable?.label || token.key}: ${isConditionTrue ? 'showing' : 'hidden'}`
+              }
             </p>
           </TooltipContent>
         </Tooltip>

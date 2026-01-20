@@ -61,6 +61,12 @@ Use Handlebars-style conditionals:
 {{#if optional_var}}This content appears when optional_var has a value{{/if}}
 ```
 
+## MCP Integration
+
+Incito supports the Model Context Protocol (MCP), allowing AI assistants like Claude Desktop, Cursor, and Claude Code to access your prompt library directly.
+
+See [MCP Documentation](./docs/mcp.md) for setup instructions.
+
 ## Releasing
 
 See [RELEASING.md](./RELEASING.md) for instructions on shipping new versions.

@@ -15,6 +15,7 @@ function RootLayoutInner() {
     handleFolderSelect,
     showNewPromptDialog,
     setShowNewPromptDialog,
+    newPromptDialogMode,
     triggerSearchFocus,
     handleCreatePrompt,
     handleCreateFromAI,
@@ -123,6 +124,7 @@ function RootLayoutInner() {
         onCreateBlank={handleCreateBlankAndNavigate}
         onCreateFromAI={handleCreateFromAIAndNavigate}
         onOpenSettings={() => navigate({ to: '/settings' })}
+        defaultMode={newPromptDialogMode}
       />
       <Toaster />
     </>

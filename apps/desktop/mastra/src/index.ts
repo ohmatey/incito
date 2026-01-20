@@ -9,6 +9,8 @@ export type {
   GeneratePromptResult,
   RefineTemplateInput,
   RefineTemplateResult,
+  SummarizeChangesInput,
+  SummarizeChangesResult,
 } from './types'
 
 export {
@@ -18,7 +20,7 @@ export {
 } from './types'
 
 // API
-export { generatePrompt, refineTemplate } from './api'
+export { generatePrompt, refineTemplate, summarizeChanges } from './api'
 
 // Generator utilities
 export { generate, getModel, SYSTEM_PROMPT } from './agents/prompt-generator'

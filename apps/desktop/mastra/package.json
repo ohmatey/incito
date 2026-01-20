@@ -6,14 +6,23 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:mcp": "bun build ./src/mcp/stdio.ts --compile --outfile ../src-tauri/binaries/incito-mcp"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/google": "^2.0.0",
     "@ai-sdk/openai": "^2.0.0",
     "@mastra/core": "^0.10.0",
+    "@mastra/mcp": "^0.14.5",
     "ai": "^5.0.0",
+    "better-sqlite3": "^11.10.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.19.7"
   }
 }

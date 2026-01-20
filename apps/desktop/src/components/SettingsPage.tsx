@@ -11,7 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { FolderOpen, Sun, Moon, Monitor, Eye, EyeOff, Check, Loader2, Sparkles, Pencil, Trash2 } from 'lucide-react'
+import { FolderOpen, Sun, Moon, Monitor, Eye, EyeOff, Check, Loader2, Sparkles, Pencil, Trash2, Copy, ExternalLink, Plug } from 'lucide-react'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { openUrl } from '@tauri-apps/plugin-opener'
+import { platform } from '@tauri-apps/plugin-os'
 import { useTheme } from '@/context/ThemeContext'
 import {
   getAISettings,
@@ -56,6 +59,16 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
   const [showApiKey, setShowApiKey] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [mcpCopied, setMcpCopied] = useState(false)
+  const [currentPlatform, setCurrentPlatform] = useState<string>('macos')
+
+  // Detect platform
+  useEffect(() => {
+    const p = platform()
+    if (p === 'macos') setCurrentPlatform('macos')
+    else if (p === 'windows') setCurrentPlatform('windows')
+    else setCurrentPlatform('linux')
+  }, [])
 
   // Load AI settings on mount
   useEffect(() => {
@@ -133,6 +146,52 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
   }
 
   const canSave = editSettings.provider && editSettings.apiKey
+
+  // MCP configuration based on platform
+  const getMcpBinaryPath = () => {
+    switch (currentPlatform) {
+      case 'macos':
+        return '/Applications/Incito.app/Contents/MacOS/incito-mcp'
+      case 'windows':
+        return 'C:\\Program Files\\Incito\\incito-mcp.exe'
+      default:
+        return '/usr/local/bin/incito-mcp'
+    }
+  }
+
+  const getMcpConfigPath = () => {
+    switch (currentPlatform) {
+      case 'macos':
+        return '~/Library/Application Support/Claude/claude_desktop_config.json'
+      case 'windows':
+        return '%APPDATA%\\Claude\\claude_desktop_config.json'
+      default:
+        return '~/.config/Claude/claude_desktop_config.json'
+    }
+  }
+
+  const mcpConfig = JSON.stringify(
+    {
+      mcpServers: {
+        incito: {
+          command: getMcpBinaryPath(),
+        },
+      },
+    },
+    null,
+    2
+  )
+
+  async function handleCopyMcpConfig() {
+    await writeText(mcpConfig)
+    setMcpCopied(true)
+    toast.success('MCP configuration copied')
+    setTimeout(() => setMcpCopied(false), 2000)
+  }
+
+  async function handleOpenMcpDocs() {
+    await openUrl('https://modelcontextprotocol.io/introduction')
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -380,6 +439,58 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                   <FolderOpen className="h-4 w-4" />
                   Change Folder
                 </Button>
+              </div>
+            </div>
+
+            {/* MCP Integration */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">MCP Integration</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Connect your prompt library to AI assistants like Claude Desktop, Cursor, and Claude Code via the Model Context Protocol (MCP).
+              </p>
+              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Plug className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Claude Desktop Configuration
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Add to <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">{getMcpConfigPath()}</code>
+                  </p>
+                  <div className="relative">
+                    <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto border border-gray-200 dark:border-gray-700">
+                      {mcpConfig}
+                    </pre>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyMcpConfig}
+                      className="absolute top-2 right-2 h-8 w-8 p-0"
+                    >
+                      {mcpCopied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Available tools: <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">list_prompts</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">get_prompt</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">use_prompt</code>
+                  </p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={handleOpenMcpDocs}
+                    className="h-auto p-0 text-xs gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View Documentation
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

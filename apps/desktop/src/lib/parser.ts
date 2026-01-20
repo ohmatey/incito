@@ -1,7 +1,7 @@
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
 import type { PromptFile, Variable, ParseError, SelectOption, SerializationFormat, Note } from '../types/prompt'
-import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, isValidVariableKey, isValidTagName } from './constants'
+import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, RESERVED_KEYWORDS, isValidVariableKey, isValidTagName } from './constants'
 import { AVAILABLE_LAUNCHERS } from './launchers'
 
 const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select']
@@ -367,7 +367,7 @@ export function serializePrompt(prompt: PromptFile): string {
  * Extract variable keys from template text by finding {{variable}} patterns
  * Also detects variables in Handlebars helpers like {{#if var}}, {{#each var}}, {{#if (eq var "value")}}
  * Returns unique variable keys found in the template
- * Only includes keys that pass validation
+ * Only includes keys that pass validation and are not reserved Handlebars keywords
  */
 export function extractVariablesFromTemplate(template: string): string[] {
   const keys = new Set<string>()
@@ -378,7 +378,8 @@ export function extractVariablesFromTemplate(template: string): string[] {
     let match
     while ((match = regex.exec(template)) !== null) {
       const key = match[1]
-      if (isValidVariableKey(key)) {
+      // Skip reserved Handlebars keywords like "else", "this", etc.
+      if (isValidVariableKey(key) && !RESERVED_KEYWORDS.has(key)) {
         keys.add(key)
       }
     }
