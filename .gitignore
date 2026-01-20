@@ -9,6 +9,7 @@ out/
 # Tauri
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/Cargo.lock
+apps/desktop/src-tauri/binaries/incito-mcp-*
 
 # IDE
 .idea/

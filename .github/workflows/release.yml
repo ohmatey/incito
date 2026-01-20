@@ -35,6 +35,11 @@ jobs:
         with:
           version: 10
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -46,6 +51,10 @@ jobs:
 
       - name: Install frontend dependencies
         run: pnpm install
+
+      - name: Build MCP sidecar
+        run: pnpm --filter @incito/mastra run build:mcp
+        shell: bash
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
