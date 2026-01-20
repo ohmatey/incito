@@ -7,7 +7,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build:mcp": "./scripts/build-mcp.sh"
+    "build:mcp": "node scripts/build-mcp.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
