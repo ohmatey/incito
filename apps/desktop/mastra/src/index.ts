@@ -11,6 +11,11 @@ export type {
   RefineTemplateResult,
   SummarizeChangesInput,
   SummarizeChangesResult,
+  FillFieldDefinition,
+  FillFieldsInput,
+  FillFieldsResult,
+  FillSingleFieldInput,
+  FillSingleFieldResult,
 } from './types'
 
 export {
@@ -20,7 +25,7 @@ export {
 } from './types'
 
 // API
-export { generatePrompt, refineTemplate, summarizeChanges } from './api'
+export { generatePrompt, refineTemplate, summarizeChanges, fillFormFields, fillSingleField } from './api'
 
 // Generator utilities
 export { generate, getModel, SYSTEM_PROMPT } from './agents/prompt-generator'

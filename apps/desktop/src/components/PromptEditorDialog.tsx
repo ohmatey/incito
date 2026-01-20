@@ -179,6 +179,9 @@ export function PromptEditorDialog({
                 placeholder="Make it more formal and professional..."
                 autoFocus
               />
+              <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                AI can make mistakes. Please review generated content.
+              </p>
               <Button
                 onClick={handleRefine}
                 disabled={isRefining || !aiInstruction.trim()}

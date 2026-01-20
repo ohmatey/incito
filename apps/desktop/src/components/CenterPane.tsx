@@ -14,13 +14,15 @@ import {
 import { VariableInputCard } from './VariableInputCard'
 import { TagBadge } from './TagBadge'
 import { TagSelector } from './TagSelector'
+import { AiFillFieldModal } from './AiFillFieldModal'
+import type { Variable } from '@/types/prompt'
 import { interpolate } from '@/lib/interpolate'
 import { AVAILABLE_LAUNCHERS, getLaunchersByIds, type Launcher } from '@/lib/launchers'
 import { hasAIConfigured } from '@/lib/store'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { toast } from 'sonner'
-import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus, RotateCcw, Sparkles, Loader2 } from 'lucide-react'
+import { Copy, Check, ExternalLink, MoreHorizontal, Pin, FileText, Plus, RotateCcw, Sparkles, Loader2, Undo2, Redo2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
+
+interface FillWithAIResult {
+  filledCount: number
+  totalCount: number
+}
 
 interface CenterPaneProps {
   prompt: PromptFile | null
@@ -52,7 +59,12 @@ interface CenterPaneProps {
   onSelectPrompt: (prompt: PromptFile) => void
   onPromptCompleted?: () => void
   onResetForm?: () => void
+  onUndo?: () => void
+  onRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
   onRefineWithAI?: (template: string, instruction: string) => Promise<string>
+  onFillWithAI?: (context: string) => Promise<FillWithAIResult>
 }
 
 export function CenterPane({
@@ -78,13 +90,23 @@ export function CenterPane({
   onSelectPrompt,
   onPromptCompleted,
   onResetForm,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onRefineWithAI,
+  onFillWithAI,
 }: CenterPaneProps) {
   const [copied, setCopied] = useState(false)
   const [aiInstruction, setAiInstruction] = useState('')
   const [isRefining, setIsRefining] = useState(false)
   const [aiConfigured, setAiConfigured] = useState(false)
   const [showAiPanel, setShowAiPanel] = useState(false)
+  const [showFillAiPanel, setShowFillAiPanel] = useState(false)
+  const [fillContext, setFillContext] = useState('')
+  const [isFilling, setIsFilling] = useState(false)
+  const [aiFillModalOpen, setAiFillModalOpen] = useState(false)
+  const [aiFillTargetVariable, setAiFillTargetVariable] = useState<Variable | null>(null)
 
   // Keyboard navigation between variables (Cmd/Ctrl+Shift+Up/Down)
   useEffect(() => {
@@ -178,6 +200,12 @@ export function CenterPane({
     }
   }, [isEditMode])
 
+  // Reset fill AI panel state when entering edit mode or switching prompts
+  useEffect(() => {
+    setShowFillAiPanel(false)
+    setFillContext('')
+  }, [isEditMode, prompt?.id])
+
   const handleRefine = useCallback(async () => {
     if (!onRefineWithAI || !aiInstruction.trim()) return
 
@@ -194,6 +222,30 @@ export function CenterPane({
       setIsRefining(false)
     }
   }, [localTemplate, aiInstruction, onRefineWithAI, onLocalTemplateChange])
+
+  const handleFillWithAI = useCallback(async () => {
+    if (!onFillWithAI || !fillContext.trim()) return
+
+    setIsFilling(true)
+    try {
+      const result = await onFillWithAI(fillContext)
+      setShowFillAiPanel(false)
+      setFillContext('')
+      if (result.filledCount === 0) {
+        toast.info('No matching info found', {
+          description: 'Try adding more details to the context.',
+        })
+      } else {
+        toast.success(`Filled ${result.filledCount} of ${result.totalCount} fields`)
+      }
+    } catch (error) {
+      console.error('Failed to fill fields:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fill fields'
+      toast.error(errorMessage)
+    } finally {
+      setIsFilling(false)
+    }
+  }, [fillContext, onFillWithAI])
 
   // Get Tag objects for display from tag names
   const promptTagObjects = localTags
@@ -480,6 +532,9 @@ export function CenterPane({
                     className="min-h-[100px] text-sm resize-none border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900"
                     placeholder="Make it more formal and professional..."
                   />
+                  <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                    AI can make mistakes. Please review generated content.
+                  </p>
                   <Button
                     onClick={handleRefine}
                     disabled={isRefining || !aiInstruction.trim()}
@@ -527,21 +582,106 @@ export function CenterPane({
 
           {/* Variable inputs */}
           <div className="space-y-3 pt-2">
-            {/* Reset button - top right above fields */}
-            {onResetForm && prompt.variables.length > 0 && (
-              <div className="flex justify-end">
+            {/* Undo/Redo/Reset/Fill with AI buttons - top right above fields */}
+            {prompt.variables.length > 0 && (
+              <div className="flex justify-end gap-1">
+                {aiConfigured && onFillWithAI && !showFillAiPanel && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFillAiPanel(true)}
+                    className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    title="Fill fields with AI from context"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Fill with AI
+                  </Button>
+                )}
+                {onUndo && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                    className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+                    title="Undo (Cmd+Z)"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                    Undo
+                  </Button>
+                )}
+                {onRedo && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                    className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+                    title="Redo (Cmd+Shift+Z)"
+                  >
+                    <Redo2 className="h-4 w-4" />
+                    Redo
+                  </Button>
+                )}
+                {onResetForm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onResetForm}
+                    className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    title="Reset form to defaults"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reset
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Fill with AI Panel */}
+            {aiConfigured && onFillWithAI && showFillAiPanel && (
+              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Fill with AI
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setShowFillAiPanel(false)}
+                  >
+                    Hide
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Paste your notes, project details, or any context. AI will extract relevant info to fill the fields below.
+                </p>
+                <Textarea
+                  value={fillContext}
+                  onChange={(e) => setFillContext(e.target.value)}
+                  className="min-h-[120px] text-sm resize-none border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900"
+                  placeholder="Paste context here... e.g., project notes, meeting notes, requirements, etc."
+                />
+                <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                  AI can make mistakes. Please review generated content.
+                </p>
                 <Button
-                  variant="ghost"
+                  onClick={handleFillWithAI}
+                  disabled={isFilling || !fillContext.trim()}
+                  className="mt-3 gap-2"
                   size="sm"
-                  onClick={onResetForm}
-                  className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  title="Reset form to defaults"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset
+                  {isFilling ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {isFilling ? 'Filling...' : 'Fill Fields'}
                 </Button>
               </div>
             )}
+
             {prompt.variables.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 No variables defined. Add {"{{variableName}}"} in the template.
@@ -555,6 +695,11 @@ export function CenterPane({
                   isActive={activeVariableKey === variable.key}
                   onValueChange={(value) => onValueChange(variable.key, value)}
                   onActiveChange={(active) => onActiveVariableChange(active ? variable.key : null)}
+                  aiConfigured={aiConfigured}
+                  onAiFillClick={() => {
+                    setAiFillTargetVariable(variable)
+                    setAiFillModalOpen(true)
+                  }}
                 />
               ))
             )}
@@ -667,6 +812,20 @@ export function CenterPane({
           </div>
         </div>
       </div>
+
+      {/* AI Fill Field Modal */}
+      <AiFillFieldModal
+        open={aiFillModalOpen}
+        onOpenChange={setAiFillModalOpen}
+        variable={aiFillTargetVariable}
+        otherVariables={prompt.variables.filter(v => v.key !== aiFillTargetVariable?.key)}
+        currentValues={values}
+        onGenerate={(value) => {
+          if (aiFillTargetVariable) {
+            onValueChange(aiFillTargetVariable.key, value)
+          }
+        }}
+      />
     </div>
   )
 }

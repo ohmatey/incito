@@ -1,5 +1,7 @@
 import { generate, refine, summarizeChanges as summarize } from './agents/prompt-generator'
-import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult, type SummarizeChangesInput, type SummarizeChangesResult } from './types'
+import { fillFields } from './agents/field-filler'
+import { fillSingleField as fillSingle } from './agents/single-field-filler'
+import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult, type SummarizeChangesInput, type SummarizeChangesResult, type FillFieldsInput, type FillFieldsResult, type FillFieldDefinition, type FillSingleFieldInput, type FillSingleFieldResult } from './types'
 
 // Valid variable types
 const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select'] as const
@@ -284,6 +286,231 @@ export async function summarizeChanges(
     return {
       ok: false,
       error: `Failed to summarize changes: ${errorMessage}`,
+      code: 'GENERATION_FAILED',
+    }
+  }
+}
+
+// Validate a single field value against its type constraints
+function validateFieldValue(
+  value: unknown,
+  field: FillFieldDefinition
+): unknown | null {
+  if (value === undefined || value === null) return null
+
+  switch (field.type) {
+    case 'text':
+    case 'textarea':
+      // Must be a string
+      if (typeof value !== 'string') {
+        return String(value)
+      }
+      return value
+
+    case 'select':
+      // Must match one of the options (case-insensitive)
+      if (typeof value !== 'string' || !field.options) return null
+      const matchedOption = field.options.find(
+        (opt) => opt.toLowerCase() === value.toLowerCase()
+      )
+      return matchedOption || null
+
+    case 'multi-select':
+      // Must be an array where all items match options
+      if (!Array.isArray(value) || !field.options) return null
+      const validItems = value
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => {
+          const matched = field.options!.find(
+            (opt) => opt.toLowerCase() === item.toLowerCase()
+          )
+          return matched
+        })
+        .filter((item): item is string => item !== undefined)
+      return validItems.length > 0 ? validItems : null
+
+    case 'number':
+    case 'slider':
+      // Must be a number within min/max range
+      let numValue: number
+      if (typeof value === 'number') {
+        numValue = value
+      } else if (typeof value === 'string') {
+        numValue = parseFloat(value)
+        if (isNaN(numValue)) return null
+      } else {
+        return null
+      }
+      // Clamp to min/max if specified
+      if (field.min !== undefined && numValue < field.min) {
+        numValue = field.min
+      }
+      if (field.max !== undefined && numValue > field.max) {
+        numValue = field.max
+      }
+      return numValue
+
+    case 'array':
+      // Must be an array of strings
+      if (Array.isArray(value)) {
+        const stringItems = value
+          .filter((item) => item !== null && item !== undefined)
+          .map((item) => String(item))
+        return stringItems.length > 0 ? stringItems : null
+      }
+      // Single string value - convert to array
+      if (typeof value === 'string' && value.trim()) {
+        return [value.trim()]
+      }
+      return null
+
+    default:
+      return null
+  }
+}
+
+export async function fillFormFields(
+  input: FillFieldsInput,
+  config: AIConfig
+): Promise<FillFieldsResult> {
+  try {
+    const responseText = await fillFields(
+      {
+        context: input.context,
+        fields: input.fields.map((f) => ({
+          key: f.key,
+          label: f.label,
+          type: f.type,
+          options: f.options,
+          min: f.min,
+          max: f.max,
+        })),
+      },
+      config
+    )
+
+    // Try to parse the JSON response
+    let parsed: { fields?: Record<string, unknown>; confidence?: string }
+    try {
+      // Handle potential markdown code blocks
+      let jsonText = responseText.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.slice(7)
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.slice(3)
+      }
+      if (jsonText.endsWith('```')) {
+        jsonText = jsonText.slice(0, -3)
+      }
+      jsonText = jsonText.trim()
+
+      parsed = JSON.parse(jsonText)
+    } catch {
+      return {
+        ok: false,
+        error: 'Failed to parse AI response. Please try again.',
+        code: 'INVALID_RESPONSE',
+      }
+    }
+
+    // Validate the parsed response structure
+    if (!parsed.fields || typeof parsed.fields !== 'object') {
+      return {
+        ok: false,
+        error: 'Invalid response structure. Please try again.',
+        code: 'INVALID_RESPONSE',
+      }
+    }
+
+    // Validate each field value against its type constraints
+    const validatedFields: Record<string, unknown> = {}
+    let filledCount = 0
+
+    for (const field of input.fields) {
+      const rawValue = parsed.fields[field.key]
+      if (rawValue !== undefined) {
+        const validatedValue = validateFieldValue(rawValue, field)
+        if (validatedValue !== null) {
+          validatedFields[field.key] = validatedValue
+          filledCount++
+        }
+      }
+    }
+
+    // Determine confidence level
+    const confidence = (parsed.confidence as 'high' | 'medium' | 'low') || 'medium'
+
+    return {
+      ok: true,
+      data: {
+        fields: validatedFields,
+        filledCount,
+        totalCount: input.fields.length,
+        confidence,
+      },
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('invalid_api_key')) {
+      return {
+        ok: false,
+        error: 'Invalid API key. Please check your API key in Settings.',
+        code: 'INVALID_API_KEY',
+      }
+    }
+
+    if (errorMessage.includes('429') || errorMessage.includes('rate_limit') || errorMessage.includes('Rate limit')) {
+      return {
+        ok: false,
+        error: 'Rate limit exceeded. Please wait a moment and try again.',
+        code: 'RATE_LIMITED',
+      }
+    }
+
+    return {
+      ok: false,
+      error: `Failed to fill fields: ${errorMessage}`,
+      code: 'GENERATION_FAILED',
+    }
+  }
+}
+
+export async function fillSingleField(
+  input: FillSingleFieldInput,
+  config: AIConfig
+): Promise<FillSingleFieldResult> {
+  try {
+    const value = await fillSingle(input, config)
+
+    return {
+      ok: true,
+      data: {
+        value,
+      },
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('invalid_api_key')) {
+      return {
+        ok: false,
+        error: 'Invalid API key. Please check your API key in Settings.',
+        code: 'INVALID_API_KEY',
+      }
+    }
+
+    if (errorMessage.includes('429') || errorMessage.includes('rate_limit') || errorMessage.includes('Rate limit')) {
+      return {
+        ok: false,
+        error: 'Rate limit exceeded. Please wait a moment and try again.',
+        code: 'RATE_LIMITED',
+      }
+    }
+
+    return {
+      ok: false,
+      error: `Failed to generate content: ${errorMessage}`,
       code: 'GENERATION_FAILED',
     }
   }

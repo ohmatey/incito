@@ -176,6 +176,9 @@ export function NewPromptDialog({
                   className="min-h-[100px] resize-none"
                   disabled={isGenerating}
                 />
+                <p className="font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                  AI can make mistakes. Please review generated content.
+                </p>
               </div>
 
               {/* Error Display */}

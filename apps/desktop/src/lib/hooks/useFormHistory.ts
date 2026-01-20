@@ -92,9 +92,10 @@ export function useFormHistory(
   valuesRef.current = values
 
   // Flush pending user changes to history
-  const flushPendingChanges = useCallback(() => {
+  // Returns the entry that was created, or null if there were no pending changes
+  const flushPendingChanges = useCallback((): HistoryEntry | null => {
     const pending = pendingChangesRef.current
-    if (pending.size === 0) return
+    if (pending.size === 0) return null
 
     const changes: ValueChange[] = []
     pending.forEach((change, key) => {
@@ -126,27 +127,34 @@ export function useFormHistory(
 
     // Clear pending
     pendingChangesRef.current = new Map()
+
+    return entry
   }, [maxHistorySize])
 
   // Set a single value (user input - debounced)
   const setValue = useCallback((key: string, value: unknown) => {
-    const currentValue = valuesRef.current[key]
+    // Use functional update to get the true current state (valuesRef may be stale if React hasn't re-rendered)
+    setValuesState((prevValues) => {
+      const currentValue = prevValues[key]
 
-    // Skip if value hasn't changed
-    if (currentValue === value) return
+      // Skip if value hasn't changed
+      if (currentValue === value) return prevValues
 
-    // Track this change
-    const existing = pendingChangesRef.current.get(key)
-    pendingChangesRef.current.set(key, {
-      value,
-      // Keep the original previous value if we're updating an existing pending change
-      previousValue: existing?.previousValue ?? currentValue,
+      // Track this change for history
+      const existing = pendingChangesRef.current.get(key)
+      pendingChangesRef.current.set(key, {
+        value,
+        // Keep the original previous value if we're updating an existing pending change
+        previousValue: existing?.previousValue ?? currentValue,
+      })
+
+      // Return new values
+      const newValues = { ...prevValues, [key]: value }
+      // Keep valuesRef in sync for other operations (undo/redo) that may run before React re-renders
+      valuesRef.current = newValues
+      onValuesChange?.(newValues)
+      return newValues
     })
-
-    // Update current values immediately
-    const newValues = { ...valuesRef.current, [key]: value }
-    setValuesState(newValues)
-    onValuesChange?.(newValues)
 
     // Debounce history commit
     if (debounceTimerRef.current) {
@@ -234,55 +242,53 @@ export function useFormHistory(
       clearTimeout(debounceTimerRef.current)
       debounceTimerRef.current = null
     }
-    flushPendingChanges()
+    const flushedEntry = flushPendingChanges()
 
-    setPast((prevPast) => {
-      if (prevPast.length === 0) return prevPast
+    // Build the effective past array (including any just-flushed entry)
+    const effectivePast = flushedEntry ? [...past, flushedEntry] : past
+    if (effectivePast.length === 0) return
 
-      const lastEntry = prevPast[prevPast.length - 1]
-      const newPast = prevPast.slice(0, -1)
+    const lastEntry = effectivePast[effectivePast.length - 1]
 
-      // Apply reverse changes
-      const currentValues = valuesRef.current
+    // Apply reverse changes using functional update
+    setValuesState((currentValues) => {
       const newValues = { ...currentValues }
       for (const change of lastEntry.changes) {
         newValues[change.key] = change.previousValue
       }
-
-      setValuesState(newValues)
+      valuesRef.current = newValues
       onValuesChange?.(newValues)
-
-      // Move to future
-      setFuture((prevFuture) => [...prevFuture, lastEntry])
-
-      return newPast
+      return newValues
     })
-  }, [flushPendingChanges, onValuesChange])
+
+    // Update history stacks - use the effective past minus the entry we're undoing
+    setPast(effectivePast.slice(0, -1))
+    setFuture((prevFuture) => [...prevFuture, lastEntry])
+  }, [flushPendingChanges, onValuesChange, past])
 
   // Redo last undone change
   const redo = useCallback(() => {
-    setFuture((prevFuture) => {
-      if (prevFuture.length === 0) return prevFuture
+    // Get the last entry from future (need to read synchronously before state updates)
+    const currentFuture = future
+    if (currentFuture.length === 0) return
 
-      const lastEntry = prevFuture[prevFuture.length - 1]
-      const newFuture = prevFuture.slice(0, -1)
+    const lastEntry = currentFuture[currentFuture.length - 1]
 
-      // Apply changes
-      const currentValues = valuesRef.current
+    // Apply changes using functional update
+    setValuesState((currentValues) => {
       const newValues = { ...currentValues }
       for (const change of lastEntry.changes) {
         newValues[change.key] = change.value
       }
-
-      setValuesState(newValues)
+      valuesRef.current = newValues
       onValuesChange?.(newValues)
-
-      // Move to past
-      setPast((prevPast) => [...prevPast, lastEntry])
-
-      return newFuture
+      return newValues
     })
-  }, [onValuesChange])
+
+    // Update history stacks
+    setFuture(currentFuture.slice(0, -1))
+    setPast((prevPast) => [...prevPast, lastEntry])
+  }, [onValuesChange, future])
 
   // Clear all history
   const clearHistory = useCallback(() => {

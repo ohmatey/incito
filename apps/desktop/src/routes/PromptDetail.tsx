@@ -128,11 +128,28 @@ export function PromptDetail() {
           onSelectPrompt={handleSelectPrompt}
           onPromptCompleted={handlePromptCompleted}
           onResetForm={handleResetForm}
+          onUndo={editState.undo}
+          onRedo={editState.redo}
+          canUndo={editState.canUndo}
+          canRedo={editState.canRedo}
           onRefineWithAI={async (template, instruction) => {
             const { refinePromptTemplate } = await import('@/lib/mastra-client')
             const result = await refinePromptTemplate(template, instruction)
             if (!result.ok) throw new Error(result.error)
             return result.data
+          }}
+          onFillWithAI={async (context) => {
+            const { fillFormFieldsWithContext } = await import('@/lib/mastra-client')
+            const result = await fillFormFieldsWithContext(context, selectedPrompt.variables)
+            if (!result.ok) throw new Error(result.error)
+            // Apply the filled values using setValuesWithSource with 'ai_fill' source for undo support
+            if (Object.keys(result.data.fields).length > 0) {
+              editState.setValuesWithSource(result.data.fields, 'ai_fill')
+            }
+            return {
+              filledCount: result.data.filledCount,
+              totalCount: result.data.totalCount,
+            }
           }}
         />
       </div>

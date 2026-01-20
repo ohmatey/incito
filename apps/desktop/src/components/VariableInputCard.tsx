@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
-import { Plus, X, AlertCircle } from 'lucide-react'
+import { Plus, X, AlertCircle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface VariableInputCardProps {
@@ -21,6 +21,8 @@ interface VariableInputCardProps {
   isActive: boolean
   onValueChange: (value: unknown) => void
   onActiveChange: (active: boolean) => void
+  aiConfigured?: boolean
+  onAiFillClick?: () => void
 }
 
 export function VariableInputCard({
@@ -29,6 +31,8 @@ export function VariableInputCard({
   isActive,
   onValueChange,
   onActiveChange,
+  aiConfigured,
+  onAiFillClick,
 }: VariableInputCardProps) {
   const [arrayInputValue, setArrayInputValue] = useState('')
   const [touched, setTouched] = useState(false)
@@ -310,13 +314,30 @@ export function VariableInputCard({
       onMouseLeave={() => onActiveChange(false)}
     >
       <div className="mb-2">
-        <Label
-          htmlFor={`var-${variable.key}`}
-          className="text-sm font-medium text-gray-700 dark:text-gray-200"
-        >
-          {variable.label}
-          {variable.required && <span className="text-secondary-500 ml-1">*</span>}
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor={`var-${variable.key}`}
+            className="text-sm font-medium text-gray-700 dark:text-gray-200"
+          >
+            {variable.label}
+            {variable.required && <span className="text-secondary-500 ml-1">*</span>}
+          </Label>
+          {(variable.type === 'text' || variable.type === 'textarea') && aiConfigured && onAiFillClick && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                onAiFillClick()
+              }}
+              className="h-6 w-6 p-0 text-gray-400 hover:text-secondary-500"
+              title="Generate with AI"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
         {variable.description && (
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
             {variable.description}

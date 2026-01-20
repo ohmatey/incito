@@ -85,3 +85,63 @@ export type SummarizeChangesResult = {
   error: string
   code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
 }
+
+// Field definition for fill fields input
+export interface FillFieldDefinition {
+  key: string
+  label: string
+  type: 'text' | 'textarea' | 'select' | 'number' | 'slider' | 'array' | 'multi-select'
+  options?: string[]
+  min?: number
+  max?: number
+}
+
+// Input for filling form fields with AI
+export interface FillFieldsInput {
+  context: string
+  fields: FillFieldDefinition[]
+}
+
+// Fill fields result
+export type FillFieldsResult = {
+  ok: true
+  data: {
+    fields: Record<string, unknown>
+    filledCount: number
+    totalCount: number
+    confidence: 'high' | 'medium' | 'low'
+  }
+} | {
+  ok: false
+  error: string
+  code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED' | 'INVALID_RESPONSE' | 'NO_FIELDS_EXTRACTED'
+}
+
+// Input for filling a single field with AI
+export interface FillSingleFieldInput {
+  targetField: {
+    key: string
+    label: string
+    type: 'text' | 'textarea'
+    description?: string
+    placeholder?: string
+  }
+  otherFields: Array<{
+    key: string
+    label: string
+    value: unknown
+  }>
+  userPrompt: string
+}
+
+// Single field fill result
+export type FillSingleFieldResult = {
+  ok: true
+  data: {
+    value: string
+  }
+} | {
+  ok: false
+  error: string
+  code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
+}
