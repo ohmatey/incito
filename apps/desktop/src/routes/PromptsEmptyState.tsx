@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { useAppContext } from '@/context/AppContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileText, Sparkles, Clock, PlayCircle, X, Pin } from 'lucide-react'
@@ -8,6 +9,7 @@ import type { PromptFile } from '@/types/prompt'
 import { getDefaultValues } from '@/lib/interpolate'
 
 export function PromptsEmptyState() {
+  const { t } = useTranslation(['prompts', 'common'])
   const navigate = useNavigate()
   const {
     promptManager,
@@ -87,7 +89,7 @@ export function PromptsEmptyState() {
             {/* Create New Section */}
             <div className="space-y-4">
               <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Create New Prompt
+                {t('emptyState.createNewPrompt')}
               </h2>
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -98,9 +100,9 @@ export function PromptsEmptyState() {
                     <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="text-center">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">Blank Template</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">{t('newDialog.blankTemplate')}</p>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Start from scratch
+                      {t('newDialog.startFromScratch')}
                     </p>
                   </div>
                 </button>
@@ -113,9 +115,9 @@ export function PromptsEmptyState() {
                     <Sparkles className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="text-center">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">Generate with AI</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-100">{t('newDialog.generateWithAI')}</p>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {aiConfigured === false ? 'Configure in Settings' : 'Describe what you need'}
+                      {aiConfigured === false ? t('newDialog.configureInSettings') : t('newDialog.describeWhatYouNeed')}
                     </p>
                   </div>
                 </button>
@@ -128,7 +130,7 @@ export function PromptsEmptyState() {
                 <div className="flex items-center gap-2">
                   <Pin className="h-4 w-4 text-gray-400" />
                   <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Pinned
+                    {t('list.pinned')}
                   </h2>
                 </div>
                 <div className="space-y-2">
@@ -164,7 +166,7 @@ export function PromptsEmptyState() {
                   <div className="flex items-center gap-2">
                     <PlayCircle className="h-4 w-4 text-amber-500" />
                     <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      In Progress
+                      {t('emptyState.inProgress')}
                     </h2>
                   </div>
                   <button
@@ -173,7 +175,7 @@ export function PromptsEmptyState() {
                     }}
                     className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   >
-                    Clear all
+                    {t('emptyState.clearAll')}
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -197,8 +199,8 @@ export function PromptsEmptyState() {
                             </p>
                             <p className="text-sm text-amber-600 dark:text-amber-400">
                               {status.total > 0
-                                ? `${status.filled} of ${status.total} required variables filled`
-                                : 'Variables entered'}
+                                ? t('emptyState.variablesFilled', { filled: status.filled, total: status.total })
+                                : t('emptyState.variablesEntered')}
                             </p>
                           </div>
                         </button>
@@ -208,7 +210,7 @@ export function PromptsEmptyState() {
                             clearDraftById(prompt.id)
                           }}
                           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-amber-600 hover:bg-amber-200 dark:text-amber-400 dark:hover:bg-amber-800/40"
-                          title="Clear progress"
+                          title={t('emptyState.clearProgress')}
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -225,7 +227,7 @@ export function PromptsEmptyState() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-400" />
                   <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Recently Used
+                    {t('emptyState.recentlyUsed')}
                   </h2>
                 </div>
                 <div className="space-y-2">
@@ -257,7 +259,7 @@ export function PromptsEmptyState() {
             {/* Quick tip for keyboard shortcut */}
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">Tip:</span> Press{' '}
+                <span className="font-medium">{t('emptyState.tip')}</span> {t('emptyState.pressKey')}{' '}
                 <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
                   {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
                 </kbd>
@@ -265,7 +267,7 @@ export function PromptsEmptyState() {
                 <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
                   N
                 </kbd>
-                {' '}to create a new prompt, or{' '}
+                {' '}{t('emptyState.toCreatePrompt')}{' '}
                 <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
                   {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
                 </kbd>
@@ -273,7 +275,7 @@ export function PromptsEmptyState() {
                 <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
                   K
                 </kbd>
-                {' '}to search.
+                {' '}{t('emptyState.toSearch')}
               </p>
             </div>
           </div>

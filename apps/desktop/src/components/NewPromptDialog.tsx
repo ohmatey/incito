@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export function NewPromptDialog({
   onOpenSettings,
   defaultMode = 'blank',
 }: NewPromptDialogProps) {
+  const { t } = useTranslation(['prompts', 'common'])
   const { tagManager } = useAppContext()
   const [creationType, setCreationType] = useState<CreationType>('blank')
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
@@ -69,7 +71,7 @@ export function NewPromptDialog({
 
   async function handleGenerateWithAI() {
     if (!description.trim()) {
-      setError('Please describe the prompt you want to generate')
+      setError(t('newDialog.pleaseDescribe'))
       return
     }
 
@@ -103,9 +105,9 @@ export function NewPromptDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Prompt</DialogTitle>
+          <DialogTitle>{t('newDialog.title')}</DialogTitle>
           <DialogDescription>
-            Start with a blank template or generate one with AI
+            {t('newDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,9 +124,9 @@ export function NewPromptDialog({
             >
               <RadioGroupItem value="blank" id="type-blank" className="sr-only" />
               <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Blank Template</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('newDialog.blankTemplate')}</span>
               <span className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Start from scratch
+                {t('newDialog.startFromScratch')}
               </span>
             </Label>
             <Label
@@ -133,9 +135,9 @@ export function NewPromptDialog({
             >
               <RadioGroupItem value="ai" id="type-ai" className="sr-only" disabled={!aiConfigured} />
               <Sparkles className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Generate with AI</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('newDialog.generateWithAI')}</span>
               <span className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                {aiConfigured === false ? 'Configure in Settings' : 'Describe what you need'}
+                {aiConfigured === false ? t('newDialog.configureInSettings') : t('newDialog.describeWhatYouNeed')}
               </span>
             </Label>
           </RadioGroup>
@@ -145,14 +147,14 @@ export function NewPromptDialog({
             <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
               <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <p className="text-sm text-amber-700 dark:text-amber-300 flex-1">
-                AI provider not configured.{' '}
+                {t('newDialog.aiNotConfigured')}{' '}
                 <button
                   type="button"
                   onClick={handleOpenSettings}
                   className="underline hover:no-underline font-medium inline-flex items-center gap-1"
                 >
                   <Settings className="h-3 w-3" />
-                  Configure in Settings
+                  {t('newDialog.configureInSettings')}
                 </button>
               </p>
             </div>
@@ -163,11 +165,11 @@ export function NewPromptDialog({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium">
-                  Describe your prompt
+                  {t('newDialog.describePrompt')}
                 </Label>
                 <Textarea
                   id="description"
-                  placeholder="E.g., A prompt for writing blog posts about technology topics with adjustable tone and length"
+                  placeholder={t('newDialog.placeholder')}
                   value={description}
                   onChange={(e) => {
                     setDescription(e.target.value)
@@ -177,7 +179,7 @@ export function NewPromptDialog({
                   disabled={isGenerating}
                 />
                 <p className="font-mono text-[10px] text-gray-400 dark:text-gray-500">
-                  AI can make mistakes. Please review generated content.
+                  {t('newDialog.aiDisclaimer')}
                 </p>
               </div>
 
@@ -194,11 +196,11 @@ export function NewPromptDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isGenerating}>
-            Cancel
+            {t('common:buttons.cancel')}
           </Button>
           {creationType === 'blank' ? (
             <Button onClick={handleCreateBlank}>
-              Create Blank
+              {t('newDialog.createBlank')}
             </Button>
           ) : (
             <Button
@@ -209,10 +211,10 @@ export function NewPromptDialog({
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
+                  {t('newDialog.generating')}
                 </>
               ) : (
-                "Generate"
+                t('newDialog.generate')
               )}
             </Button>
           )}

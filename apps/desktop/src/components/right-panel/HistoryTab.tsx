@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile } from '@/types/prompt'
 import { getPromptVersions, type PromptVersionRow } from '@/lib/store'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -19,6 +20,7 @@ interface HistoryTabProps {
 }
 
 export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
+  const { t } = useTranslation('common')
   const [versions, setVersions] = useState<PromptVersionRow[]>([])
   const [loading, setLoading] = useState(false)
   const [expandedVersionId, setExpandedVersionId] = useState<string | null>(null)
@@ -90,7 +92,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
   if (!prompt) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Select a prompt</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('header.selectPrompt')}</p>
       </div>
     )
   }
@@ -98,7 +100,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Loading history...</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('rightPanel.loadingHistory')}</p>
       </div>
     )
   }
@@ -110,10 +112,10 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
           <Clock className="h-8 w-8 text-gray-400 dark:text-gray-500" />
         </div>
         <h3 className="mt-4 font-medium text-gray-700 dark:text-gray-300">
-          No version history yet
+          {t('rightPanel.noHistory')}
         </h3>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Versions are created automatically when you save changes
+          {t('rightPanel.historyAutoSave')}
         </p>
       </div>
     )
@@ -143,7 +145,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                         </span>
                         {isActive && (
                           <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded dark:bg-green-900/30 dark:text-green-400">
-                            Active
+                            {t('rightPanel.active')}
                           </span>
                         )}
                       </div>
@@ -168,7 +170,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                         size="icon"
                         onClick={() => setExpandedVersionId(isExpanded ? null : version.id)}
                         className="h-8 w-8"
-                        title={isExpanded ? 'Hide preview' : 'Show preview'}
+                        title={isExpanded ? t('rightPanel.hidePreview') : t('rightPanel.showPreview')}
                       >
                         {isExpanded ? (
                           <ChevronUp className="h-4 w-4" />
@@ -182,7 +184,7 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
                           size="icon"
                           onClick={() => setRestoreDialogVersion(version)}
                           className="h-8 w-8 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
-                          title="Restore this version"
+                          title={t('rightPanel.restoreVersion')}
                         >
                           <RotateCcw className="h-4 w-4" />
                         </Button>
@@ -214,9 +216,9 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
       <Dialog open={!!restoreDialogVersion} onOpenChange={(open) => !open && setRestoreDialogVersion(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Restore Version</DialogTitle>
+            <DialogTitle>{t('rightPanel.restoreVersionTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to restore version {restoreDialogVersion?.version_number}? This will replace the current content with the selected version. A new version will be created with your current content before restoring.
+              {t('rightPanel.restoreVersionDescription', { version: restoreDialogVersion?.version_number })}
             </DialogDescription>
           </DialogHeader>
           {restoreDialogVersion && (
@@ -229,10 +231,10 @@ export function HistoryTab({ prompt, onRestore }: HistoryTabProps) {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setRestoreDialogVersion(null)}>
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button onClick={() => restoreDialogVersion && handleRestore(restoreDialogVersion)}>
-              Restore Version
+              {t('rightPanel.restoreVersionButton')}
             </Button>
           </DialogFooter>
         </DialogContent>

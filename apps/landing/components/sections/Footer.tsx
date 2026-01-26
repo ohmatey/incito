@@ -1,9 +1,14 @@
+'use client'
+
 import { Github } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Logo } from '@/components/shared/Logo'
+import { useLanguage } from '@/context/LanguageContext'
 import { GITHUB_URL } from '@/lib/constants'
 
 export function Footer() {
+  const { t } = useLanguage()
+
   return (
     <footer className="border-t border-gray-200 py-8 dark:border-gray-800">
       <Container>
@@ -11,7 +16,7 @@ export function Footer() {
           <div className="flex items-center gap-2">
             <Logo size={24} />
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              Made by Aaron
+              {t.footer.madeBy}
             </span>
           </div>
           <a

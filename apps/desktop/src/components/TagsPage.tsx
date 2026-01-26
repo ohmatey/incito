@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Tag, PromptFile } from '@/types/prompt'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ export function TagsPage({
   onUpdateTag,
   onDeleteTag,
 }: TagsPageProps) {
+  const { t } = useTranslation(['tags', 'common'])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editColor, setEditColor] = useState('')
@@ -81,7 +83,7 @@ export function TagsPage({
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Tags</h1>
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('tags:title')}</h1>
       </div>
 
       {/* Content */}
@@ -90,10 +92,10 @@ export function TagsPage({
           <div className="max-w-2xl space-y-6">
             {/* Create new tag */}
             <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Create New Tag</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('tags:createNewTag')}</h3>
             <div className="flex items-center gap-3">
               <Input
-                placeholder="Tag name"
+                placeholder={t('tags:tagName')}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
@@ -115,17 +117,17 @@ export function TagsPage({
               </div>
               <Button onClick={handleCreateTag} disabled={!newTagName.trim()}>
                 <Plus className="h-4 w-4 mr-1" />
-                Add Tag
+                {t('tags:addTag')}
               </Button>
             </div>
           </div>
 
           {/* Tag list */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">All Tags ({tags.length})</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('tags:allTags', { count: tags.length })}</h3>
             {tags.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400 py-4">
-                No tags created yet. Create your first tag above.
+                {t('tags:noTagsYet')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -173,8 +175,7 @@ export function TagsPage({
                       <>
                         <TagBadge tag={tag} size="md" />
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {tagUsageCounts.get(tag.id) || 0} prompt
-                          {(tagUsageCounts.get(tag.id) || 0) !== 1 ? 's' : ''}
+                          {t('tags:promptCount', { count: tagUsageCounts.get(tag.id) || 0 })}
                         </span>
                         <div className="ml-auto flex items-center gap-1">
                           <Button
@@ -207,18 +208,17 @@ export function TagsPage({
       <AlertDialog open={!!deleteTag} onOpenChange={() => setDeleteTag(null)}>
         <AlertDialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-gray-800 dark:text-gray-100">Delete Tag</AlertDialogTitle>
+            <AlertDialogTitle className="text-gray-800 dark:text-gray-100">{t('tags:deleteTag')}</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete the tag "{deleteTag?.name}"? This will
-              remove it from all prompts that use it.
+              {t('tags:deleteTagDescription', { name: deleteTag?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-              Cancel
+              {t('common:buttons.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-red-500 text-white hover:bg-red-600">
-              Delete
+              {t('common:buttons.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

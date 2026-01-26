@@ -1,4 +1,5 @@
 import type { PromptFile } from '@/types/prompt'
+import { useTranslation } from 'react-i18next'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -38,6 +39,7 @@ export function PromptListItem({
   onDelete,
   onTogglePin,
 }: PromptListItemProps) {
+  const { t } = useTranslation(['prompts', 'common'])
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   return (
@@ -78,18 +80,18 @@ export function PromptListItem({
         <ContextMenuContent>
           <ContextMenuItem onClick={onTogglePin}>
             {isPinned ? <PinOff className="mr-2 h-4 w-4" /> : <Pin className="mr-2 h-4 w-4" />}
-            {isPinned ? 'Unpin' : 'Pin'}
+            {isPinned ? t('prompts:editor.unpin') : t('prompts:editor.pin')}
           </ContextMenuItem>
           <ContextMenuItem onClick={onDuplicate}>
             <Copy className="mr-2 h-4 w-4" />
-            Duplicate
+            {t('prompts:editor.duplicate')}
           </ContextMenuItem>
           <ContextMenuItem
             onClick={() => setShowDeleteDialog(true)}
             className="text-red-500 focus:text-red-500"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('common:buttons.delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -97,21 +99,20 @@ export function PromptListItem({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-gray-800 dark:text-gray-100">Delete Prompt</AlertDialogTitle>
+            <AlertDialogTitle className="text-gray-800 dark:text-gray-100">{t('prompts:deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete "{prompt.name}"? This action cannot
-              be undone.
+              {t('prompts:deleteDialog.description', { name: prompt.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-              Cancel
+              {t('common:buttons.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              Delete
+              {t('common:buttons.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

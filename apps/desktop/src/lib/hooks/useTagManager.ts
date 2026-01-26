@@ -8,6 +8,7 @@ import {
 } from '@/lib/store'
 import { savePrompt } from '@/lib/prompts'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 
 export interface UseTagManagerResult {
   tags: Tag[]
@@ -51,14 +52,15 @@ export function useTagManager(): UseTagManagerResult {
       const result = await createTagInDb(name, color)
       if (result.ok) {
         setTags((prev) => [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name)))
-        toast.success('Created tag')
+        toast.success(i18n.t('toasts:success.tagCreated'))
         return result.data
       } else {
         toast.error(result.error)
         return null
       }
-    } catch (err) {
-      toast.error('Failed to create tag')
+    } catch (error) {
+      console.error('Failed to create tag:', error)
+      toast.error(i18n.t('toasts:error.tagCreateFailed'))
       return null
     }
   }, [])
@@ -110,14 +112,15 @@ export function useTagManager(): UseTagManagerResult {
           }
         }
 
-        toast.success('Updated tag')
+        toast.success(i18n.t('toasts:success.tagUpdated'))
         return true
       } else {
         toast.error(result.error)
         return false
       }
-    } catch (err) {
-      toast.error('Failed to update tag')
+    } catch (error) {
+      console.error('Failed to update tag:', error)
+      toast.error(i18n.t('toasts:error.tagUpdateFailed'))
       return false
     }
   }, [tags])
@@ -157,15 +160,16 @@ export function useTagManager(): UseTagManagerResult {
           })
         }
 
-        toast.success('Deleted tag')
+        toast.success(i18n.t('toasts:success.tagDeleted'))
         return true
       } else if (!result.ok) {
         toast.error(result.error)
         return false
       }
       return false
-    } catch (err) {
-      toast.error('Failed to delete tag')
+    } catch (error) {
+      console.error('Failed to delete tag:', error)
+      toast.error(i18n.t('toasts:error.tagDeleteFailed'))
       return false
     }
   }, [tags])

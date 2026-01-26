@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile } from '@/types/prompt'
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { HighlightedTextarea } from '@/components/ui/highlighted-textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { hasAIConfigured } from '@/lib/store'
@@ -40,6 +42,7 @@ export function PromptEditorDialog({
   onSaveAsVariant,
   onRefineWithAI,
 }: PromptEditorDialogProps) {
+  const { t } = useTranslation(['common', 'prompts'])
   const [template, setTemplate] = useState('')
   const [aiInstruction, setAiInstruction] = useState('')
   const [variantLabel, setVariantLabel] = useState('')
@@ -96,7 +99,7 @@ export function PromptEditorDialog({
 
   if (!prompt) return null
 
-  const title = mode === 'edit' ? 'Edit Prompt' : 'Create Variant'
+  const title = mode === 'edit' ? t('prompts:editorDialog.editTitle') : t('prompts:editorDialog.createVariantTitle')
   const hasAI = aiConfigured && onRefineWithAI
 
   return (
@@ -106,7 +109,7 @@ export function PromptEditorDialog({
           <DialogTitle>{title}</DialogTitle>
           {prompt && (
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Based on: {prompt.name}
+              {t('prompts:editorDialog.basedOn', { name: prompt.name })}
             </p>
           )}
         </DialogHeader>
@@ -115,13 +118,13 @@ export function PromptEditorDialog({
         {mode === 'new-variant' && (
           <div className="flex items-center gap-3">
             <Label htmlFor="variant-label" className="shrink-0">
-              Variant Name:
+              {t('prompts:editorDialog.variantNameLabel')}
             </Label>
             <Input
               id="variant-label"
               value={variantLabel}
               onChange={(e) => setVariantLabel(e.target.value)}
-              placeholder="e.g., Formal, Casual, Technical"
+              placeholder={t('prompts:editorDialog.variantNamePlaceholder')}
               className="flex-1 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
               autoFocus
             />
@@ -132,7 +135,7 @@ export function PromptEditorDialog({
           {/* Template Editor - 2/3 width when AI panel is shown */}
           <div className={`flex flex-col ${showAiPanel ? 'w-2/3' : 'w-full'}`}>
             <div className="flex items-center justify-between mb-2">
-              <Label htmlFor="template">Template</Label>
+              <Label htmlFor="template">{t('prompts:editorDialog.templateLabel')}</Label>
               {hasAI && !showAiPanel && (
                 <Button
                   variant="ghost"
@@ -141,16 +144,16 @@ export function PromptEditorDialog({
                   onClick={() => setShowAiPanel(true)}
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  Refine with AI
+                  {t('prompts:editorDialog.refineWithAI')}
                 </Button>
               )}
             </div>
-            <Textarea
+            <HighlightedTextarea
               id="template"
               value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              className="flex-1 min-h-[400px] font-mono text-sm resize-none border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-              placeholder="Write your prompt template here..."
+              onValueChange={setTemplate}
+              className="flex-1 min-h-[400px] resize-none border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+              placeholder={t('prompts:editorDialog.templatePlaceholder')}
             />
           </div>
 
@@ -158,29 +161,29 @@ export function PromptEditorDialog({
           {hasAI && showAiPanel && (
             <div className="w-1/3 flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="ai-instruction">AI Refinement</Label>
+                <Label htmlFor="ai-instruction">{t('prompts:editorDialog.aiRefinementLabel')}</Label>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-7 text-xs"
                   onClick={() => setShowAiPanel(false)}
                 >
-                  Hide
+                  {t('prompts:editorDialog.hide')}
                 </Button>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Describe how to improve the template:
+                {t('prompts:editorDialog.describeImprovement')}
               </p>
               <Textarea
                 id="ai-instruction"
                 value={aiInstruction}
                 onChange={(e) => setAiInstruction(e.target.value)}
                 className="flex-1 min-h-[200px] text-sm resize-none border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-                placeholder="Make it more formal and professional..."
+                placeholder={t('prompts:editorDialog.refinePlaceholder')}
                 autoFocus
               />
               <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
-                AI can make mistakes. Please review generated content.
+                {t('common:ai.disclaimer')}
               </p>
               <Button
                 onClick={handleRefine}
@@ -192,7 +195,7 @@ export function PromptEditorDialog({
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
-                Refine
+                {t('prompts:editorDialog.refine')}
               </Button>
             </div>
           )}
@@ -200,24 +203,24 @@ export function PromptEditorDialog({
 
         <DialogFooter className="mt-4">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common:buttons.cancel')}
           </Button>
 
           {mode === 'new-variant' ? (
             // In new-variant mode, primary action is Save as Variant
             <Button onClick={handleSaveAsVariant} disabled={!variantLabel.trim()}>
-              Create Variant
+              {t('prompts:editorDialog.createVariant')}
             </Button>
           ) : (
             // In edit mode, show Save and Save as Variant dropdown
             <>
               <Button onClick={handleSave}>
-                Save
+                {t('common:buttons.save')}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1">
-                    Save as Variant
+                    {t('prompts:editorDialog.saveAsVariant')}
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -225,13 +228,13 @@ export function PromptEditorDialog({
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="dropdown-variant-label" className="text-sm">
-                        Variant Name
+                        {t('prompts:editorDialog.variantNameLabel')}
                       </Label>
                       <Input
                         id="dropdown-variant-label"
                         value={variantLabel}
                         onChange={(e) => setVariantLabel(e.target.value)}
-                        placeholder="e.g., Formal, Casual"
+                        placeholder={t('prompts:editorDialog.variantNamePlaceholderShort')}
                         className="mt-1 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => {
@@ -248,7 +251,7 @@ export function PromptEditorDialog({
                       disabled={!variantLabel.trim()}
                       onClick={handleSaveAsVariant}
                     >
-                      Create Variant
+                      {t('prompts:editorDialog.createVariant')}
                     </Button>
                   </div>
                 </DropdownMenuContent>

@@ -5,9 +5,12 @@ import { Container } from '@/components/ui/container'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/shared/FadeIn'
 import { ScreenshotPlaceholder } from '@/components/shared/ScreenshotPlaceholder'
+import { useLanguage } from '@/context/LanguageContext'
 import { GITHUB_URL, DOWNLOAD_URL } from '@/lib/constants'
 
 export function Hero() {
+  const { t } = useLanguage()
+
   return (
     <section className="relative overflow-hidden pb-20 pt-32">
       {/* Background gradient */}
@@ -19,27 +22,26 @@ export function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl lg:text-6xl">
-              Turn prompts into{' '}
-              <span className="text-gradient">instructions.</span>
+              {t.hero.title}{' '}
+              <span className="text-gradient">{t.hero.titleHighlight}</span>
             </h1>
           </FadeIn>
 
           <FadeIn delay={0.1}>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400 sm:text-xl">
-              Build guided forms for your best prompts. Fill in the blanks, copy, paste into any AI.
-              Set it up once, reuse forever. 100% offline.
+              {t.hero.subtitle}
             </p>
           </FadeIn>
 
           <FadeIn delay={0.2}>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a href={DOWNLOAD_URL}>
-                <Button size="lg">Download for macOS</Button>
+                <Button size="lg">{t.hero.downloadButton}</Button>
               </a>
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 <Button variant="secondary" size="lg">
                   <Github size={20} className="mr-2" />
-                  View on GitHub
+                  {t.hero.githubButton}
                 </Button>
               </a>
             </div>
@@ -52,7 +54,7 @@ export function Hero() {
             <div className="absolute -inset-4 -z-10 rounded-2xl bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-accent-500/20 blur-2xl" />
             <ScreenshotPlaceholder
               src="/screenshots/incito-desktop.png"
-              alt="Incito desktop application showing prompt editor"
+              alt={t.hero.screenshotAlt}
             />
           </div>
         </FadeIn>

@@ -1,54 +1,13 @@
 'use client'
 
-import { HardDrive, Zap, Braces, Sparkles, Keyboard, Paintbrush, GitBranch } from 'lucide-react'
+import { HardDrive, Zap, Braces, Sparkles, Keyboard, Paintbrush, GitBranch, LucideIcon } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { FadeIn } from '@/components/shared/FadeIn'
+import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
-const features = [
-  {
-    icon: HardDrive,
-    title: '100% Offline',
-    description: 'Works completely offline. Your prompts never leave your machine—no internet required, no cloud sync, no accounts.',
-    color: 'primary',
-  },
-  {
-    icon: Zap,
-    title: 'Instant',
-    description: 'Native app performance. Opens in milliseconds, not seconds. No loading spinners.',
-    color: 'secondary',
-  },
-  {
-    icon: Braces,
-    title: 'Handlebars Templating',
-    description: 'Use {{variables}}, conditionals, and helpers. Your prompts become smart templates.',
-    color: 'accent',
-  },
-  {
-    icon: GitBranch,
-    title: 'Prompt Variants',
-    description: 'Create multiple versions of any prompt. Test different tones, styles, or approaches side by side.',
-    color: 'primary',
-  },
-  {
-    icon: Sparkles,
-    title: 'Bring Your Own AI (Optional)',
-    description: 'Connect an AI provider if you want help generating prompts. Or skip it—the app works fully standalone.',
-    color: 'primary',
-  },
-  {
-    icon: Keyboard,
-    title: 'Keyboard-first',
-    description: 'Navigate, search, and copy without touching your mouse. Shortcuts for everything.',
-    color: 'secondary',
-  },
-  {
-    icon: Paintbrush,
-    title: 'Clean UI',
-    description: 'A distraction-free interface that gets out of your way. Light and dark modes included.',
-    color: 'accent',
-  },
-]
+const featureIcons: LucideIcon[] = [HardDrive, Zap, Braces, GitBranch, Sparkles, Keyboard, Paintbrush]
+const featureColors = ['primary', 'secondary', 'accent', 'primary', 'primary', 'secondary', 'accent']
 
 const colorClasses = {
   primary: {
@@ -66,20 +25,24 @@ const colorClasses = {
 }
 
 export function Features() {
+  const { t } = useLanguage()
+
   return (
     <section className="py-20">
       <Container>
         <FadeIn>
           <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">
-            Everything you need, nothing you don&apos;t
+            {t.features.heading}
           </h2>
         </FadeIn>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => {
-            const colors = colorClasses[feature.color as keyof typeof colorClasses]
+          {t.features.items.map((feature, index) => {
+            const Icon = featureIcons[index]
+            const color = featureColors[index]
+            const colors = colorClasses[color as keyof typeof colorClasses]
             return (
-              <FadeIn key={feature.title} delay={index * 0.05}>
+              <FadeIn key={index} delay={index * 0.05}>
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
                   <div
                     className={cn(
@@ -88,7 +51,7 @@ export function Features() {
                       colors.text
                     )}
                   >
-                    <feature.icon size={24} />
+                    <Icon size={24} />
                   </div>
                   <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                     {feature.title}

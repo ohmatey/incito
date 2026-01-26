@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -19,6 +20,7 @@ export function NavSidebar({
   currentView,
   onViewChange,
 }: NavSidebarProps) {
+  const { t } = useTranslation('common')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   // Global keyboard shortcut to open shortcuts modal (Cmd/Ctrl + /)
@@ -41,7 +43,7 @@ export function NavSidebar({
         {/* Logo */}
         <button
           onClick={() => onViewChange('prompts')}
-          aria-label="Go to prompts"
+          aria-label={t('navigation.goToPrompts')}
           className="flex h-14 w-full items-center justify-center border-b border-gray-200 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700"
         >
           <svg
@@ -67,7 +69,7 @@ export function NavSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => onViewChange('search')}
-                aria-label="Search"
+                aria-label={t('navigation.search')}
                 className={cn(
                   'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
                   currentView === 'search' &&
@@ -78,7 +80,7 @@ export function NavSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Search</p>
+              <p>{t('navigation.search')}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -88,7 +90,7 @@ export function NavSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => onViewChange('prompts')}
-                aria-label="Prompts"
+                aria-label={t('navigation.prompts')}
                 className={cn(
                   'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
                   currentView === 'prompts' &&
@@ -99,7 +101,7 @@ export function NavSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Prompts</p>
+              <p>{t('navigation.prompts')}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -109,7 +111,7 @@ export function NavSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => onViewChange('tags')}
-                aria-label="Tags"
+                aria-label={t('navigation.tags')}
                 className={cn(
                   'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
                   currentView === 'tags' &&
@@ -120,7 +122,7 @@ export function NavSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Tags</p>
+              <p>{t('navigation.tags')}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -133,14 +135,14 @@ export function NavSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShortcutsOpen(true)}
-                aria-label="Keyboard shortcuts"
+                aria-label={t('navigation.keyboardShortcuts')}
                 className="h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100"
               >
                 <Keyboard className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Keyboard Shortcuts</p>
+              <p>{t('navigation.keyboardShortcuts')}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -150,7 +152,7 @@ export function NavSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => onViewChange('settings')}
-                aria-label="Settings"
+                aria-label={t('navigation.settings')}
                 className={cn(
                   'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
                   currentView === 'settings' &&
@@ -161,7 +163,7 @@ export function NavSidebar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Settings</p>
+              <p>{t('navigation.settings')}</p>
             </TooltipContent>
           </Tooltip>
         </div>

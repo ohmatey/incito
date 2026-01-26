@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 
 export type ChangeSource = 'user' | 'ai_fill' | 'ai_refine' | 'reset'
 
@@ -301,17 +301,23 @@ export function useFormHistory(
     setFuture([])
   }, [])
 
-  // Get the source of the last change for a specific key
-  const getLastChangeSource = useCallback((key: string): ChangeSource | null => {
-    // Check from most recent to oldest
-    for (let i = past.length - 1; i >= 0; i--) {
-      const entry = past[i]
-      if (entry.changes.some((c) => c.key === key)) {
-        return entry.source
+  // Build a Map of key → lastSource for O(1) lookups
+  // This is more efficient than iterating through history for each key
+  const lastSourceByKey = useMemo(() => {
+    const map = new Map<string, ChangeSource>()
+    for (const entry of past) {
+      for (const change of entry.changes) {
+        map.set(change.key, entry.source)
       }
     }
-    return null
+    return map
   }, [past])
+
+  // Get the source of the last change for a specific key - O(1) lookup
+  const getLastChangeSource = useCallback(
+    (key: string): ChangeSource | null => lastSourceByKey.get(key) ?? null,
+    [lastSourceByKey]
+  )
 
   // Cleanup on unmount
   useEffect(() => {

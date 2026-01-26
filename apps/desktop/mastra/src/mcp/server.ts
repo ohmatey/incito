@@ -51,3 +51,15 @@ export const server = new MCPServer({
     use_prompt: usePromptTool,
   },
 })
+
+server.use(async (context, next) => {
+  const authToken = process.env.INCITO_MCP_TOKEN
+  if (!authToken) {
+    throw new Error('MCP token is not configured on the server.')
+  }
+  const providedToken = context.headers?.['x-auth-token']
+  if (providedToken !== authToken) {
+    throw new Error('Unauthorized')
+  }
+  return next()
+})

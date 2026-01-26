@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile } from '@/types/prompt'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -29,12 +30,13 @@ export function ConfigTab({
   onDeletePrompt,
   onDefaultLaunchersChange,
 }: ConfigTabProps) {
+  const { t } = useTranslation(['prompts', 'common'])
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   if (!prompt) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Select a prompt</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('prompts:configTab.selectPrompt')}</p>
       </div>
     )
   }
@@ -46,10 +48,10 @@ export function ConfigTab({
           {/* Edit Section */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Edit Prompt
+              {t('prompts:configTab.editPrompt')}
             </h3>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Modify the template, variables, and metadata
+              {t('prompts:configTab.editDescription')}
             </p>
             <Button
               variant="outline"
@@ -58,17 +60,17 @@ export function ConfigTab({
               className="mt-3 gap-1.5"
             >
               <Pencil className="h-4 w-4" />
-              Edit Prompt
+              {t('prompts:configTab.editPrompt')}
             </Button>
           </div>
 
           {/* Quick Launch Section */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Quick Launch
+              {t('prompts:configTab.quickLaunch')}
             </h3>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Select default apps to show as quick-access buttons
+              {t('prompts:configTab.quickLaunchDescription')}
             </p>
             <div className="mt-3 space-y-2">
               {AVAILABLE_LAUNCHERS.map((launcher) => {
@@ -102,10 +104,10 @@ export function ConfigTab({
           {/* Delete Section */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Delete Prompt
+              {t('prompts:configTab.deletePrompt')}
             </h3>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Permanently delete this prompt file
+              {t('prompts:configTab.deleteDescription')}
             </p>
             <Button
               variant="outline"
@@ -114,7 +116,7 @@ export function ConfigTab({
               className="mt-3 gap-1.5 text-red-500 hover:text-red-600 border-red-200 hover:border-red-300 dark:border-red-900 dark:hover:border-red-800"
             >
               <Trash2 className="h-4 w-4" />
-              Delete Prompt
+              {t('prompts:configTab.deletePrompt')}
             </Button>
           </div>
         </div>
@@ -124,21 +126,21 @@ export function ConfigTab({
         <AlertDialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-gray-800 dark:text-gray-100">
-              Delete Prompt
+              {t('prompts:configTab.deletePrompt')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete "{prompt.name}"? This action cannot be undone.
+              {t('prompts:configTab.deleteConfirmDescription', { name: prompt.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-              Cancel
+              {t('common:buttons.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={onDeletePrompt}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              Delete
+              {t('common:buttons.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

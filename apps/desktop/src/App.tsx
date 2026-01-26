@@ -1,3 +1,8 @@
+/**
+ * @deprecated This file is not used in the production app.
+ * The app uses TanStack Router with AppContext (see main.tsx, router.tsx, and RootLayout.tsx).
+ * This file is kept for reference but should not be modified.
+ */
 import { useState, useEffect } from 'react'
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { RightPanelTab } from '@/components/PromptHeader'
@@ -18,6 +23,7 @@ import { NewPromptDialog } from '@/components/NewPromptDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import type { GeneratedPrompt } from '@/lib/mastra-client'
+import i18n from '@/i18n'
 
 export default function App() {
   // Core state
@@ -50,6 +56,7 @@ export default function App() {
       }
     }
     loadSavedFolder()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Run once on mount only
   }, [])
 
   // Keyboard shortcuts
@@ -95,8 +102,9 @@ export default function App() {
         promptManager.selectPrompt(loadedPrompts[0])
         editState.setIsEditMode(false)
       }
-    } catch (err) {
-      toast.error('Failed to load prompts folder')
+    } catch (error) {
+      console.error('Failed to load prompts folder:', error)
+      toast.error(i18n.t('toasts:error.promptsFolderFailed'))
       await clearFolderPath()
       setFolderPath(null)
     } finally {
@@ -308,8 +316,9 @@ export default function App() {
 
     try {
       await savePrompt(updatedPrompt)
-    } catch (err) {
-      toast.error('Failed to save notes')
+    } catch (error) {
+      console.error('Failed to save notes:', error)
+      toast.error(i18n.t('toasts:error.notesSaveFailed'))
     }
   }
 
@@ -330,8 +339,9 @@ export default function App() {
 
     try {
       await savePrompt(updatedPrompt)
-    } catch (err) {
-      toast.error('Failed to save default launchers')
+    } catch (error) {
+      console.error('Failed to save launchers:', error)
+      toast.error(i18n.t('toasts:error.launchersSaveFailed'))
     }
   }
 

@@ -56,6 +56,16 @@ function serializeArray(items: string[], format: SerializationFormat = 'comma'):
   }
 }
 
+function sanitizeValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value.replace(/\{\{/g, '\\{{').replace(/\}\}/g, '\\}}')
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeValue)
+  }
+  return value
+}
+
 export function interpolate(
   template: string,
   values: Record<string, unknown>,
@@ -64,20 +74,36 @@ export function interpolate(
   // Build context with defaults and formatted arrays
   const context: Record<string, unknown> = {}
 
-  for (const v of variables) {
-    const value = values[v.key]
+  // Create a map of variable keys for quick lookup
+  const variableMap = new Map(variables.map(v => [v.key, v]))
 
-    if (value !== undefined && value !== '') {
-      // Handle array values with formatting for direct substitution
-      if (Array.isArray(value)) {
-        const format = v.format || 'comma'
-        // Store both the raw array and a formatted version
-        context[v.key] = serializeArray(value as string[], format)
-        context[`${v.key}_array`] = value // Raw array for iteration
+  // First, add all values passed in (even those without variable definitions)
+  // Track which keys were explicitly set (even if empty string)
+  const explicitlySet = new Set<string>()
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined) {
+      explicitlySet.add(key)
+      if (value !== '') {
+        const variable = variableMap.get(key)
+        // Handle array values with formatting for direct substitution
+        if (Array.isArray(value)) {
+          const format = variable?.format || 'comma'
+          // Store both the raw array and a formatted version
+          context[key] = serializeArray(value as string[], format)
+          context[`${key}_array`] = value // Raw array for iteration
+        } else {
+          context[key] = sanitizeValue(value)
+        }
       } else {
-        context[v.key] = value
+        // Empty string is explicitly set - add it so conditionals work correctly
+        context[key] = ''
       }
-    } else if (v.default !== undefined) {
+    }
+  }
+
+  // Then, fill in defaults for variables not in values
+  for (const v of variables) {
+    if (context[v.key] === undefined && v.default !== undefined) {
       // Handle default values
       if (Array.isArray(v.default)) {
         const format = v.format || 'comma'
@@ -89,9 +115,23 @@ export function interpolate(
     }
   }
 
+  // Find all simple variable references in template and preserve undefined ones as placeholders
+  // Match {{varname}} but not {{#if}}, {{/if}}, {{else}}, etc.
+  const varRefRegex = /\{\{([a-zA-Z_][a-zA-Z0-9_-]*)\}\}/g
+  let match
+  while ((match = varRefRegex.exec(template)) !== null) {
+    const varName = match[1]
+    // Skip built-in Handlebars keywords
+    if (['if', 'unless', 'each', 'with', 'else'].includes(varName)) continue
+    // If not already in context, add the placeholder as the value
+    if (context[varName] === undefined) {
+      context[varName] = `{{${varName}}}`
+    }
+  }
+
   try {
     // noEscape prevents HTML escaping (we want raw output for prompts)
-    const compiled = Handlebars.compile(template, { noEscape: true })
+    const compiled = Handlebars.compile(template, { noEscape: true, strict: false })
     return compiled(context)
   } catch {
     // Return original template on compilation/runtime errors

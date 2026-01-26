@@ -1,0 +1,124 @@
+{
+  "navigation": {
+    "search": "Search",
+    "prompts": "Prompts",
+    "tags": "Tags",
+    "settings": "Settings",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "goToPrompts": "Go to prompts"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "copy": "Copy",
+    "close": "Close",
+    "confirm": "Confirm",
+    "changeFolder": "Change Folder",
+    "selectFolder": "Select Folder",
+    "configure": "Configure",
+    "remove": "Remove"
+  },
+  "labels": {
+    "loading": "Loading...",
+    "loadingSettings": "Loading settings...",
+    "noResults": "No results found",
+    "name": "Name",
+    "description": "Description",
+    "provider": "Provider",
+    "apiKey": "API Key",
+    "model": "Model"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "toggleHint": "Press {{mod}} / to toggle this panel",
+    "platform": {
+      "mac": "Mac",
+      "other": "Windows/Linux"
+    },
+    "sections": {
+      "navigation": "Navigation",
+      "actions": "Actions",
+      "panels": "Prompt Panels",
+      "general": "General"
+    },
+    "labels": {
+      "searchPrompts": "Search prompts",
+      "newPrompt": "New prompt",
+      "navigateList": "Navigate prompt list",
+      "jumpVariables": "Jump between variables",
+      "copyPrompt": "Copy prompt",
+      "editPrompt": "Edit prompt",
+      "saveChanges": "Save changes",
+      "duplicatePrompt": "Duplicate prompt",
+      "toggleRightPanel": "Toggle right panel",
+      "showShortcuts": "Show keyboard shortcuts",
+      "closeCancel": "Close dialog / Cancel",
+      "moveBetweenFields": "Move between fields"
+    }
+  },
+  "header": {
+    "selectPrompt": "Select a prompt",
+    "discardChanges": "Discard changes?",
+    "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to cancel? Your changes will be lost.",
+    "keepEditing": "Keep editing",
+    "discardChangesButton": "Discard changes"
+  },
+  "tabs": {
+    "prompt": "Prompt",
+    "history": "History",
+    "notes": "Notes",
+    "config": "Config",
+    "instructions": "Instructions",
+    "preview": "Preview",
+    "variables": "Variables"
+  },
+  "rightPanel": {
+    "addNote": "Add note",
+    "writeNote": "Write a note...",
+    "addNoteButton": "Add Note",
+    "addFirstNoteButton": "Add first note",
+    "noNotes": "No notes yet",
+    "addFirstNote": "Add notes to remember important details about this prompt",
+    "noteAdded": "Note added",
+    "noteDeleted": "Note deleted",
+    "deleteNoteConfirm": "Delete this note?",
+    "noHistory": "No version history yet",
+    "historyAutoSave": "Versions are created automatically when you save changes",
+    "loadingHistory": "Loading history...",
+    "active": "Active",
+    "hidePreview": "Hide preview",
+    "showPreview": "Show preview",
+    "restoreVersion": "Restore this version",
+    "restoreVersionTitle": "Restore Version",
+    "restoreVersionDescription": "Are you sure you want to restore version {{version}}? This will replace the current content with the selected version. A new version will be created with your current content before restoring.",
+    "restoreVersionButton": "Restore Version",
+    "versionRestored": "Version restored",
+    "today": "Today at {{time}}",
+    "yesterday": "Yesterday at {{time}}",
+    "daysAgo": "{{days}} days ago",
+    "quickLaunch": "Quick Launch",
+    "quickLaunchDescription": "Choose apps to show as quick launch buttons.",
+    "dangerZone": "Danger Zone",
+    "deletePrompt": "Delete prompt",
+    "deletePromptDescription": "Permanently delete this prompt.",
+    "variants": "Variants",
+    "newVariant": "New variant",
+    "baseVersion": "Base version",
+    "closePanel": "Close panel"
+  },
+  "ai": {
+    "disclaimer": "AI can make mistakes. Please review generated content.",
+    "generating": "Generating...",
+    "generate": "Generate"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try refreshing the page.",
+    "errorDetails": "Error details",
+    "tryAgain": "Try again",
+    "reloadPage": "Reload page"
+  }
+}

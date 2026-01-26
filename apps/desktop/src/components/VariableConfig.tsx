@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Variable, SerializationFormat } from '@/types/prompt'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +44,7 @@ export function VariableConfig({
   isFirst = false,
   isLast = false,
 }: VariableConfigProps) {
+  const { t } = useTranslation(['prompts'])
   const [arrayInputValue, setArrayInputValue] = useState('')
   const [arrayDefaultInputValue, setArrayDefaultInputValue] = useState('')
 
@@ -496,7 +498,7 @@ export function VariableConfig({
               type="text"
               value={variable.default as string ?? ''}
               onChange={(e) => handleDefaultChange(e.target.value)}
-              placeholder="Default value"
+              placeholder={t('prompts:variableConfig.placeholders.defaultValue')}
               className="h-8 text-sm"
             />
           )
@@ -506,7 +508,7 @@ export function VariableConfig({
               type="number"
               value={variable.default as number ?? ''}
               onChange={(e) => handleDefaultChange(e.target.value)}
-              placeholder="Default value"
+              placeholder={t('prompts:variableConfig.placeholders.defaultValue')}
               className="h-8 text-sm"
             />
           )
@@ -533,10 +535,10 @@ export function VariableConfig({
               onValueChange={handleSelectDefaultChange}
             >
               <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="No default" />
+                <SelectValue placeholder={t('prompts:variableConfig.placeholders.noDefault')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">No default</SelectItem>
+                <SelectItem value="__none__">{t('prompts:variableConfig.placeholders.noDefault')}</SelectItem>
                 {options.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -597,7 +599,7 @@ export function VariableConfig({
                 <Input
                   type="text"
                   value={arrayDefaultInputValue}
-                  placeholder="Add default item..."
+                  placeholder={t('prompts:variableConfig.placeholders.addDefaultItem')}
                   onChange={(e) => setArrayDefaultInputValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -635,30 +637,30 @@ export function VariableConfig({
       <div className="space-y-3">
         {/* Label */}
         <div className="space-y-1">
-          <Label className="text-xs text-gray-500 dark:text-gray-400">Label</Label>
+          <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.label')}</Label>
           <Input
             value={variable.label}
             onChange={(e) => handleLabelChange(e.target.value)}
-            placeholder="Label"
+            placeholder={t('prompts:variableConfig.placeholders.labelPlaceholder')}
             className="h-8 text-sm"
           />
         </div>
 
         {/* Type */}
         <div className="space-y-1">
-          <Label className="text-xs text-gray-500 dark:text-gray-400">Type</Label>
+          <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.type')}</Label>
           <Select value={variable.type} onValueChange={handleTypeChange}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">Text</SelectItem>
-              <SelectItem value="textarea">Text Area</SelectItem>
-              <SelectItem value="number">Number</SelectItem>
-              <SelectItem value="slider">Slider</SelectItem>
-              <SelectItem value="select">Select</SelectItem>
-              <SelectItem value="multi-select">Multi-Select</SelectItem>
-              <SelectItem value="array">Array</SelectItem>
+              <SelectItem value="text">{t('prompts:variableConfig.types.text')}</SelectItem>
+              <SelectItem value="textarea">{t('prompts:variableConfig.types.textarea')}</SelectItem>
+              <SelectItem value="number">{t('prompts:variableConfig.types.number')}</SelectItem>
+              <SelectItem value="slider">{t('prompts:variableConfig.types.slider')}</SelectItem>
+              <SelectItem value="select">{t('prompts:variableConfig.types.select')}</SelectItem>
+              <SelectItem value="multi-select">{t('prompts:variableConfig.types.multiSelect')}</SelectItem>
+              <SelectItem value="array">{t('prompts:variableConfig.types.array')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -666,10 +668,10 @@ export function VariableConfig({
         {/* Slider config */}
         {variable.type === 'slider' && (
           <div className="space-y-2">
-            <Label className="text-xs text-gray-500 dark:text-gray-400">Slider Range</Label>
+            <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.sliderRange')}</Label>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs text-gray-400">Min</Label>
+                <Label className="text-xs text-gray-400">{t('prompts:variableConfig.fields.min')}</Label>
                 <Input
                   type="number"
                   value={variable.min ?? 0}
@@ -678,7 +680,7 @@ export function VariableConfig({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-gray-400">Max</Label>
+                <Label className="text-xs text-gray-400">{t('prompts:variableConfig.fields.max')}</Label>
                 <Input
                   type="number"
                   value={variable.max ?? 100}
@@ -687,7 +689,7 @@ export function VariableConfig({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-gray-400">Step</Label>
+                <Label className="text-xs text-gray-400">{t('prompts:variableConfig.fields.step')}</Label>
                 <Input
                   type="number"
                   value={variable.step ?? 1}
@@ -704,7 +706,7 @@ export function VariableConfig({
         {(variable.type === 'select' || variable.type === 'multi-select') && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-gray-500 dark:text-gray-400">Options</Label>
+              <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.options')}</Label>
               <Button
                 type="button"
                 variant="ghost"
@@ -713,7 +715,7 @@ export function VariableConfig({
                 className="h-6 text-xs"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add
+                {t('prompts:variableConfig.actions.add')}
               </Button>
             </div>
             <div className="space-y-1.5">
@@ -722,13 +724,13 @@ export function VariableConfig({
                   <Input
                     value={opt.label}
                     onChange={(e) => handleOptionChange(index, 'label', e.target.value)}
-                    placeholder="Label"
+                    placeholder={t('prompts:variableConfig.placeholders.labelPlaceholder')}
                     className="h-7 text-xs flex-1"
                   />
                   <Input
                     value={opt.value}
                     onChange={(e) => handleOptionChange(index, 'value', e.target.value)}
-                    placeholder="Value"
+                    placeholder={t('prompts:variableConfig.placeholders.valuePlaceholder')}
                     className="h-7 text-xs flex-1 font-mono"
                   />
                   <Button
@@ -751,16 +753,16 @@ export function VariableConfig({
         {/* Format selector for array/multi-select */}
         {(variable.type === 'array' || variable.type === 'multi-select') && (
           <div className="space-y-1">
-            <Label className="text-xs text-gray-500 dark:text-gray-400">Output Format</Label>
+            <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.outputFormat')}</Label>
             <Select value={variable.format || 'comma'} onValueChange={(v) => handleFormatChange(v as SerializationFormat)}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="comma">Comma separated</SelectItem>
-                <SelectItem value="newline">Newline separated</SelectItem>
-                <SelectItem value="numbered">Numbered list</SelectItem>
-                <SelectItem value="bullet">Bullet list</SelectItem>
+                <SelectItem value="comma">{t('prompts:variableConfig.formats.comma')}</SelectItem>
+                <SelectItem value="newline">{t('prompts:variableConfig.formats.newline')}</SelectItem>
+                <SelectItem value="numbered">{t('prompts:variableConfig.formats.numbered')}</SelectItem>
+                <SelectItem value="bullet">{t('prompts:variableConfig.formats.bullet')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -768,7 +770,7 @@ export function VariableConfig({
 
         {/* Default value - after type-specific config */}
         <div className="space-y-1">
-          <Label className="text-xs text-gray-500 dark:text-gray-400">Default Value</Label>
+          <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.defaultValue')}</Label>
           {renderDefaultValueInput()}
         </div>
 
@@ -786,7 +788,7 @@ export function VariableConfig({
             htmlFor={`required-toggle-${variable.key}`}
             className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer"
           >
-            Required field
+            {t('prompts:variableConfig.actions.requiredField')}
           </Label>
         </div>
 
@@ -801,14 +803,14 @@ export function VariableConfig({
             htmlFor={`desc-toggle-${variable.key}`}
             className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer"
           >
-            Add description
+            {t('prompts:variableConfig.actions.addDescription')}
           </Label>
         </div>
         {variable.description !== undefined && (
           <Textarea
             value={variable.description}
             onChange={(e) => handleDescriptionChange(e.target.value)}
-            placeholder="Add helpful context or instructions for this field..."
+            placeholder={t('prompts:variableConfig.actions.descriptionPlaceholder')}
             className="min-h-[60px] text-sm resize-y"
           />
         )}

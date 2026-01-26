@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { RightPanelTab } from '@/components/PromptHeader'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, X, Eye, History, Settings2, StickyNote, Plus, List } from 'lucide-react'
@@ -21,12 +22,14 @@ export function RightPanelHeader({
   onClose,
   onAddNote,
 }: RightPanelHeaderProps) {
+  const { t } = useTranslation('common')
+
   const tabLabels: Record<RightPanelTab, string> = {
-    preview: 'Prompt',
-    history: 'History',
-    notes: 'Notes',
-    config: 'Config',
-    instructions: 'Instructions',
+    preview: t('tabs.prompt'),
+    history: t('tabs.history'),
+    notes: t('tabs.notes'),
+    config: t('tabs.config'),
+    instructions: t('tabs.instructions'),
   }
 
   const tabIcons: Record<RightPanelTab, React.ReactNode> = {
@@ -74,7 +77,7 @@ export function RightPanelHeader({
             size="icon"
             onClick={onAddNote}
             className="h-8 w-8"
-            aria-label="Add note"
+            aria-label={t('rightPanel.addNote')}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -86,7 +89,7 @@ export function RightPanelHeader({
           size="icon"
           onClick={onClose}
           className="h-8 w-8"
-          aria-label="Close panel"
+          aria-label={t('rightPanel.closePanel')}
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </Button>

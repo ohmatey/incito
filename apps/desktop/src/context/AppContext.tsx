@@ -7,6 +7,7 @@ import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
 import { toast } from 'sonner'
 import type { GeneratedPrompt } from '@/lib/mastra-client'
+import i18n from '@/i18n'
 
 interface AppContextValue {
   // Folder state
@@ -168,6 +169,7 @@ export function AppProvider({ children }: AppProviderProps) {
       }
     }
     loadSavedFolder()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Run once on mount only
   }, [])
 
   // Folder operations
@@ -216,8 +218,9 @@ export function AppProvider({ children }: AppProviderProps) {
         promptManager.selectPrompt(loadedPrompts[0])
         editState.setIsEditMode(false)
       }
-    } catch (err) {
-      toast.error('Failed to load prompts folder')
+    } catch (error) {
+      console.error('Failed to load prompts folder:', error)
+      toast.error(i18n.t('toasts:error.promptsFolderFailed'))
       await clearFolderPath()
       setFolderPath(null)
     } finally {
@@ -416,7 +419,7 @@ export function AppProvider({ children }: AppProviderProps) {
 
     // Validate name before saving
     if (!editState.validateName(editState.localName, promptManager.prompts, selectedPrompt.path)) {
-      toast.error(editState.nameError || 'Invalid name')
+      toast.error(editState.nameError || i18n.t('toasts:error.invalidName'))
       return
     }
 
@@ -492,8 +495,9 @@ export function AppProvider({ children }: AppProviderProps) {
 
     try {
       await savePrompt(updatedPrompt)
-    } catch (err) {
-      toast.error('Failed to save notes')
+    } catch (error) {
+      console.error('Failed to save notes:', error)
+      toast.error(i18n.t('toasts:error.notesSaveFailed'))
     }
   }
 
@@ -514,8 +518,9 @@ export function AppProvider({ children }: AppProviderProps) {
 
     try {
       await savePrompt(updatedPrompt)
-    } catch (err) {
-      toast.error('Failed to save default launchers')
+    } catch (error) {
+      console.error('Failed to save launchers:', error)
+      toast.error(i18n.t('toasts:error.launchersSaveFailed'))
     }
   }
 
@@ -574,10 +579,10 @@ export function AppProvider({ children }: AppProviderProps) {
       // Select the new variant
       promptManager.setSelectedPrompt(variant)
       editState.syncFromPrompt(variant)
-      toast.success(`Created variant: ${variantLabel}`)
-    } catch (err) {
-      toast.error('Failed to create variant')
-      console.error(err)
+      toast.success(i18n.t('toasts:success.variantCreated', { name: variantLabel }))
+    } catch (error) {
+      console.error('Failed to create variant:', error)
+      toast.error(i18n.t('toasts:error.variantCreateFailed'))
     }
   }
 

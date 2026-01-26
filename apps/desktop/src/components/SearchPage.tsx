@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile, Tag } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
@@ -37,6 +38,7 @@ export function SearchPage({
   onTogglePinPrompt,
   focusTrigger,
 }: SearchPageProps) {
+  const { t } = useTranslation(['search'])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [focusedIndex, setFocusedIndex] = useState<number>(-1)
@@ -122,7 +124,7 @@ export function SearchPage({
       {/* Header */}
       <div className="flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
         <Search className="h-5 w-5 text-gray-400" />
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Search</h1>
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('search:title')}</h1>
       </div>
 
       {/* Search Controls */}
@@ -131,7 +133,7 @@ export function SearchPage({
           <div className="relative flex-1">
             <Input
               ref={searchInputRef}
-              placeholder="Search prompts..."
+              placeholder={t('search:placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -186,7 +188,7 @@ export function SearchPage({
                       onCheckedChange={() => setSelectedTags([])}
                       className="text-gray-500"
                     >
-                      Clear filters
+                      {t('search:clearFilters')}
                     </DropdownMenuCheckboxItem>
                   </>
                 )}
@@ -200,7 +202,7 @@ export function SearchPage({
               onClick={clearFilters}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              Clear all
+              {t('search:clearAll')}
             </Button>
           )}
         </div>
@@ -212,7 +214,7 @@ export function SearchPage({
           {filteredPrompts.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-gray-500 dark:text-gray-400">
-                {hasFilters ? 'No prompts match your search' : 'No prompts found'}
+                {hasFilters ? t('search:noMatches') : t('search:noPrompts')}
               </p>
             </div>
           ) : (

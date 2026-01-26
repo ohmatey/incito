@@ -1,4 +1,5 @@
 import type { Variable } from '@/types/prompt'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ interface VariableInputProps {
 }
 
 export function VariableInput({ variable, value, onChange }: VariableInputProps) {
+  const { t } = useTranslation(['prompts'])
   const hasError = variable.required && (value === undefined || value === '')
   const id = `var-${variable.key}`
   const errorId = `${id}-error`
@@ -86,7 +88,7 @@ export function VariableInput({ variable, value, onChange }: VariableInputProps)
                 id={id}
                 type="text"
                 value={(value as string) ?? ''}
-                placeholder="No options configured..."
+                placeholder={t('prompts:variableInput.noOptionsConfigured')}
                 disabled
                 className="bg-gray-50 dark:bg-gray-900"
               />
@@ -102,7 +104,7 @@ export function VariableInput({ variable, value, onChange }: VariableInputProps)
                 aria-invalid={hasError ? true : undefined}
                 aria-required={variable.required ? true : undefined}
               >
-                <SelectValue placeholder="Select an option" />
+                <SelectValue placeholder={t('prompts:variableInput.selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {validOptions.map((option) => (
@@ -118,7 +120,7 @@ export function VariableInput({ variable, value, onChange }: VariableInputProps)
 
       {hasError && (
         <p id={errorId} className="text-xs text-destructive" role="alert">
-          {variable.label} is required
+          {t('prompts:variableInput.isRequired', { label: variable.label })}
         </p>
       )}
     </div>

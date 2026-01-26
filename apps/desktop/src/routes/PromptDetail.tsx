@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
 import { PromptHeader } from '@/components/PromptHeader'
@@ -8,6 +9,7 @@ import { ResizeHandle } from '@/components/ui/resize-handle'
 import { PromptEditorDialog } from '@/components/PromptEditorDialog'
 
 export function PromptDetail() {
+  const { t } = useTranslation('common')
   const { promptId } = useParams({ from: '/prompts/$promptId' })
   const navigate = useNavigate()
   const {
@@ -83,7 +85,7 @@ export function PromptDetail() {
   if (!selectedPrompt) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('labels.loading')}</p>
       </div>
     )
   }
@@ -132,6 +134,7 @@ export function PromptDetail() {
           onRedo={editState.redo}
           canUndo={editState.canUndo}
           canRedo={editState.canRedo}
+          getLastChangeSource={editState.getLastChangeSource}
           onRefineWithAI={async (template, instruction) => {
             const { refinePromptTemplate } = await import('@/lib/mastra-client')
             const result = await refinePromptTemplate(template, instruction)

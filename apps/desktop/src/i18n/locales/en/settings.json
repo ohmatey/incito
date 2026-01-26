@@ -1,0 +1,47 @@
+{
+  "title": "Settings",
+  "appearance": {
+    "title": "Appearance",
+    "description": "Choose your preferred color theme.",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "title": "Language",
+    "description": "Choose your preferred language."
+  },
+  "aiProvider": {
+    "title": "AI Provider",
+    "description": "Connect an AI service to power prompt generation and suggestions.",
+    "emptyState": "No AI provider configured",
+    "configure": "Configure AI Provider",
+    "provider": "Provider",
+    "apiKey": "API Key",
+    "model": "Model",
+    "selectProvider": "Select a provider",
+    "selectModel": "Select a model",
+    "enterApiKey": "Enter your {{provider}} API key",
+    "configured": "AI provider configured",
+    "removed": "AI provider removed",
+    "loading": "Loading settings...",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "google": "Google"
+    }
+  },
+  "promptsFolder": {
+    "title": "Prompts Folder",
+    "description": "The folder where your prompt templates are stored."
+  },
+  "mcp": {
+    "title": "MCP Integration",
+    "description": "Connect your prompt library to AI assistants like Claude Desktop, Cursor, and Claude Code via the Model Context Protocol (MCP).",
+    "claudeDesktopConfig": "Claude Desktop Configuration",
+    "addTo": "Add to",
+    "availableTools": "Available tools:",
+    "viewDocs": "View Documentation",
+    "copied": "MCP configuration copied"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile, Note } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ interface NotesTabProps {
 }
 
 export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChange }: NotesTabProps) {
+  const { t } = useTranslation('common')
   const [newNoteContent, setNewNoteContent] = useState('')
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
@@ -20,7 +22,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
   if (!prompt) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Select a prompt</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('header.selectPrompt')}</p>
       </div>
     )
   }
@@ -94,7 +96,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
           <Textarea
             value={newNoteContent}
             onChange={(e) => setNewNoteContent(e.target.value)}
-            placeholder="Write a note..."
+            placeholder={t('rightPanel.writeNote')}
             className="mb-2 min-h-[80px] resize-none text-sm"
             autoFocus
           />
@@ -108,7 +110,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
               }}
               className=""
             >
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button
               size="sm"
@@ -116,7 +118,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
               disabled={!newNoteContent.trim()}
               className=""
             >
-              Add Note
+              {t('rightPanel.addNoteButton')}
             </Button>
           </div>
         </div>
@@ -130,10 +132,10 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
               <StickyNote className="h-8 w-8 text-gray-400 dark:text-gray-500" />
             </div>
             <h3 className="mt-4 font-medium text-gray-700 dark:text-gray-300">
-              No notes yet
+              {t('rightPanel.noNotes')}
             </h3>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Add notes to remember important details about this prompt
+              {t('rightPanel.addFirstNote')}
             </p>
             <Button
               variant="outline"
@@ -142,7 +144,7 @@ export function NotesTab({ prompt, onNotesChange, isAddingNote, onAddingNoteChan
               className="mt-4 gap-1"
             >
               <Plus className="h-4 w-4" />
-              Add first note
+              {t('rightPanel.addFirstNoteButton')}
             </Button>
           </div>
         ) : (

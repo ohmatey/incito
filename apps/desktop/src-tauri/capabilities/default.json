@@ -8,25 +8,34 @@
     "dialog:default",
     "dialog:allow-open",
     "fs:default",
+    "fs:scope",
     {
       "identifier": "fs:allow-read-dir",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$HOME/**" }
+      ]
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$HOME/**" }
+      ]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "**" }]
-    },
-    {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$HOME/**" }
+      ]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$HOME/**" }
+      ]
     },
     "clipboard-manager:default",
     "clipboard-manager:allow-write-text",
@@ -38,3 +47,4 @@
     "os:default"
   ]
 }
+

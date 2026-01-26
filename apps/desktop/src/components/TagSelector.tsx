@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Plus, ChevronDown } from 'lucide-react'
 import { TAG_COLORS, TAG_COLOR_NAMES } from '@/lib/constants'
+import { useTranslation } from 'react-i18next'
 
 interface TagSelectorProps {
   tags: Tag[]
@@ -25,6 +26,7 @@ export function TagSelector({
   onTagToggle,
   onCreateTag,
 }: TagSelectorProps) {
+  const { t } = useTranslation(['tags', 'common'])
   const [isCreating, setIsCreating] = useState(false)
   const [newTagName, setNewTagName] = useState('')
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[9]) // default blue
@@ -41,14 +43,14 @@ export function TagSelector({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1">
           <Plus className="h-4 w-4" />
-          Add tag
+          {t('tags:selector.addTag')}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         {tags.length === 0 && !isCreating && (
           <div className="px-2 py-1.5 text-sm text-muted-foreground">
-            No tags yet
+            {t('tags:selector.noTagsYet')}
           </div>
         )}
 
@@ -74,7 +76,7 @@ export function TagSelector({
             <Input
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="Tag name"
+              placeholder={t('tags:tagName')}
               className="h-8 text-sm"
               autoFocus
               onKeyDown={(e) => {
@@ -110,7 +112,7 @@ export function TagSelector({
                 onClick={handleCreateTag}
                 disabled={!newTagName.trim()}
               >
-                Create
+                {t('tags:selector.create')}
               </Button>
               <Button
                 size="sm"
@@ -121,7 +123,7 @@ export function TagSelector({
                   setNewTagName('')
                 }}
               >
-                Cancel
+                {t('common:buttons.cancel')}
               </Button>
             </div>
           </div>
@@ -131,7 +133,7 @@ export function TagSelector({
             onClick={() => setIsCreating(true)}
           >
             <Plus className="h-4 w-4" />
-            Create new tag
+            {t('tags:selector.createNewTag')}
           </button>
         )}
       </DropdownMenuContent>

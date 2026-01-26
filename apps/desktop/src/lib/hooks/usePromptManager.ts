@@ -4,6 +4,7 @@ import { loadPrompts, savePrompt, createPrompt, duplicatePrompt, deletePrompt, i
 import { parsePromptFile } from '@/lib/parser'
 import { toast } from 'sonner'
 import type { GeneratedPrompt } from '@/lib/mastra-client'
+import i18n from '@/i18n'
 
 export interface UsePromptManagerResult {
   prompts: PromptFile[]
@@ -43,10 +44,11 @@ export function usePromptManager(): UsePromptManagerResult {
       const newPrompt = await createPrompt(folderPath, existingFileNames, existingDisplayNames)
       setPrompts((prev) => [...prev, newPrompt].sort((a, b) => a.name.localeCompare(b.name)))
       setSelectedPrompt(newPrompt)
-      toast.success('Created new prompt')
+      toast.success(i18n.t('toasts:success.promptCreated'))
       return newPrompt
-    } catch (err) {
-      toast.error('Failed to create prompt')
+    } catch (error) {
+      console.error('Failed to create prompt:', error)
+      toast.error(i18n.t('toasts:error.promptCreateFailed'))
       return null
     }
   }, [prompts])
@@ -77,10 +79,11 @@ export function usePromptManager(): UsePromptManagerResult {
 
       setPrompts((prev) => [...prev, newPrompt].sort((a, b) => a.name.localeCompare(b.name)))
       setSelectedPrompt(newPrompt)
-      toast.success('Generated prompt template')
+      toast.success(i18n.t('toasts:success.promptGenerated'))
       return newPrompt
-    } catch (err) {
-      toast.error('Failed to create prompt from AI')
+    } catch (error) {
+      console.error('Failed to generate prompt from AI:', error)
+      toast.error(i18n.t('toasts:error.promptGenerateFailed'))
       return null
     }
   }, [prompts])
@@ -92,10 +95,11 @@ export function usePromptManager(): UsePromptManagerResult {
       const duplicated = await duplicatePrompt(prompt, folderPath, existingFileNames, existingDisplayNames)
       setPrompts((prev) => [...prev, duplicated].sort((a, b) => a.name.localeCompare(b.name)))
       setSelectedPrompt(duplicated)
-      toast.success('Duplicated prompt')
+      toast.success(i18n.t('toasts:success.promptDuplicated'))
       return duplicated
-    } catch (err) {
-      toast.error('Failed to duplicate prompt')
+    } catch (error) {
+      console.error('Failed to duplicate prompt:', error)
+      toast.error(i18n.t('toasts:error.promptDuplicateFailed'))
       return null
     }
   }, [prompts])
@@ -113,10 +117,11 @@ export function usePromptManager(): UsePromptManagerResult {
 
         return remaining
       })
-      toast.success('Deleted prompt')
+      toast.success(i18n.t('toasts:success.promptDeleted'))
       return true
-    } catch (err) {
-      toast.error('Failed to delete prompt')
+    } catch (error) {
+      console.error('Failed to delete prompt:', error)
+      toast.error(i18n.t('toasts:error.promptDeleteFailed'))
       return false
     }
   }, [selectedPrompt?.path])
@@ -130,10 +135,11 @@ export function usePromptManager(): UsePromptManagerResult {
           .sort((a, b) => a.name.localeCompare(b.name))
       )
       setSelectedPrompt(updatedPrompt)
-      toast.success('Saved prompt')
+      toast.success(i18n.t('toasts:success.promptSaved'))
       return true
-    } catch (err) {
-      toast.error('Failed to save prompt')
+    } catch (error) {
+      console.error('Failed to save prompt:', error)
+      toast.error(i18n.t('toasts:error.promptSaveFailed'))
       return false
     }
   }, [])
@@ -157,10 +163,11 @@ export function usePromptManager(): UsePromptManagerResult {
           .sort((a, b) => a.name.localeCompare(b.name))
       )
       await savePrompt(restoredPrompt)
-      toast.success('Version restored successfully')
+      toast.success(i18n.t('toasts:success.versionRestored'))
       return true
-    } catch (err) {
-      toast.error('Failed to restore version')
+    } catch (error) {
+      console.error('Failed to restore version:', error)
+      toast.error(i18n.t('toasts:error.versionRestoreFailed'))
       return false
     }
   }, [selectedPrompt])

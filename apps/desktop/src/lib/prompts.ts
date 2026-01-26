@@ -1,5 +1,5 @@
 import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin-fs'
-import { join } from '@tauri-apps/api/path'
+import { join, resolve } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
 import { syncPromptTags, createPromptVersion, deletePromptVersions, hasAIConfigured } from './store'
 import { summarizePromptChanges } from './mastra-client'
@@ -11,6 +11,12 @@ export interface InitialPromptContent {
   template?: string
   variables?: Variable[]
   tags?: string[]
+}
+
+async function isPathInFolder(filePath: string, folderPath: string): Promise<boolean> {
+  const resolvedFile = await resolve(filePath)
+  const resolvedFolder = await resolve(folderPath)
+  return resolvedFile.startsWith(resolvedFolder)
 }
 
 export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
@@ -78,6 +84,10 @@ export async function createPrompt(
   )
   const path = await join(folderPath, fileName)
 
+  if (!await isPathInFolder(path, folderPath)) {
+    throw new Error('Path traversal detected')
+  }
+
   const id = crypto.randomUUID()
   let template: string
   if (initialContent) {
@@ -103,6 +113,10 @@ export async function duplicatePrompt(
   const newFileName = generateUniqueFileName(`${baseName} copy`, existingFileNames)
   const newDisplayName = generateUniqueDisplayName(`${original.name} copy`, existingDisplayNames)
   const newPath = await join(folderPath, newFileName)
+
+  if (!await isPathInFolder(newPath, folderPath)) {
+    throw new Error('Path traversal detected')
+  }
 
   const newPrompt: PromptFile = {
     ...original,
@@ -141,6 +155,10 @@ export async function createVariant(
   const baseVariantName = `${parentBaseName}--${variantSlug}`
   const variantFileName = generateUniqueFileName(baseVariantName, existingFileNames)
   const variantPath = await join(folderPath, variantFileName)
+
+  if (!await isPathInFolder(variantPath, folderPath)) {
+    throw new Error('Path traversal detected')
+  }
 
   // Create variant prompt
   const variantId = crypto.randomUUID()

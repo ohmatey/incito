@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -12,12 +13,12 @@ interface KeyboardShortcutsModalProps {
 }
 
 interface Shortcut {
-  label: string
+  labelKey: string
   keys: string[]
 }
 
 interface ShortcutSection {
-  title: string
+  titleKey: string
   shortcuts: Shortcut[]
 }
 
@@ -26,35 +27,35 @@ const modKey = isMac ? '⌘' : 'Ctrl'
 
 const shortcutSections: ShortcutSection[] = [
   {
-    title: 'Navigation',
+    titleKey: 'shortcuts.sections.navigation',
     shortcuts: [
-      { label: 'Search prompts', keys: [modKey, 'K'] },
-      { label: 'New prompt', keys: [modKey, 'N'] },
-      { label: 'Navigate prompt list', keys: ['↑', '↓'] },
-      { label: 'Jump between variables', keys: [modKey, 'Shift', '↑/↓'] },
+      { labelKey: 'shortcuts.labels.searchPrompts', keys: [modKey, 'K'] },
+      { labelKey: 'shortcuts.labels.newPrompt', keys: [modKey, 'N'] },
+      { labelKey: 'shortcuts.labels.navigateList', keys: ['↑', '↓'] },
+      { labelKey: 'shortcuts.labels.jumpVariables', keys: [modKey, 'Shift', '↑/↓'] },
     ],
   },
   {
-    title: 'Actions',
+    titleKey: 'shortcuts.sections.actions',
     shortcuts: [
-      { label: 'Copy prompt', keys: [modKey, 'Enter'] },
-      { label: 'Edit prompt', keys: [modKey, 'E'] },
-      { label: 'Save changes', keys: [modKey, 'S'] },
-      { label: 'Duplicate prompt', keys: [modKey, 'D'] },
+      { labelKey: 'shortcuts.labels.copyPrompt', keys: [modKey, 'Enter'] },
+      { labelKey: 'shortcuts.labels.editPrompt', keys: [modKey, 'E'] },
+      { labelKey: 'shortcuts.labels.saveChanges', keys: [modKey, 'S'] },
+      { labelKey: 'shortcuts.labels.duplicatePrompt', keys: [modKey, 'D'] },
     ],
   },
   {
-    title: 'Prompt Panels',
+    titleKey: 'shortcuts.sections.panels',
     shortcuts: [
-      { label: 'Toggle right panel', keys: [modKey, '\\'] },
+      { labelKey: 'shortcuts.labels.toggleRightPanel', keys: [modKey, '\\'] },
     ],
   },
   {
-    title: 'General',
+    titleKey: 'shortcuts.sections.general',
     shortcuts: [
-      { label: 'Show keyboard shortcuts', keys: [modKey, '/'] },
-      { label: 'Close dialog / Cancel', keys: ['Esc'] },
-      { label: 'Move between fields', keys: ['Tab'] },
+      { labelKey: 'shortcuts.labels.showShortcuts', keys: [modKey, '/'] },
+      { labelKey: 'shortcuts.labels.closeCancel', keys: ['Esc'] },
+      { labelKey: 'shortcuts.labels.moveBetweenFields', keys: ['Tab'] },
     ],
   },
 ]
@@ -67,10 +68,10 @@ function ShortcutKey({ children }: { children: string }) {
   )
 }
 
-function ShortcutRow({ shortcut }: { shortcut: Shortcut }) {
+function ShortcutRow({ shortcut, t }: { shortcut: Shortcut; t: (key: string) => string }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-sm text-gray-600 dark:text-gray-400">{shortcut.label}</span>
+      <span className="text-sm text-gray-600 dark:text-gray-400">{t(shortcut.labelKey)}</span>
       <div className="flex items-center gap-1">
         {shortcut.keys.map((key, index) => (
           <ShortcutKey key={index}>{key}</ShortcutKey>
@@ -80,15 +81,15 @@ function ShortcutRow({ shortcut }: { shortcut: Shortcut }) {
   )
 }
 
-function ShortcutSectionComponent({ section }: { section: ShortcutSection }) {
+function ShortcutSectionComponent({ section, t }: { section: ShortcutSection; t: (key: string) => string }) {
   return (
     <div>
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-        {section.title}
+        {t(section.titleKey)}
       </h3>
       <div className="space-y-0.5">
         {section.shortcuts.map((shortcut, index) => (
-          <ShortcutRow key={index} shortcut={shortcut} />
+          <ShortcutRow key={index} shortcut={shortcut} t={t} />
         ))}
       </div>
     </div>
@@ -96,27 +97,29 @@ function ShortcutSectionComponent({ section }: { section: ShortcutSection }) {
 }
 
 export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcutsModalProps) {
+  const { t } = useTranslation('common')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Keyboard Shortcuts
+            {t('shortcuts.title')}
             <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
-              {isMac ? 'Mac' : 'Windows/Linux'}
+              {isMac ? t('shortcuts.platform.mac') : t('shortcuts.platform.other')}
             </span>
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh]">
           <div className="grid grid-cols-2 gap-6 pr-4">
             {shortcutSections.map((section, index) => (
-              <ShortcutSectionComponent key={index} section={section} />
+              <ShortcutSectionComponent key={index} section={section} t={t} />
             ))}
           </div>
         </ScrollArea>
         <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
           <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-            Press <ShortcutKey>{modKey}</ShortcutKey> <ShortcutKey>/</ShortcutKey> to toggle this panel
+            {t('shortcuts.toggleHint', { mod: modKey })}
           </p>
         </div>
       </DialogContent>

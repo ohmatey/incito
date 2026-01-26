@@ -1,0 +1,124 @@
+{
+  "navigation": {
+    "search": "ค้นหา",
+    "prompts": "พรอมต์",
+    "tags": "แท็ก",
+    "settings": "ตั้งค่า",
+    "keyboardShortcuts": "แป้นพิมพ์ลัด",
+    "goToPrompts": "ไปที่พรอมต์"
+  },
+  "buttons": {
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "create": "สร้าง",
+    "copy": "คัดลอก",
+    "close": "ปิด",
+    "confirm": "ยืนยัน",
+    "changeFolder": "เปลี่ยนโฟลเดอร์",
+    "selectFolder": "เลือกโฟลเดอร์",
+    "configure": "ตั้งค่า",
+    "remove": "ลบออก"
+  },
+  "labels": {
+    "loading": "กำลังโหลด...",
+    "loadingSettings": "กำลังโหลดการตั้งค่า...",
+    "noResults": "ไม่พบผลลัพธ์",
+    "name": "ชื่อ",
+    "description": "คำอธิบาย",
+    "provider": "ผู้ให้บริการ",
+    "apiKey": "คีย์ API",
+    "model": "โมเดล"
+  },
+  "shortcuts": {
+    "title": "แป้นพิมพ์ลัด",
+    "toggleHint": "กด {{mod}} / เพื่อสลับแผงนี้",
+    "platform": {
+      "mac": "Mac",
+      "other": "Windows/Linux"
+    },
+    "sections": {
+      "navigation": "การนำทาง",
+      "actions": "การดำเนินการ",
+      "panels": "แผงพรอมต์",
+      "general": "ทั่วไป"
+    },
+    "labels": {
+      "searchPrompts": "ค้นหาพรอมต์",
+      "newPrompt": "พรอมต์ใหม่",
+      "navigateList": "นำทางรายการพรอมต์",
+      "jumpVariables": "ข้ามระหว่างตัวแปร",
+      "copyPrompt": "คัดลอกพรอมต์",
+      "editPrompt": "แก้ไขพรอมต์",
+      "saveChanges": "บันทึกการเปลี่ยนแปลง",
+      "duplicatePrompt": "ทำซ้ำพรอมต์",
+      "toggleRightPanel": "สลับแผงขวา",
+      "showShortcuts": "แสดงแป้นพิมพ์ลัด",
+      "closeCancel": "ปิดไดอะล็อก / ยกเลิก",
+      "moveBetweenFields": "ย้ายระหว่างช่อง"
+    }
+  },
+  "header": {
+    "selectPrompt": "เลือกพรอมต์",
+    "discardChanges": "ยกเลิกการเปลี่ยนแปลง?",
+    "unsavedChangesWarning": "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? การเปลี่ยนแปลงของคุณจะหายไป",
+    "keepEditing": "แก้ไขต่อ",
+    "discardChangesButton": "ยกเลิกการเปลี่ยนแปลง"
+  },
+  "tabs": {
+    "prompt": "พรอมต์",
+    "history": "ประวัติ",
+    "notes": "บันทึก",
+    "config": "ตั้งค่า",
+    "instructions": "คำแนะนำ",
+    "preview": "ตัวอย่าง",
+    "variables": "ตัวแปร"
+  },
+  "rightPanel": {
+    "addNote": "เพิ่มบันทึก",
+    "writeNote": "เขียนบันทึก...",
+    "addNoteButton": "เพิ่มบันทึก",
+    "addFirstNoteButton": "เพิ่มบันทึกแรก",
+    "noNotes": "ยังไม่มีบันทึก",
+    "addFirstNote": "เพิ่มบันทึกเพื่อจดจำรายละเอียดสำคัญเกี่ยวกับพรอมต์นี้",
+    "noteAdded": "เพิ่มบันทึกแล้ว",
+    "noteDeleted": "ลบบันทึกแล้ว",
+    "deleteNoteConfirm": "ลบบันทึกนี้?",
+    "noHistory": "ยังไม่มีประวัติเวอร์ชัน",
+    "historyAutoSave": "เวอร์ชันจะถูกสร้างโดยอัตโนมัติเมื่อคุณบันทึกการเปลี่ยนแปลง",
+    "loadingHistory": "กำลังโหลดประวัติ...",
+    "active": "ใช้งานอยู่",
+    "hidePreview": "ซ่อนตัวอย่าง",
+    "showPreview": "แสดงตัวอย่าง",
+    "restoreVersion": "กู้คืนเวอร์ชันนี้",
+    "restoreVersionTitle": "กู้คืนเวอร์ชัน",
+    "restoreVersionDescription": "คุณแน่ใจหรือไม่ว่าต้องการกู้คืนเวอร์ชัน {{version}}? สิ่งนี้จะแทนที่เนื้อหาปัจจุบันด้วยเวอร์ชันที่เลือก เวอร์ชันใหม่จะถูกสร้างขึ้นพร้อมเนื้อหาปัจจุบันของคุณก่อนการกู้คืน",
+    "restoreVersionButton": "กู้คืนเวอร์ชัน",
+    "versionRestored": "กู้คืนเวอร์ชันแล้ว",
+    "today": "วันนี้เวลา {{time}}",
+    "yesterday": "เมื่อวานเวลา {{time}}",
+    "daysAgo": "{{days}} วันที่แล้ว",
+    "quickLaunch": "เปิดด่วน",
+    "quickLaunchDescription": "เลือกแอปที่จะแสดงเป็นปุ่มเปิดด่วน",
+    "dangerZone": "โซนอันตราย",
+    "deletePrompt": "ลบพรอมต์",
+    "deletePromptDescription": "ลบพรอมต์นี้อย่างถาวร",
+    "variants": "ตัวแปร",
+    "newVariant": "ตัวแปรใหม่",
+    "baseVersion": "เวอร์ชันฐาน",
+    "closePanel": "ปิดแผง"
+  },
+  "ai": {
+    "disclaimer": "AI อาจผิดพลาดได้ กรุณาตรวจสอบเนื้อหาที่สร้าง",
+    "generating": "กำลังสร้าง...",
+    "generate": "สร้าง"
+  },
+  "errorBoundary": {
+    "title": "เกิดข้อผิดพลาด",
+    "description": "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองรีเฟรชหน้า",
+    "errorDetails": "รายละเอียดข้อผิดพลาด",
+    "tryAgain": "ลองอีกครั้ง",
+    "reloadPage": "โหลดหน้าใหม่"
+  }
+}

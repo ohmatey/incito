@@ -1,0 +1,47 @@
+{
+  "title": "ตั้งค่า",
+  "appearance": {
+    "title": "รูปลักษณ์",
+    "description": "เลือกธีมสีที่คุณต้องการ",
+    "light": "สว่าง",
+    "dark": "มืด",
+    "system": "ตามระบบ"
+  },
+  "language": {
+    "title": "ภาษา",
+    "description": "เลือกภาษาที่คุณต้องการ"
+  },
+  "aiProvider": {
+    "title": "ผู้ให้บริการ AI",
+    "description": "เชื่อมต่อบริการ AI เพื่อสร้างและแนะนำพรอมต์",
+    "emptyState": "ยังไม่ได้ตั้งค่าผู้ให้บริการ AI",
+    "configure": "ตั้งค่าผู้ให้บริการ AI",
+    "provider": "ผู้ให้บริการ",
+    "apiKey": "คีย์ API",
+    "model": "โมเดล",
+    "selectProvider": "เลือกผู้ให้บริการ",
+    "selectModel": "เลือกโมเดล",
+    "enterApiKey": "ป้อนคีย์ API ของ {{provider}}",
+    "configured": "ตั้งค่าผู้ให้บริการ AI แล้ว",
+    "removed": "ลบผู้ให้บริการ AI แล้ว",
+    "loading": "กำลังโหลดการตั้งค่า...",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "google": "Google"
+    }
+  },
+  "promptsFolder": {
+    "title": "โฟลเดอร์พรอมต์",
+    "description": "โฟลเดอร์ที่เก็บเทมเพลตพรอมต์ของคุณ"
+  },
+  "mcp": {
+    "title": "การเชื่อมต่อ MCP",
+    "description": "เชื่อมต่อคลังพรอมต์ของคุณกับผู้ช่วย AI เช่น Claude Desktop, Cursor และ Claude Code ผ่าน Model Context Protocol (MCP)",
+    "claudeDesktopConfig": "การตั้งค่า Claude Desktop",
+    "addTo": "เพิ่มไปที่",
+    "availableTools": "เครื่องมือที่ใช้ได้:",
+    "viewDocs": "ดูเอกสาร",
+    "copied": "คัดลอกการตั้งค่า MCP แล้ว"
+  }
+}

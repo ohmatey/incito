@@ -1,5 +1,6 @@
-import { readdir, readFile } from 'fs/promises'
+import { readdir, readFile, realpath } from 'fs/promises'
 import { join } from 'path'
+import { homedir } from 'os'
 import { parsePromptFile } from '../../../../src/lib/parser'
 import { interpolate } from '../../../../src/lib/interpolate'
 import type { PromptFile, Variable } from '../../../../src/types/prompt'
@@ -11,7 +12,13 @@ export type { PromptFile, Variable }
  */
 export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   try {
-    const entries = await readdir(folderPath, { withFileTypes: true })
+    const resolvedPath = await realpath(folderPath)
+    const homeDir = homedir()
+    if (!resolvedPath.startsWith(homeDir)) {
+      throw new Error('Prompts folder must be within user home directory')
+    }
+
+    const entries = await readdir(resolvedPath, { withFileTypes: true })
     const mdFiles = entries.filter(
       (entry) => entry.isFile() && entry.name.endsWith('.md')
     )
@@ -19,7 +26,7 @@ export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
     const prompts: PromptFile[] = []
 
     for (const file of mdFiles) {
-      const filePath = join(folderPath, file.name)
+      const filePath = join(resolvedPath, file.name)
       const content = await readFile(filePath, 'utf-8')
       const prompt = parsePromptFile(content, file.name, filePath)
       prompts.push(prompt)

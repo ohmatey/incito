@@ -8,16 +8,20 @@ import { RouterProvider } from '@tanstack/react-router'
 import { router } from './router'
 import { PlatformProvider } from './context/PlatformContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import './i18n' // Initialize i18n
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ThemeProvider>
-        <PlatformProvider>
-          <RouterProvider router={router} />
-        </PlatformProvider>
+        <LanguageProvider>
+          <PlatformProvider>
+            <RouterProvider router={router} />
+          </PlatformProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>,

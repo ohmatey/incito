@@ -1,0 +1,51 @@
+{
+  "success": {
+    "copied": "Copied to clipboard",
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "created": "Created successfully",
+    "promptCreated": "Created new prompt",
+    "promptDeleted": "Deleted prompt",
+    "promptDuplicated": "Duplicated prompt",
+    "promptSaved": "Saved prompt",
+    "promptGenerated": "Generated prompt template",
+    "tagCreated": "Created tag",
+    "tagDeleted": "Deleted tag",
+    "tagUpdated": "Updated tag",
+    "versionRestored": "Version restored successfully",
+    "aiConfigured": "AI provider configured",
+    "aiRemoved": "AI provider removed",
+    "mcpCopied": "MCP configuration copied",
+    "variantCreated": "Created variant: {{name}}"
+  },
+  "error": {
+    "copyFailed": "Failed to copy",
+    "saveFailed": "Failed to save",
+    "deleteFailed": "Failed to delete",
+    "createFailed": "Failed to create",
+    "loadFailed": "Failed to load",
+    "generic": "Something went wrong",
+    "promptLoadFailed": "Failed to load prompt",
+    "promptSaveFailed": "Failed to save prompt",
+    "promptDeleteFailed": "Failed to delete prompt",
+    "promptCreateFailed": "Failed to create prompt",
+    "promptDuplicateFailed": "Failed to duplicate prompt",
+    "promptGenerateFailed": "Failed to create prompt from AI",
+    "promptsFolderFailed": "Failed to load prompts folder",
+    "versionRestoreFailed": "Failed to restore version",
+    "tagLoadFailed": "Failed to load tags",
+    "tagSaveFailed": "Failed to save tag",
+    "tagDeleteFailed": "Failed to delete tag",
+    "tagCreateFailed": "Failed to create tag",
+    "tagUpdateFailed": "Failed to update tag",
+    "aiFailed": "AI generation failed",
+    "fillRequired": "Please fill in all required fields",
+    "notesSaveFailed": "Failed to save notes",
+    "launchersSaveFailed": "Failed to save default launchers",
+    "variantCreateFailed": "Failed to create variant",
+    "invalidName": "Invalid name"
+  },
+  "info": {
+    "noChanges": "No changes to save"
+  }
+}

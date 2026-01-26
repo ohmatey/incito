@@ -8,6 +8,7 @@ import {
 } from '@/lib/store'
 import { savePrompt } from '@/lib/prompts'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 
 interface UseTagsOptions {
   prompts: PromptFile[]
@@ -35,7 +36,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
     const result = await createTagInDb(name, color)
     if (result.ok) {
       setTags((prev) => [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name)))
-      toast.success('Created tag')
+      toast.success(i18n.t('toasts:success.tagCreated'))
       return result.data
     } else {
       toast.error(result.error)
@@ -81,7 +82,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
         }
       }
 
-      toast.success('Updated tag')
+      toast.success(i18n.t('toasts:success.tagUpdated'))
       return true
     } else {
       toast.error(result.error)
@@ -119,7 +120,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
         })
       }
 
-      toast.success('Deleted tag')
+      toast.success(i18n.t('toasts:success.tagDeleted'))
       return true
     } else {
       toast.error(result.error)

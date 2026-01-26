@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile, Tag } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { HighlightedTextarea } from '@/components/ui/highlighted-textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -63,6 +65,7 @@ interface CenterPaneProps {
   onRedo?: () => void
   canUndo?: boolean
   canRedo?: boolean
+  getLastChangeSource?: (key: string) => 'user' | 'ai_fill' | 'ai_refine' | 'reset' | null
   onRefineWithAI?: (template: string, instruction: string) => Promise<string>
   onFillWithAI?: (context: string) => Promise<FillWithAIResult>
 }
@@ -94,9 +97,11 @@ export function CenterPane({
   onRedo,
   canUndo,
   canRedo,
+  getLastChangeSource,
   onRefineWithAI,
   onFillWithAI,
 }: CenterPaneProps) {
+  const { t } = useTranslation(['prompts', 'common', 'toasts'])
   const [copied, setCopied] = useState(false)
   const [aiInstruction, setAiInstruction] = useState('')
   const [isRefining, setIsRefining] = useState(false)
@@ -167,12 +172,12 @@ export function CenterPane({
           const content = interpolate(prompt!.template, values, prompt!.variables)
           writeText(content).then(() => {
             setCopied(true)
-            toast.success('Copied to clipboard')
+            toast.success(t('toasts:success.copied'))
             setTimeout(() => setCopied(false), 2000)
             onPromptCompleted?.()
           })
         } else {
-          toast.error('Fill all required fields first')
+          toast.error(t('centerPane.fillRequiredFirst'))
         }
       }
     }
@@ -214,10 +219,10 @@ export function CenterPane({
       const refined = await onRefineWithAI(localTemplate, aiInstruction)
       onLocalTemplateChange(refined)
       setAiInstruction('')
-      toast.success('Template refined')
+      toast.success(t('centerPane.templateRefined'))
     } catch (error) {
       console.error('Failed to refine:', error)
-      toast.error('Failed to refine template')
+      toast.error(t('centerPane.refineFailed'))
     } finally {
       setIsRefining(false)
     }
@@ -232,15 +237,15 @@ export function CenterPane({
       setShowFillAiPanel(false)
       setFillContext('')
       if (result.filledCount === 0) {
-        toast.info('No matching info found', {
-          description: 'Try adding more details to the context.',
+        toast.info(t('centerPane.noMatchingInfo'), {
+          description: t('centerPane.addMoreDetails'),
         })
       } else {
-        toast.success(`Filled ${result.filledCount} of ${result.totalCount} fields`)
+        toast.success(t('centerPane.filledFields', { filled: result.filledCount, total: result.totalCount }))
       }
     } catch (error) {
       console.error('Failed to fill fields:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fill fields'
+      const errorMessage = error instanceof Error ? error.message : t('centerPane.fillFailed')
       toast.error(errorMessage)
     } finally {
       setIsFilling(false)
@@ -299,7 +304,7 @@ export function CenterPane({
     const content = getInterpolatedContent()
     await writeText(content)
     setCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('toasts:success.copied'))
     setTimeout(() => setCopied(false), 2000)
     onPromptCompleted?.()
   }
@@ -314,17 +319,17 @@ export function CenterPane({
       if (!app.supportsDeepLink) {
         await writeText(content)
         await openUrl(app.getUrl(content))
-        toast.success(`Copied & opened ${app.name}`, {
-          description: 'Paste your prompt to continue',
+        toast.success(t('centerPane.copiedAndOpened', { app: app.name }), {
+          description: t('centerPane.pasteToContinue'),
         })
       } else {
         await openUrl(app.getUrl(content))
-        toast.success(`Opened in ${app.name}`)
+        toast.success(t('centerPane.openedIn', { app: app.name }))
       }
       onPromptCompleted?.()
     } catch (error) {
       console.error(`Failed to open ${app.name}:`, error)
-      toast.error(`Failed to open ${app.name}`)
+      toast.error(t('centerPane.failedToOpen', { app: app.name }))
     }
   }
 
@@ -340,7 +345,7 @@ export function CenterPane({
               {pinnedPrompts.length > 0 && (
                 <div className="mb-8 w-full max-w-md">
                   <h3 className="mb-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Pinned Prompts
+                    {t('centerPane.pinnedPrompts')}
                   </h3>
                   <div className="grid gap-2">
                     {pinnedPrompts.map((p) => (
@@ -366,7 +371,7 @@ export function CenterPane({
                 </div>
               )}
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Select a prompt to get started
+                {t('centerPane.selectToStart')}
               </p>
             </>
           ) : (
@@ -376,10 +381,10 @@ export function CenterPane({
                   <FileText className="h-8 w-8 text-primary-600 dark:text-primary-400" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Create your first prompt
+                  {t('centerPane.createFirst')}
                 </h3>
                 <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-                  Prompts are reusable templates with variables. Create one to get started with organizing your AI workflows.
+                  {t('centerPane.createFirstDescription')}
                 </p>
                 <Button
                   onClick={() => {
@@ -394,7 +399,7 @@ export function CenterPane({
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  New Prompt
+                  {t('list.newPrompt')}
                 </Button>
               </div>
             </div>
@@ -410,7 +415,7 @@ export function CenterPane({
         <div className="flex-1 p-6">
           <div className="mx-auto max-w-2xl space-y-4">
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-              <h3 className="font-medium text-red-600 dark:text-red-400">Parse Errors</h3>
+              <h3 className="font-medium text-red-600 dark:text-red-400">{t('centerPane.parseErrors')}</h3>
               <ul className="mt-2 space-y-1 text-sm text-red-600 dark:text-red-400">
                 {prompt.errors.map((error, i) => (
                   <li key={i}>
@@ -420,7 +425,7 @@ export function CenterPane({
               </ul>
             </div>
             <div>
-              <h3 className="mb-2 font-medium text-gray-700 dark:text-gray-300">Raw Content</h3>
+              <h3 className="mb-2 font-medium text-gray-700 dark:text-gray-300">{t('centerPane.rawContent')}</h3>
               <pre className="overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 shadow-inner dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-200">
                 {prompt.rawContent}
               </pre>
@@ -447,7 +452,7 @@ export function CenterPane({
                     ? 'text-red-500 dark:text-red-400 border-red-300 dark:border-red-600'
                     : 'text-gray-800 dark:text-gray-100'
                 }`}
-                placeholder="Prompt name"
+                placeholder={t('centerPane.promptNamePlaceholder')}
               />
               {nameError && (
                 <p className="mt-1 text-xs text-red-500 dark:text-red-400">{nameError}</p>
@@ -460,7 +465,7 @@ export function CenterPane({
                 value={localDescription}
                 onChange={(e) => onLocalDescriptionChange(e.target.value)}
                 className="min-h-[60px] resize-none border-gray-200 bg-white text-sm dark:border-gray-700 dark:bg-gray-800"
-                placeholder="Add a description..."
+                placeholder={t('centerPane.addDescriptionPlaceholder')}
               />
             </div>
 
@@ -485,7 +490,7 @@ export function CenterPane({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Template
+                  {t('centerPane.template')}
                 </Label>
                 {aiConfigured && onRefineWithAI && !showAiPanel && (
                   <Button
@@ -495,16 +500,16 @@ export function CenterPane({
                     onClick={() => setShowAiPanel(true)}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    Refine with AI
+                    {t('centerPane.refineWithAI')}
                   </Button>
                 )}
               </div>
 
-              <Textarea
+              <HighlightedTextarea
                 value={localTemplate}
-                onChange={(e) => onLocalTemplateChange(e.target.value)}
-                className="min-h-[300px] w-full resize-y border-gray-200 bg-white font-mono text-sm dark:border-gray-700 dark:bg-gray-800"
-                placeholder="Write your prompt template here. Use {{variable}} to add variables."
+                onValueChange={onLocalTemplateChange}
+                className="min-h-[300px] w-full resize-y border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                placeholder={t('centerPane.templatePlaceholder')}
               />
 
               {/* AI Refinement Panel */}
@@ -512,7 +517,7 @@ export function CenterPane({
                 <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Refine with AI
+                      {t('centerPane.refineWithAI')}
                     </Label>
                     <Button
                       variant="ghost"
@@ -520,20 +525,20 @@ export function CenterPane({
                       className="h-7 text-xs"
                       onClick={() => setShowAiPanel(false)}
                     >
-                      Hide
+                      {t('centerPane.hide')}
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    Describe how to improve the template:
+                    {t('centerPane.describeImprovement')}
                   </p>
                   <Textarea
                     value={aiInstruction}
                     onChange={(e) => setAiInstruction(e.target.value)}
                     className="min-h-[100px] text-sm resize-none border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900"
-                    placeholder="Make it more formal and professional..."
+                    placeholder={t('centerPane.refinePlaceholder')}
                   />
                   <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
-                    AI can make mistakes. Please review generated content.
+                    {t('common:ai.disclaimer')}
                   </p>
                   <Button
                     onClick={handleRefine}
@@ -546,7 +551,7 @@ export function CenterPane({
                     ) : (
                       <Sparkles className="h-4 w-4" />
                     )}
-                    {isRefining ? 'Refining...' : 'Refine'}
+                    {isRefining ? t('centerPane.refining') : t('centerPane.refine')}
                   </Button>
                 </div>
               )}
@@ -591,10 +596,10 @@ export function CenterPane({
                     size="sm"
                     onClick={() => setShowFillAiPanel(true)}
                     className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    title="Fill fields with AI from context"
+                    title={t('centerPane.fillWithAI')}
                   >
                     <Sparkles className="h-4 w-4" />
-                    Fill with AI
+                    {t('centerPane.fillWithAI')}
                   </Button>
                 )}
                 {onUndo && (
@@ -604,10 +609,10 @@ export function CenterPane({
                     onClick={onUndo}
                     disabled={!canUndo}
                     className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
-                    title="Undo (Cmd+Z)"
+                    title={t('centerPane.undo')}
                   >
                     <Undo2 className="h-4 w-4" />
-                    Undo
+                    {t('centerPane.undo')}
                   </Button>
                 )}
                 {onRedo && (
@@ -617,10 +622,10 @@ export function CenterPane({
                     onClick={onRedo}
                     disabled={!canRedo}
                     className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
-                    title="Redo (Cmd+Shift+Z)"
+                    title={t('centerPane.redo')}
                   >
                     <Redo2 className="h-4 w-4" />
-                    Redo
+                    {t('centerPane.redo')}
                   </Button>
                 )}
                 {onResetForm && (
@@ -629,10 +634,10 @@ export function CenterPane({
                     size="sm"
                     onClick={onResetForm}
                     className="gap-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    title="Reset form to defaults"
+                    title={t('centerPane.reset')}
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Reset
+                    {t('centerPane.reset')}
                   </Button>
                 )}
               </div>
@@ -643,7 +648,7 @@ export function CenterPane({
               <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Fill with AI
+                    {t('centerPane.fillWithAI')}
                   </Label>
                   <Button
                     variant="ghost"
@@ -651,20 +656,20 @@ export function CenterPane({
                     className="h-7 text-xs"
                     onClick={() => setShowFillAiPanel(false)}
                   >
-                    Hide
+                    {t('centerPane.hide')}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  Paste your notes, project details, or any context. AI will extract relevant info to fill the fields below.
+                  {t('centerPane.fillWithAIDescription')}
                 </p>
                 <Textarea
                   value={fillContext}
                   onChange={(e) => setFillContext(e.target.value)}
                   className="min-h-[120px] text-sm resize-none border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900"
-                  placeholder="Paste context here... e.g., project notes, meeting notes, requirements, etc."
+                  placeholder={t('centerPane.fillContextPlaceholder')}
                 />
                 <p className="mt-2 font-mono text-[10px] text-gray-400 dark:text-gray-500">
-                  AI can make mistakes. Please review generated content.
+                  {t('centerPane.aiDisclaimer')}
                 </p>
                 <Button
                   onClick={handleFillWithAI}
@@ -677,31 +682,36 @@ export function CenterPane({
                   ) : (
                     <Sparkles className="h-4 w-4" />
                   )}
-                  {isFilling ? 'Filling...' : 'Fill Fields'}
+                  {isFilling ? t('centerPane.filling') : t('centerPane.fillFields')}
                 </Button>
               </div>
             )}
 
             {prompt.variables.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                No variables defined. Add {"{{variableName}}"} in the template.
+                {t('centerPane.noVariablesHint')}
               </p>
             ) : (
-              prompt.variables.map((variable) => (
-                <VariableInputCard
-                  key={variable.key}
-                  variable={variable}
-                  value={values[variable.key]}
-                  isActive={activeVariableKey === variable.key}
-                  onValueChange={(value) => onValueChange(variable.key, value)}
-                  onActiveChange={(active) => onActiveVariableChange(active ? variable.key : null)}
-                  aiConfigured={aiConfigured}
-                  onAiFillClick={() => {
-                    setAiFillTargetVariable(variable)
-                    setAiFillModalOpen(true)
-                  }}
-                />
-              ))
+              prompt.variables.map((variable) => {
+                const changeSource = getLastChangeSource?.(variable.key)
+                const isAiFilled = changeSource === 'ai_fill' || changeSource === 'ai_refine'
+                return (
+                  <VariableInputCard
+                    key={variable.key}
+                    variable={variable}
+                    value={values[variable.key]}
+                    isActive={activeVariableKey === variable.key}
+                    isAiFilled={isAiFilled}
+                    onValueChange={(value) => onValueChange(variable.key, value)}
+                    onActiveChange={(active) => onActiveVariableChange(active ? variable.key : null)}
+                    aiConfigured={aiConfigured}
+                    onAiFillClick={() => {
+                      setAiFillTargetVariable(variable)
+                      setAiFillModalOpen(true)
+                    }}
+                  />
+                )
+              })
             )}
           </div>
           </div>
@@ -751,13 +761,13 @@ export function CenterPane({
                       className="gap-1.5"
                     >
                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      {copied ? 'Copied' : 'Copy Prompt'}
+                      {copied ? t('centerPane.copied') : t('centerPane.copyPrompt')}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 {!canCopy() && (
                   <TooltipContent>
-                    <p>Fill all required fields to continue</p>
+                    <p>{t('centerPane.fillRequiredToContinue')}</p>
                   </TooltipContent>
                 )}
               </Tooltip>
@@ -795,7 +805,7 @@ export function CenterPane({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Launch In</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('centerPane.launchIn')}</DropdownMenuLabel>
                   {AVAILABLE_LAUNCHERS.map((launcher) => (
                     <DropdownMenuItem
                       key={launcher.id}

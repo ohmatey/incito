@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile } from '@/types/prompt'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,6 +41,7 @@ export function PromptHeader({
   onSave,
   onCancel,
 }: PromptHeaderProps) {
+  const { t } = useTranslation('common')
   const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   function handleCancelClick() {
@@ -56,11 +58,11 @@ export function PromptHeader({
   }
 
   const tabLabels: Record<RightPanelTab, string> = {
-    preview: 'Prompt',
-    history: 'History',
-    notes: 'Notes',
-    config: 'Config',
-    instructions: 'Instructions',
+    preview: t('tabs.prompt'),
+    history: t('tabs.history'),
+    notes: t('tabs.notes'),
+    config: t('tabs.config'),
+    instructions: t('tabs.instructions'),
   }
 
   const tabIcons: Record<RightPanelTab, React.ReactNode> = {
@@ -86,7 +88,7 @@ export function PromptHeader({
   if (!prompt) {
     return (
       <div className="flex h-14 shrink-0 items-center border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
-        <p className="text-gray-500 dark:text-gray-400">Select a prompt</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('header.selectPrompt')}</p>
       </div>
     )
   }
@@ -108,7 +110,7 @@ export function PromptHeader({
               size="sm"
               onClick={handleCancelClick}
             >
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button
               size="sm"
@@ -117,7 +119,7 @@ export function PromptHeader({
               className="gap-1.5"
             >
               <Save className="h-4 w-4" />
-              Save
+              {t('buttons.save')}
             </Button>
           </>
         )}
@@ -131,7 +133,7 @@ export function PromptHeader({
             className="gap-1.5"
           >
             <Pencil className="h-4 w-4" />
-            Edit
+            {t('buttons.edit')}
           </Button>
         )}
 
@@ -159,7 +161,7 @@ export function PromptHeader({
               onClick={handleCancelClick}
               className="ml-2"
             >
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button
               size="sm"
@@ -168,7 +170,7 @@ export function PromptHeader({
               className="gap-1.5"
             >
               <Save className="h-4 w-4" />
-              Save
+              {t('buttons.save')}
             </Button>
           </>
         )}
@@ -178,15 +180,15 @@ export function PromptHeader({
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogTitle>{t('header.discardChanges')}</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. Are you sure you want to cancel? Your changes will be lost.
+              {t('header.unsavedChangesWarning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogCancel>{t('header.keepEditing')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmCancel}>
-              Discard changes
+              {t('header.discardChangesButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,8 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { platform } from '@tauri-apps/plugin-os'
 import { useTheme } from '@/context/ThemeContext'
+import { useLanguage } from '@/context/LanguageContext'
+import { LANGUAGES, type Language } from '@/i18n/types'
 import {
   getAISettings,
   saveAISettings,
@@ -32,19 +35,15 @@ interface SettingsPageProps {
 
 type AIViewMode = 'empty' | 'editing' | 'viewing'
 
-const PROVIDER_NAMES: Record<AIProvider, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-}
-
 function maskApiKey(key: string): string {
   if (key.length <= 8) return '••••••••'
   return `${key.slice(0, 4)}••••••••${key.slice(-4)}`
 }
 
 export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const { theme, setTheme } = useTheme()
+  const { language, setLanguage } = useLanguage()
   const [savedSettings, setSavedSettings] = useState<AISettings>({
     provider: null,
     apiKey: null,
@@ -115,7 +114,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
       if (result.ok) {
         setSavedSettings(editSettings)
         setViewMode('viewing')
-        toast.success('AI provider configured')
+        toast.success(t('settings:aiProvider.configured'))
       } else {
         toast.error(result.error)
       }
@@ -136,7 +135,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
         setSavedSettings({ provider: null, apiKey: null, model: null })
         setEditSettings({ provider: null, apiKey: null, model: null })
         setViewMode('empty')
-        toast.success('AI provider removed')
+        toast.success(t('settings:aiProvider.removed'))
       } else {
         toast.error(result.error)
       }
@@ -185,7 +184,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
   async function handleCopyMcpConfig() {
     await writeText(mcpConfig)
     setMcpCopied(true)
-    toast.success('MCP configuration copied')
+    toast.success(t('settings:mcp.copied'))
     setTimeout(() => setMcpCopied(false), 2000)
   }
 
@@ -197,7 +196,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Settings</h1>
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('settings:title')}</h1>
       </div>
 
       {/* Content */}
@@ -206,9 +205,9 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
           <div className="max-w-2xl space-y-6">
             {/* Appearance */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Appearance</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings:appearance.title')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Choose your preferred color theme.
+                {t('settings:appearance.description')}
               </p>
               <RadioGroup
                 value={theme}
@@ -221,7 +220,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                 >
                   <RadioGroupItem value="light" id="theme-light" className="sr-only" />
                   <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Light</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings:appearance.light')}</span>
                 </Label>
                 <Label
                   htmlFor="theme-dark"
@@ -229,7 +228,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                 >
                   <RadioGroupItem value="dark" id="theme-dark" className="sr-only" />
                   <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dark</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings:appearance.dark')}</span>
                 </Label>
                 <Label
                   htmlFor="theme-system"
@@ -237,36 +236,61 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                 >
                   <RadioGroupItem value="system" id="theme-system" className="sr-only" />
                   <Monitor className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">System</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings:appearance.system')}</span>
                 </Label>
+              </RadioGroup>
+            </div>
+
+            {/* Language */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings:language.title')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t('settings:language.description')}
+              </p>
+              <RadioGroup
+                value={language}
+                onValueChange={(value) => setLanguage(value as Language)}
+                className="grid grid-cols-2 gap-3"
+              >
+                {LANGUAGES.map((lang) => (
+                  <Label
+                    key={lang.code}
+                    htmlFor={`lang-${lang.code}`}
+                    className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-150 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary-500 [&:has([data-state=checked])]:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:[&:has([data-state=checked])]:bg-primary-900/20"
+                  >
+                    <RadioGroupItem value={lang.code} id={`lang-${lang.code}`} className="sr-only" />
+                    <span className="text-2xl">{lang.flag}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{lang.nativeName}</span>
+                  </Label>
+                ))}
               </RadioGroup>
             </div>
 
             {/* AI Provider */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Provider</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings:aiProvider.title')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Connect an AI service to power prompt generation and suggestions.
+                {t('settings:aiProvider.description')}
               </p>
 
               {isLoading ? (
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading settings...
+                  {t('settings:aiProvider.loading')}
                 </div>
               ) : viewMode === 'empty' ? (
                 /* Empty State */
                 <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-600 dark:bg-gray-800/50">
                   <Sparkles className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500" />
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    No AI provider configured
+                    {t('settings:aiProvider.emptyState')}
                   </p>
                   <Button
                     onClick={handleStartEditing}
                     variant="outline"
                     className="mt-3"
                   >
-                    Configure AI Provider
+                    {t('settings:aiProvider.configure')}
                   </Button>
                 </div>
               ) : viewMode === 'viewing' ? (
@@ -276,10 +300,10 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                          Provider
+                          {t('settings:aiProvider.provider')}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {savedSettings.provider ? PROVIDER_NAMES[savedSettings.provider] : '—'}
+                          {savedSettings.provider ? t(`settings:aiProvider.providers.${savedSettings.provider}`) : '—'}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -304,7 +328,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                     </div>
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        API Key
+                        {t('settings:aiProvider.apiKey')}
                       </p>
                       <p className="text-sm font-mono text-gray-900 dark:text-gray-100">
                         {savedSettings.apiKey ? maskApiKey(savedSettings.apiKey) : '—'}
@@ -312,7 +336,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                     </div>
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Model
+                        {t('settings:aiProvider.model')}
                       </p>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {savedSettings.provider && savedSettings.model
@@ -328,19 +352,19 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                   {/* Provider Selection */}
                   <div className="space-y-2">
                     <Label htmlFor="ai-provider" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Provider
+                      {t('settings:aiProvider.provider')}
                     </Label>
                     <Select
                       value={editSettings.provider || ''}
                       onValueChange={(value) => handleProviderChange(value as AIProvider)}
                     >
                       <SelectTrigger id="ai-provider" className="w-full">
-                        <SelectValue placeholder="Select a provider" />
+                        <SelectValue placeholder={t('settings:aiProvider.selectProvider')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="openai">OpenAI</SelectItem>
-                        <SelectItem value="anthropic">Anthropic</SelectItem>
-                        <SelectItem value="google">Google</SelectItem>
+                        <SelectItem value="openai">{t('settings:aiProvider.providers.openai')}</SelectItem>
+                        <SelectItem value="anthropic">{t('settings:aiProvider.providers.anthropic')}</SelectItem>
+                        <SelectItem value="google">{t('settings:aiProvider.providers.google')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -349,7 +373,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                   {editSettings.provider && (
                     <div className="space-y-2">
                       <Label htmlFor="ai-api-key" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        API Key
+                        {t('settings:aiProvider.apiKey')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -359,7 +383,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                           onChange={(e) =>
                             setEditSettings((prev) => ({ ...prev, apiKey: e.target.value }))
                           }
-                          placeholder={`Enter your ${PROVIDER_NAMES[editSettings.provider]} API key`}
+                          placeholder={t('settings:aiProvider.enterApiKey', { provider: t(`settings:aiProvider.providers.${editSettings.provider}`) })}
                           className="pr-10"
                         />
                         <button
@@ -381,7 +405,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                   {editSettings.provider && editSettings.apiKey && (
                     <div className="space-y-2">
                       <Label htmlFor="ai-model" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Model
+                        {t('settings:aiProvider.model')}
                       </Label>
                       <Select
                         value={editSettings.model || ''}
@@ -390,7 +414,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                         }
                       >
                         <SelectTrigger id="ai-model" className="w-full">
-                          <SelectValue placeholder="Select a model" />
+                          <SelectValue placeholder={t('settings:aiProvider.selectModel')} />
                         </SelectTrigger>
                         <SelectContent>
                           {AI_MODELS[editSettings.provider].map((model) => (
@@ -415,10 +439,10 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                       ) : (
                         <Check className="h-4 w-4" />
                       )}
-                      Save
+                      {t('common:buttons.save')}
                     </Button>
                     <Button variant="outline" onClick={handleCancelEditing} disabled={isSaving}>
-                      Cancel
+                      {t('common:buttons.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -427,9 +451,9 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
 
             {/* Prompts Folder */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Prompts Folder</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings:promptsFolder.title')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                The folder where your prompt templates are stored.
+                {t('settings:promptsFolder.description')}
               </p>
               <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
                 <code className="flex-1 text-sm text-gray-600 truncate font-mono dark:text-gray-400">
@@ -437,27 +461,27 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                 </code>
                 <Button variant="secondary" onClick={onChangeFolder} className="gap-2 shrink-0">
                   <FolderOpen className="h-4 w-4" />
-                  Change Folder
+                  {t('common:buttons.changeFolder')}
                 </Button>
               </div>
             </div>
 
             {/* MCP Integration */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">MCP Integration</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings:mcp.title')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Connect your prompt library to AI assistants like Claude Desktop, Cursor, and Claude Code via the Model Context Protocol (MCP).
+                {t('settings:mcp.description')}
               </p>
               <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Plug className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Claude Desktop Configuration
+                      {t('settings:mcp.claudeDesktopConfig')}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Add to <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">{getMcpConfigPath()}</code>
+                    {t('settings:mcp.addTo')} <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">{getMcpConfigPath()}</code>
                   </p>
                   <div className="relative">
                     <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto border border-gray-200 dark:border-gray-700">
@@ -479,7 +503,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                 </div>
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    Available tools: <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">list_prompts</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">get_prompt</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">use_prompt</code>
+                    {t('settings:mcp.availableTools')} <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">list_prompts</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">get_prompt</code>, <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">use_prompt</code>
                   </p>
                   <Button
                     variant="link"
@@ -488,7 +512,7 @@ export function SettingsPage({ folderPath, onChangeFolder }: SettingsPageProps) 
                     className="h-auto p-0 text-xs gap-1"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    View Documentation
+                    {t('settings:mcp.viewDocs')}
                   </Button>
                 </div>
               </div>

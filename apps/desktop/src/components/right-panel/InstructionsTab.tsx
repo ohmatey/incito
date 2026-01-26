@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PromptFile, Variable } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { VariableConfig } from '@/components/VariableConfig'
@@ -23,11 +24,13 @@ export function InstructionsTab({
   onVariableUpdate,
   onVariableMove,
 }: InstructionsTabProps) {
+  const { t } = useTranslation(['prompts'])
+
   if (!prompt || !prompt.isValid) {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No prompt selected
+          {t('prompts:instructionsTab.noPromptSelected')}
         </p>
       </div>
     )
@@ -37,8 +40,8 @@ export function InstructionsTab({
     return (
       <div className="flex h-full items-center justify-center p-4">
         <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-          No variables defined.<br />
-          Add {"{{variableName}}"} in the template.
+          {t('prompts:instructionsTab.noVariables')}<br />
+          {t('prompts:instructionsTab.addVariablesHint')}
         </p>
       </div>
     )

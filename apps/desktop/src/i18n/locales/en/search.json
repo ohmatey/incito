@@ -1,0 +1,8 @@
+{
+  "title": "Search",
+  "placeholder": "Search prompts...",
+  "clearFilters": "Clear filters",
+  "clearAll": "Clear all",
+  "noMatches": "No prompts match your search",
+  "noPrompts": "No prompts found"
+}

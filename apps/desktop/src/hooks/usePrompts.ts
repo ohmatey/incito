@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { PromptFile } from '@/types/prompt'
 import { loadPrompts as loadPromptsFromDisk, savePrompt, createPrompt, duplicatePrompt, deletePrompt, isDisplayNameUnique } from '@/lib/prompts'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 
 interface UsePromptsOptions {
   folderPath: string | null
@@ -39,10 +40,10 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
       setPrompts((prev) => [...prev, newPrompt].sort((a, b) => a.name.localeCompare(b.name)))
       setSelectedPrompt(newPrompt)
       onPromptCreated?.(newPrompt)
-      toast.success('Created new prompt')
+      toast.success(i18n.t('toasts:success.promptCreated'))
       return newPrompt
     } catch (err) {
-      toast.error('Failed to create prompt')
+      toast.error(i18n.t('toasts:error.promptCreateFailed'))
       throw err
     }
   }, [folderPath, prompts, onPromptCreated])
@@ -57,10 +58,10 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
       setPrompts((prev) => [...prev, duplicated].sort((a, b) => a.name.localeCompare(b.name)))
       setSelectedPrompt(duplicated)
       onPromptCreated?.(duplicated)
-      toast.success('Duplicated prompt')
+      toast.success(i18n.t('toasts:success.promptDuplicated'))
       return duplicated
     } catch (err) {
-      toast.error('Failed to duplicate prompt')
+      toast.error(i18n.t('toasts:error.promptDuplicateFailed'))
       throw err
     }
   }, [folderPath, prompts, onPromptCreated])
@@ -76,9 +77,9 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
       }
 
       onPromptDeleted?.(prompt)
-      toast.success('Deleted prompt')
+      toast.success(i18n.t('toasts:success.promptDeleted'))
     } catch (err) {
-      toast.error('Failed to delete prompt')
+      toast.error(i18n.t('toasts:error.promptDeleteFailed'))
       throw err
     }
   }, [prompts, selectedPrompt, onPromptDeleted])
@@ -92,10 +93,10 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
           .sort((a, b) => a.name.localeCompare(b.name))
       )
       setSelectedPrompt(updatedPrompt)
-      toast.success('Saved prompt')
+      toast.success(i18n.t('toasts:success.promptSaved'))
       return updatedPrompt
     } catch (err) {
-      toast.error('Failed to save prompt')
+      toast.error(i18n.t('toasts:error.promptSaveFailed'))
       throw err
     }
   }, [])

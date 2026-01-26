@@ -12,6 +12,10 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  // Optimize barrel file imports for faster dev startup and smaller bundles
+  optimizeDeps: {
+    include: ['lucide-react'],
+  },
   clearScreen: false,
   server: {
     port: 1420,

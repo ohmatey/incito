@@ -197,3 +197,89 @@ describe('getDefaultValues', () => {
     expect(result).toEqual({ tags: ['one', 'two'] })
   })
 })
+
+describe('interpolate array handling', () => {
+  it('formats arrays with comma separator by default', () => {
+    const variables: Variable[] = [
+      { key: 'items', label: 'Items', type: 'array' },
+    ]
+    const template = 'Items: {{items}}'
+    const values = { items: ['apple', 'banana', 'cherry'] }
+
+    const result = interpolate(template, values, variables)
+
+    expect(result).toBe('Items: apple, banana, cherry')
+  })
+
+  it('formats arrays with newline separator', () => {
+    const variables: Variable[] = [
+      { key: 'items', label: 'Items', type: 'array', format: 'newline' },
+    ]
+    const template = 'Items:\n{{items}}'
+    const values = { items: ['apple', 'banana'] }
+
+    const result = interpolate(template, values, variables)
+
+    expect(result).toBe('Items:\napple\nbanana')
+  })
+
+  it('formats arrays with numbered format', () => {
+    const variables: Variable[] = [
+      { key: 'steps', label: 'Steps', type: 'array', format: 'numbered' },
+    ]
+    const template = 'Steps:\n{{steps}}'
+    const values = { steps: ['First', 'Second', 'Third'] }
+
+    const result = interpolate(template, values, variables)
+
+    expect(result).toBe('Steps:\n1. First\n2. Second\n3. Third')
+  })
+
+  it('formats arrays with bullet format', () => {
+    const variables: Variable[] = [
+      { key: 'list', label: 'List', type: 'array', format: 'bullet' },
+    ]
+    const template = 'List:\n{{list}}'
+    const values = { list: ['Item A', 'Item B'] }
+
+    const result = interpolate(template, values, variables)
+
+    expect(result).toBe('List:\n- Item A\n- Item B')
+  })
+
+  it('handles empty arrays', () => {
+    const variables: Variable[] = [
+      { key: 'items', label: 'Items', type: 'array' },
+    ]
+    const template = 'Items: {{items}}'
+    const values = { items: [] }
+
+    const result = interpolate(template, values, variables)
+
+    expect(result).toBe('Items: ')
+  })
+})
+
+describe('interpolate error handling', () => {
+  it('returns original template on invalid Handlebars syntax', () => {
+    const template = '{{#if unclosed}'
+    const values = {}
+
+    const result = interpolate(template, values, [])
+
+    expect(result).toBe('{{#if unclosed}')
+  })
+
+  it('sanitizes values that contain Handlebars syntax', () => {
+    const variables: Variable[] = [
+      { key: 'input', label: 'Input', type: 'text' },
+    ]
+    const template = 'User said: {{input}}'
+    const values = { input: 'Hello {{name}}' }
+
+    const result = interpolate(template, values, variables)
+
+    // The {{ should be escaped to prevent injection
+    expect(result).toBe('User said: Hello \\{{name\\}}')
+  })
+})

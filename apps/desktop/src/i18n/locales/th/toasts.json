@@ -1,0 +1,51 @@
+{
+  "success": {
+    "copied": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+    "saved": "บันทึกสำเร็จ",
+    "deleted": "ลบสำเร็จ",
+    "created": "สร้างสำเร็จ",
+    "promptCreated": "สร้างพรอมต์ใหม่แล้ว",
+    "promptDeleted": "ลบพรอมต์แล้ว",
+    "promptDuplicated": "ทำซ้ำพรอมต์แล้ว",
+    "promptSaved": "บันทึกพรอมต์แล้ว",
+    "promptGenerated": "สร้างเทมเพลตพรอมต์แล้ว",
+    "tagCreated": "สร้างแท็กแล้ว",
+    "tagDeleted": "ลบแท็กแล้ว",
+    "tagUpdated": "อัปเดตแท็กแล้ว",
+    "versionRestored": "กู้คืนเวอร์ชันสำเร็จ",
+    "aiConfigured": "ตั้งค่าผู้ให้บริการ AI แล้ว",
+    "aiRemoved": "ลบผู้ให้บริการ AI แล้ว",
+    "mcpCopied": "คัดลอกการตั้งค่า MCP แล้ว",
+    "variantCreated": "สร้างตัวแปร: {{name}}"
+  },
+  "error": {
+    "copyFailed": "คัดลอกไม่สำเร็จ",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "deleteFailed": "ลบไม่สำเร็จ",
+    "createFailed": "สร้างไม่สำเร็จ",
+    "loadFailed": "โหลดไม่สำเร็จ",
+    "generic": "เกิดข้อผิดพลาด",
+    "promptLoadFailed": "โหลดพรอมต์ไม่สำเร็จ",
+    "promptSaveFailed": "บันทึกพรอมต์ไม่สำเร็จ",
+    "promptDeleteFailed": "ลบพรอมต์ไม่สำเร็จ",
+    "promptCreateFailed": "สร้างพรอมต์ไม่สำเร็จ",
+    "promptDuplicateFailed": "ทำซ้ำพรอมต์ไม่สำเร็จ",
+    "promptGenerateFailed": "สร้างพรอมต์จาก AI ไม่สำเร็จ",
+    "promptsFolderFailed": "โหลดโฟลเดอร์พรอมต์ไม่สำเร็จ",
+    "versionRestoreFailed": "กู้คืนเวอร์ชันไม่สำเร็จ",
+    "tagLoadFailed": "โหลดแท็กไม่สำเร็จ",
+    "tagSaveFailed": "บันทึกแท็กไม่สำเร็จ",
+    "tagDeleteFailed": "ลบแท็กไม่สำเร็จ",
+    "tagCreateFailed": "สร้างแท็กไม่สำเร็จ",
+    "tagUpdateFailed": "อัปเดตแท็กไม่สำเร็จ",
+    "aiFailed": "สร้าง AI ไม่สำเร็จ",
+    "fillRequired": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมด",
+    "notesSaveFailed": "บันทึกโน้ตไม่สำเร็จ",
+    "launchersSaveFailed": "บันทึกตัวเปิดด่วนไม่สำเร็จ",
+    "variantCreateFailed": "สร้างตัวแปรไม่สำเร็จ",
+    "invalidName": "ชื่อไม่ถูกต้อง"
+  },
+  "info": {
+    "noChanges": "ไม่มีการเปลี่ยนแปลงที่จะบันทึก"
+  }
+}

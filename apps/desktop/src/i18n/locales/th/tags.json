@@ -1,0 +1,18 @@
+{
+  "title": "แท็ก",
+  "createNewTag": "สร้างแท็กใหม่",
+  "tagName": "ชื่อแท็ก",
+  "addTag": "เพิ่มแท็ก",
+  "allTags": "แท็กทั้งหมด ({{count}})",
+  "noTagsYet": "ยังไม่มีแท็ก สร้างแท็กแรกของคุณด้านบน",
+  "promptCount": "{{count}} พรอมต์",
+  "promptCountPlural": "{{count}} พรอมต์",
+  "deleteTag": "ลบแท็ก",
+  "deleteTagDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบแท็ก \"{{name}}\"? การดำเนินการนี้จะลบออกจากพรอมต์ทั้งหมดที่ใช้",
+  "selector": {
+    "addTag": "เพิ่มแท็ก",
+    "noTagsYet": "ยังไม่มีแท็ก",
+    "create": "สร้าง",
+    "createNewTag": "สร้างแท็กใหม่"
+  }
+}

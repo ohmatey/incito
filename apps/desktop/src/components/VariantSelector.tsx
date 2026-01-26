@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Pencil } from 'lucide-react'
 import { getVariantFamily } from '@/lib/prompts'
+import { useTranslation } from 'react-i18next'
 
 interface VariantSelectorProps {
   prompt: PromptFile
@@ -25,6 +26,7 @@ export function VariantSelector({
   onNewVariant,
   onEditPrompt,
 }: VariantSelectorProps) {
+  const { t } = useTranslation(['prompts'])
   const variantFamily = getVariantFamily(prompt, allPrompts)
 
   // Only show the selector if there's more than just the current prompt
@@ -34,7 +36,7 @@ export function VariantSelector({
   // Get display label for a prompt in the variant family
   const getVariantLabel = (p: PromptFile, index: number) => {
     if (index === 0 && !p.variantOf) {
-      return 'Original'
+      return t('prompts:variantSelector.original')
     }
     // Extract variant label from the name (e.g., "Prompt Name (Formal)" -> "Formal")
     const match = p.name.match(/\(([^)]+)\)$/)
@@ -65,7 +67,7 @@ export function VariantSelector({
           }}
         >
           <SelectTrigger className="w-[180px] h-8 bg-white dark:bg-gray-800">
-            <SelectValue placeholder="Select variant" />
+            <SelectValue placeholder={t('prompts:variantSelector.selectVariant')} />
           </SelectTrigger>
           <SelectContent>
             {variantFamily.map((p, index) => (
@@ -77,7 +79,7 @@ export function VariantSelector({
         </Select>
       ) : (
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          Original
+          {t('prompts:variantSelector.original')}
         </span>
       )}
 
@@ -90,7 +92,7 @@ export function VariantSelector({
         className="gap-1.5 h-8"
       >
         <Pencil className="h-4 w-4" />
-        Edit
+        {t('prompts:variantSelector.edit')}
       </Button>
 
       <Button
@@ -100,7 +102,7 @@ export function VariantSelector({
         className="gap-1.5 h-8"
       >
         <Plus className="h-4 w-4" />
-        New Variant
+        {t('prompts:variantSelector.newVariant')}
       </Button>
     </div>
   )

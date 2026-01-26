@@ -1,0 +1,18 @@
+{
+  "title": "Tags",
+  "createNewTag": "Create New Tag",
+  "tagName": "Tag name",
+  "addTag": "Add Tag",
+  "allTags": "All Tags ({{count}})",
+  "noTagsYet": "No tags created yet. Create your first tag above.",
+  "promptCount": "{{count}} prompt",
+  "promptCountPlural": "{{count}} prompts",
+  "deleteTag": "Delete Tag",
+  "deleteTagDescription": "Are you sure you want to delete the tag \"{{name}}\"? This will remove it from all prompts that use it.",
+  "selector": {
+    "addTag": "Add tag",
+    "noTagsYet": "No tags yet",
+    "create": "Create",
+    "createNewTag": "Create new tag"
+  }
+}

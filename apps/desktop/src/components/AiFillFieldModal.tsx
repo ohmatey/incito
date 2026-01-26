@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Variable } from '@/types/prompt'
 import {
   Dialog,
@@ -30,6 +31,7 @@ export function AiFillFieldModal({
   currentValues,
   onGenerate,
 }: AiFillFieldModalProps) {
+  const { t } = useTranslation(['prompts', 'common'])
   const [userPrompt, setUserPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -56,7 +58,7 @@ export function AiFillFieldModal({
       onOpenChange(false)
     } catch (error) {
       console.error('Failed to generate:', error)
-      toast.error('Failed to generate content')
+      toast.error(t('prompts:aiFillModal.failedToGenerate'))
     } finally {
       setIsGenerating(false)
     }
@@ -92,7 +94,7 @@ export function AiFillFieldModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-secondary-500" />
-            Generate {variable.label}
+            {t('prompts:aiFillModal.generateTitle', { label: variable.label })}
           </DialogTitle>
           {variable.description && (
             <DialogDescription>{variable.description}</DialogDescription>
@@ -105,15 +107,15 @@ export function AiFillFieldModal({
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe what you want to generate..."
+              placeholder={t('prompts:aiFillModal.describePlaceholder')}
               className="min-h-[100px] resize-none"
               autoFocus
             />
             <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-              The AI will use other form values as context to generate relevant content.
+              {t('prompts:aiFillModal.aiContextHint')}
             </p>
             <p className="mt-1 font-mono text-[10px] text-gray-400 dark:text-gray-500">
-              AI can make mistakes. Please review generated content.
+              {t('common:ai.disclaimer')}
             </p>
           </div>
         </div>
@@ -124,7 +126,7 @@ export function AiFillFieldModal({
             onClick={() => handleOpenChange(false)}
             disabled={isGenerating}
           >
-            Cancel
+            {t('common:buttons.cancel')}
           </Button>
           <Button
             onClick={handleGenerate}
@@ -136,7 +138,7 @@ export function AiFillFieldModal({
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {isGenerating ? 'Generating...' : 'Generate'}
+            {isGenerating ? t('common:ai.generating') : t('common:ai.generate')}
           </Button>
         </DialogFooter>
       </DialogContent>

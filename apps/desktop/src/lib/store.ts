@@ -92,6 +92,18 @@ async function getDb(): Promise<Database> {
         updated_at TEXT NOT NULL
       )
     `)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS recent_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        last_used_at TEXT NOT NULL
+      )
+    `)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS pinned_prompts (
+        prompt_id TEXT PRIMARY KEY,
+        pinned_at TEXT NOT NULL
+      )
+    `)
   }
   return db
 }
@@ -278,7 +290,42 @@ export async function getTagUsageCounts(): Promise<Result<Map<string, number>>> 
   }
 }
 
+
 // AI Settings operations
+
+// Store API key in SQLite settings table
+// Note: For enhanced security, consider using Tauri's secure-store plugin in the future
+const API_KEY_SETTING = 'secure_api_key'
+
+async function getApiKey(): Promise<Result<string | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      [API_KEY_SETTING]
+    )
+    return { ok: true, data: result.length > 0 ? result[0].value : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get API key: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+async function saveApiKey(apiKey: string | null): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    if (apiKey) {
+      await database.execute(
+        'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+        [API_KEY_SETTING, apiKey]
+      )
+    } else {
+      await database.execute('DELETE FROM settings WHERE key = ?', [API_KEY_SETTING])
+    }
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save API key: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
 
 export async function getAISettings(): Promise<Result<AISettings>> {
   try {
@@ -287,20 +334,33 @@ export async function getAISettings(): Promise<Result<AISettings>> {
       'SELECT value FROM settings WHERE key = ?',
       ['ai_provider']
     )
-    const apiKeyResult = await database.select<{ value: string }[]>(
-      'SELECT value FROM settings WHERE key = ?',
-      ['ai_api_key']
-    )
     const modelResult = await database.select<{ value: string }[]>(
       'SELECT value FROM settings WHERE key = ?',
       ['ai_model']
     )
 
+    // Migrate from old 'ai_api_key' to new 'secure_api_key' if needed
+    const oldApiKeyResult = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['ai_api_key']
+    )
+
+    let apiKey = await getApiKey()
+
+    if (apiKey.ok && !apiKey.data && oldApiKeyResult.length > 0) {
+      const oldApiKey = oldApiKeyResult[0].value
+      await saveApiKey(oldApiKey)
+      await database.execute('DELETE FROM settings WHERE key = ?', ['ai_api_key'])
+      apiKey = { ok: true, data: oldApiKey }
+    }
+
+    if (!apiKey.ok) return apiKey
+
     return {
       ok: true,
       data: {
         provider: providerResult.length > 0 ? (providerResult[0].value as AIProvider) : null,
-        apiKey: apiKeyResult.length > 0 ? apiKeyResult[0].value : null,
+        apiKey: apiKey.data,
         model: modelResult.length > 0 ? modelResult[0].value : null,
       },
     }
@@ -325,14 +385,10 @@ export async function saveAISettings(settings: Partial<AISettings>): Promise<Res
     }
 
     if (settings.apiKey !== undefined) {
-      if (settings.apiKey === null) {
-        await database.execute('DELETE FROM settings WHERE key = ?', ['ai_api_key'])
-      } else {
-        await database.execute(
-          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
-          ['ai_api_key', settings.apiKey]
-        )
-      }
+      const result = await saveApiKey(settings.apiKey)
+      if (!result.ok) return result
+      // Ensure old key is removed from DB
+      await database.execute('DELETE FROM settings WHERE key = ?', ['ai_api_key'])
     }
 
     if (settings.model !== undefined) {
@@ -351,6 +407,7 @@ export async function saveAISettings(settings: Partial<AISettings>): Promise<Res
     return { ok: false, error: `Failed to save AI settings: ${err instanceof Error ? err.message : String(err)}` }
   }
 }
+
 
 export async function hasAIConfigured(): Promise<Result<boolean>> {
   try {
@@ -461,13 +518,6 @@ const MAX_RECENT_PROMPTS = 10
 export async function getRecentPromptIds(): Promise<Result<string[]>> {
   try {
     const database = await getDb()
-    // Ensure the table exists
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS recent_prompts (
-        prompt_id TEXT PRIMARY KEY,
-        last_used_at TEXT NOT NULL
-      )
-    `)
     const result = await database.select<{ prompt_id: string }[]>(
       'SELECT prompt_id FROM recent_prompts ORDER BY last_used_at DESC LIMIT ?',
       [MAX_RECENT_PROMPTS]
@@ -481,14 +531,6 @@ export async function getRecentPromptIds(): Promise<Result<string[]>> {
 export async function addRecentPrompt(promptId: string): Promise<Result<void>> {
   try {
     const database = await getDb()
-    // Ensure the table exists
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS recent_prompts (
-        prompt_id TEXT PRIMARY KEY,
-        last_used_at TEXT NOT NULL
-      )
-    `)
-    // Insert or update the prompt
     await database.execute(
       'INSERT OR REPLACE INTO recent_prompts (prompt_id, last_used_at) VALUES (?, ?)',
       [promptId, new Date().toISOString()]
@@ -651,12 +693,6 @@ export async function savePanelWidths(widths: PanelWidths): Promise<Result<void>
 export async function getPinnedPromptIds(): Promise<Result<string[]>> {
   try {
     const database = await getDb()
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS pinned_prompts (
-        prompt_id TEXT PRIMARY KEY,
-        pinned_at TEXT NOT NULL
-      )
-    `)
     const result = await database.select<{ prompt_id: string }[]>(
       'SELECT prompt_id FROM pinned_prompts ORDER BY pinned_at ASC'
     )
@@ -669,12 +705,6 @@ export async function getPinnedPromptIds(): Promise<Result<string[]>> {
 export async function addPinnedPrompt(promptId: string): Promise<Result<void>> {
   try {
     const database = await getDb()
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS pinned_prompts (
-        prompt_id TEXT PRIMARY KEY,
-        pinned_at TEXT NOT NULL
-      )
-    `)
     await database.execute(
       'INSERT OR REPLACE INTO pinned_prompts (prompt_id, pinned_at) VALUES (?, ?)',
       [promptId, new Date().toISOString()]
@@ -692,5 +722,33 @@ export async function removePinnedPrompt(promptId: string): Promise<Result<void>
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to unpin prompt: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Generic setting operations
+
+export async function getSetting(key: string): Promise<Result<string | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      [key]
+    )
+    return { ok: true, data: result.length > 0 ? result[0].value : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get setting: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveSetting(key: string, value: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [key, value]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save setting: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

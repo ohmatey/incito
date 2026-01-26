@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PromptFile, Variable } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -127,6 +128,7 @@ interface RenderContext {
   activeVariableKey: string | null
   onActiveVariableChange: (key: string | null) => void
   keyCounter: { current: number }
+  t: (key: string) => string
 }
 
 // Recursively render tokens
@@ -265,8 +267,8 @@ function renderTokens(
           <TooltipContent>
             <p className="font-mono text-xs">
               {token.comparison
-                ? `${token.helper} ${token.comparison.op}(${variable?.label || token.key}, "${token.comparison.value}"): ${isConditionTrue ? 'showing' : 'hidden'}`
-                : `${token.helper} ${variable?.label || token.key}: ${isConditionTrue ? 'showing' : 'hidden'}`
+                ? `${token.helper} ${token.comparison.op}(${variable?.label || token.key}, "${token.comparison.value}"): ${isConditionTrue ? ctx.t('prompts:previewTab.showing') : ctx.t('prompts:previewTab.hidden')}`
+                : `${token.helper} ${variable?.label || token.key}: ${isConditionTrue ? ctx.t('prompts:previewTab.showing') : ctx.t('prompts:previewTab.hidden')}`
               }
             </p>
           </TooltipContent>
@@ -290,6 +292,7 @@ export function PreviewTab({
   onSelectVariant,
   onNewVariant,
 }: PreviewTabProps) {
+  const { t } = useTranslation(['prompts'])
 
   // Get variant family for this prompt
   const variantFamily = useMemo(() => {
@@ -302,7 +305,7 @@ export function PreviewTab({
   // Get display label for a prompt in the variant family
   const getVariantLabel = (p: PromptFile, index: number) => {
     if (index === 0 && !p.variantOf) {
-      return 'Original'
+      return t('prompts:previewTab.original')
     }
     const match = p.name.match(/\(([^)]+)\)$/)
     if (match) return match[1]
@@ -327,16 +330,17 @@ export function PreviewTab({
       activeVariableKey,
       onActiveVariableChange,
       keyCounter: { current: 0 },
+      t,
     }
 
     const { elements } = renderTokens(tokens, ctx)
     return elements
-  }, [prompt, values, activeVariableKey, onActiveVariableChange])
+  }, [prompt, values, activeVariableKey, onActiveVariableChange, t])
 
   if (!prompt) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Select a prompt to preview</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('prompts:previewTab.selectPrompt')}</p>
       </div>
     )
   }
@@ -344,7 +348,7 @@ export function PreviewTab({
   if (!prompt.isValid) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <p className="text-sm text-red-500 dark:text-red-400">Cannot preview - template has errors</p>
+        <p className="text-sm text-red-500 dark:text-red-400">{t('prompts:previewTab.hasErrors')}</p>
       </div>
     )
   }
@@ -376,7 +380,7 @@ export function PreviewTab({
             </Select>
           ) : (
             <span className="flex-1 text-xs text-gray-600 dark:text-gray-400">
-              {hasVariants ? getVariantLabel(prompt, variantFamily.indexOf(prompt)) : 'Original'}
+              {hasVariants ? getVariantLabel(prompt, variantFamily.indexOf(prompt)) : t('prompts:previewTab.original')}
             </span>
           )}
 
@@ -389,7 +393,7 @@ export function PreviewTab({
               onClick={onNewVariant}
             >
               <Plus className="h-3.5 w-3.5" />
-              New
+              {t('prompts:previewTab.new')}
             </Button>
           )}
         </div>

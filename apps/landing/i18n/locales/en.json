@@ -1,0 +1,98 @@
+{
+  "header": {
+    "github": "GitHub",
+    "download": "Download"
+  },
+  "hero": {
+    "title": "Turn prompts into",
+    "titleHighlight": "instructions.",
+    "subtitle": "Build guided forms for your best prompts. Fill in the blanks, copy, paste into any AI. Set it up once, reuse forever. 100% offline.",
+    "downloadButton": "Download for macOS",
+    "githubButton": "View on GitHub",
+    "screenshotAlt": "Incito desktop application showing prompt editor"
+  },
+  "problem": {
+    "heading": "Sound familiar?",
+    "items": [
+      {
+        "title": "Starting from scratch every time",
+        "description": "You've written the perfect prompt before, but now you're typing it out again from memory."
+      },
+      {
+        "title": "No structure for reuse",
+        "description": "Your prompts live in random notes and chat logs. No easy way to turn them into repeatable templates."
+      },
+      {
+        "title": "Context gets lost",
+        "description": "You remember the prompt worked, but not the exact setup—the variables, the format, the instructions that made it work."
+      }
+    ]
+  },
+  "howItWorks": {
+    "heading": "How it works",
+    "steps": [
+      {
+        "step": "1",
+        "title": "Point to a folder",
+        "description": "Pick any folder. Incito reads your markdown prompt files from there."
+      },
+      {
+        "step": "2",
+        "title": "Build your instructions",
+        "description": "Define the questions and inputs that guide prompt creation. Labels, defaults, dropdowns—Incito turns them into a form."
+      },
+      {
+        "step": "3",
+        "title": "Fill in the blanks",
+        "description": "Come back anytime. Your instructions guide you through filling out the prompt without needing to see the template."
+      },
+      {
+        "step": "4",
+        "title": "Copy and paste",
+        "description": "One click copies your completed prompt. Paste it into any AI chatbot."
+      }
+    ]
+  },
+  "features": {
+    "heading": "Everything you need, nothing you don't",
+    "items": [
+      {
+        "title": "100% Offline",
+        "description": "Works completely offline. Your prompts never leave your machine—no internet required, no cloud sync, no accounts."
+      },
+      {
+        "title": "Instant",
+        "description": "Native app performance. Opens in milliseconds, not seconds. No loading spinners."
+      },
+      {
+        "title": "Handlebars Templating",
+        "description": "Use {{variables}}, conditionals, and helpers. Your prompts become smart templates."
+      },
+      {
+        "title": "Prompt Variants",
+        "description": "Create multiple versions of any prompt. Test different tones, styles, or approaches side by side."
+      },
+      {
+        "title": "Bring Your Own AI (Optional)",
+        "description": "Connect an AI provider if you want help generating prompts. Or skip it—the app works fully standalone."
+      },
+      {
+        "title": "Keyboard-first",
+        "description": "Navigate, search, and copy without touching your mouse. Shortcuts for everything."
+      },
+      {
+        "title": "Clean UI",
+        "description": "A distraction-free interface that gets out of your way. Light and dark modes included."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Build your prompt instructions today",
+    "subheading": "Create guided forms for your best prompts. Come back, fill in the blanks, copy. Free and offline.",
+    "downloadButton": "Download for macOS",
+    "comingSoon": "Windows and Linux coming soon"
+  },
+  "footer": {
+    "madeBy": "Made by Aaron"
+  }
+}
