@@ -1,12 +1,12 @@
 'use client'
 
-import { RefreshCw, Search, Clock } from 'lucide-react'
+import { Shuffle, FileCode, TrendingDown } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { FadeIn } from '@/components/shared/FadeIn'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
-const icons = [RefreshCw, Search, Clock]
+const icons = [Shuffle, FileCode, TrendingDown]
 
 export function Problem() {
   const { t } = useLanguage()
