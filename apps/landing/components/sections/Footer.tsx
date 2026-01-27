@@ -19,7 +19,7 @@ export function Footer() {
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {t.footer.builtBy}{' '}
                 <a
-                  href="https://twitter.com/aaronmavrinac"
+                  href="https://www.aaronmcpherson.dev/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-gray-900 hover:underline dark:text-gray-100"
