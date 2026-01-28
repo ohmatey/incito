@@ -31,7 +31,7 @@ export function Features() {
     <section className="py-20">
       <Container>
         <FadeIn>
-          <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">
+          <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl [text-wrap:balance]">
             {t.features.heading}
           </h2>
         </FadeIn>
@@ -51,7 +51,7 @@ export function Features() {
                       colors.text
                     )}
                   >
-                    <Icon size={24} />
+                    <Icon size={24} aria-hidden="true" />
                   </div>
                   <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                     {feature.title}

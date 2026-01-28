@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light dark;
   --background: 250 250 249;
   --foreground: 28 25 23;
   --muted: 120 113 108;

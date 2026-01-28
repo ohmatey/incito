@@ -20,10 +20,10 @@ export function ChromeExtension() {
             <div className="relative flex flex-col items-center text-center">
               {/* Chrome icon with glow effect */}
               <div className="mb-6 inline-flex rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                <Chrome size={48} className="text-white" />
+                <Chrome size={48} className="text-white" aria-hidden="true" />
               </div>
 
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">
+              <h2 className="text-3xl font-bold text-white sm:text-4xl [text-wrap:balance]">
                 {t.chromeExtension.heading}
               </h2>
 

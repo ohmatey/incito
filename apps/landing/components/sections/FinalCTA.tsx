@@ -15,7 +15,7 @@ export function FinalCTA() {
       <Container>
         <FadeIn>
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl [text-wrap:balance]">
               {t.cta.heading}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-gray-400">
@@ -37,7 +37,7 @@ export function FinalCTA() {
                     variant="secondary"
                     className="border-gray-700 bg-transparent text-white hover:bg-gray-800"
                   >
-                    <Github size={20} className="mr-2" />
+                    <Github size={20} className="mr-2" aria-hidden="true" />
                     {t.cta.githubButton}
                   </Button>
                 </a>

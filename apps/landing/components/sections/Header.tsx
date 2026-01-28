@@ -44,7 +44,7 @@ export function Header() {
             <LanguageSwitcher />
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm">
-                <Github size={18} className="mr-2" />
+                <Github size={18} className="mr-2" aria-hidden="true" />
                 {t.header.github}
               </Button>
             </a>

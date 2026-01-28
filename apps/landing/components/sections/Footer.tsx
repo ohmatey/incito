@@ -39,7 +39,7 @@ export function Footer() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           >
-            <Github size={18} />
+            <Github size={18} aria-hidden="true" />
             <span>{t.footer.sourceCode}</span>
           </a>
         </div>

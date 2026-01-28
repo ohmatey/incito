@@ -21,7 +21,7 @@ export function Hero() {
       <Container>
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl lg:text-6xl [text-wrap:balance]">
               {t.hero.title}{' '}
               <span className="text-gradient">{t.hero.titleHighlight}</span>
             </h1>
@@ -40,7 +40,7 @@ export function Hero() {
               </a>
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 <Button variant="secondary" size="lg">
-                  <Github size={20} className="mr-2" />
+                  <Github size={20} className="mr-2" aria-hidden="true" />
                   {t.hero.githubButton}
                 </Button>
               </a>
