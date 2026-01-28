@@ -1,8 +1,12 @@
 {
   "title": "ค้นหา",
-  "placeholder": "ค้นหาพรอมต์...",
+  "placeholder": "ค้นหาพรอมต์และเอเจนต์...",
   "clearFilters": "ล้างตัวกรอง",
   "clearAll": "ล้างทั้งหมด",
-  "noMatches": "ไม่มีพรอมต์ที่ตรงกับการค้นหา",
-  "noPrompts": "ไม่พบพรอมต์"
+  "noMatches": "ไม่มีผลลัพธ์ที่ตรงกับการค้นหา",
+  "noPrompts": "ไม่พบพรอมต์หรือเอเจนต์",
+  "filterAll": "ทั้งหมด",
+  "filterPrompts": "พรอมต์",
+  "filterAgents": "เอเจนต์",
+  "shiftEnterHint": "Shift+Enter เพื่อรัน"
 }

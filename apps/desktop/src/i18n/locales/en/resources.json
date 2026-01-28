@@ -1,0 +1,69 @@
+{
+  "title": "Resources",
+  "upload": {
+    "title": "Upload Asset",
+    "dragDrop": "Drag and drop files here, or click to browse",
+    "browse": "Browse files",
+    "supportedFormats": "Supported formats: Text, Images, PDFs",
+    "uploading": "Uploading..."
+  },
+  "list": {
+    "empty": "No resources yet",
+    "emptyDescription": "Upload files to build your asset library for prompts",
+    "search": "Search resources...",
+    "uploadFirst": "Upload your first resource"
+  },
+  "detail": {
+    "metadata": "Metadata",
+    "delete": "Delete resource",
+    "deleteConfirm": "Delete this resource?",
+    "deleteDescription": "This will permanently delete the resource and remove it from the library.",
+    "fileName": "File name",
+    "fileType": "File type",
+    "fileSize": "File size",
+    "uploadedAt": "Uploaded",
+    "indexed": "Indexed",
+    "notIndexed": "Not indexed",
+    "indexedAt": "Indexed at",
+    "chunkCount": "Chunks"
+  },
+  "types": {
+    "image": "Image",
+    "document": "Document",
+    "text": "Text",
+    "pdf": "PDF",
+    "markdown": "Markdown"
+  },
+  "filters": {
+    "all": "All",
+    "images": "Images",
+    "documents": "Documents"
+  },
+  "sidebar": {
+    "indexing": "Indexing",
+    "indexNow": "Index now",
+    "reindex": "Re-index",
+    "indexingInProgress": "Indexing in progress...",
+    "indexed": "Indexed for search",
+    "notIndexed": "Not indexed for search",
+    "requiresAI": "Requires AI provider to index",
+    "actions": "Actions",
+    "preview": "Preview"
+  },
+  "picker": {
+    "title": "Select Resource",
+    "select": "Select",
+    "noResources": "No resources available"
+  },
+  "errors": {
+    "uploadFailed": "Failed to upload resource",
+    "deleteFailed": "Failed to delete resource",
+    "indexFailed": "Failed to index resource",
+    "unsupportedType": "Unsupported file type"
+  },
+  "success": {
+    "uploaded": "Resource uploaded",
+    "deleted": "Resource deleted",
+    "indexed": "Resource indexed"
+  }
+}

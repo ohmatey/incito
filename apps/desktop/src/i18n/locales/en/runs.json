@@ -1,0 +1,14 @@
+{
+  "title": "Run History",
+  "empty": {
+    "title": "No runs yet",
+    "description": "Your prompt run history will appear here when you copy or launch prompts."
+  },
+  "status": {
+    "completed": "Completed",
+    "error": "Failed",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "cancelled": "Cancelled"
+  }
+}

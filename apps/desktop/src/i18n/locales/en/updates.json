@@ -1,0 +1,15 @@
+{
+  "title": "Update Available",
+  "upToDateTitle": "No Updates Available",
+  "errorTitle": "Update Check Failed",
+  "description": "A new version ({{version}}) is available and ready to install.",
+  "releaseNotes": "What's New",
+  "downloading": "Downloading update...",
+  "updateNow": "Update Now",
+  "later": "Later",
+  "ok": "OK",
+  "error": "Update failed: {{message}}",
+  "noUpdates": "You're running the latest version of Incito.",
+  "currentVersion": "Current version: {{version}}",
+  "checkingForUpdates": "Checking for updates..."
+}

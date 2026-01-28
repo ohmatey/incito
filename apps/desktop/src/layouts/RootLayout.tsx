@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from '@tanstack/react-router'
 import { AppProvider, useAppContext } from '@/context/AppContext'
 import { FolderSelect } from '@/components/FolderSelect'
-import { NavSidebar } from '@/components/NavSidebar'
+import { NavSidebar, type NavView } from '@/components/NavSidebar'
 import { NewPromptDialog } from '@/components/NewPromptDialog'
+import { UpdateNotification } from '@/components/UpdateNotification'
 import { Toaster } from '@/components/ui/sonner'
 
 function RootLayoutInner() {
@@ -21,7 +22,22 @@ function RootLayoutInner() {
     handleCreateFromAI,
     rightPanelOpen,
     setRightPanelOpen,
+    featureFlags,
   } = useAppContext()
+
+  // Redirect if user is on a disabled feature route
+  useEffect(() => {
+    const pathname = location.pathname
+    if (pathname.startsWith('/agents') && !featureFlags.agentsEnabled) {
+      navigate({ to: '/prompts' })
+    }
+    if (pathname.startsWith('/resources') && !featureFlags.resourcesEnabled) {
+      navigate({ to: '/prompts' })
+    }
+    if (pathname.startsWith('/runs') && !featureFlags.runsEnabled) {
+      navigate({ to: '/prompts' })
+    }
+  }, [location.pathname, featureFlags, navigate])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -70,19 +86,31 @@ function RootLayoutInner() {
   }
 
   // Derive current view from pathname for NavSidebar
-  const currentView = (() => {
+  const currentView: NavView = (() => {
     const pathname = location.pathname
     if (pathname.startsWith('/search')) return 'search'
+    if (pathname.startsWith('/agents')) return 'agents'
+    if (pathname.startsWith('/runs')) return 'runs'
+    if (pathname.startsWith('/resources')) return 'resources'
     if (pathname.startsWith('/tags')) return 'tags'
     if (pathname.startsWith('/settings')) return 'settings'
     return 'prompts'
   })()
 
   // Handle nav view change
-  function handleViewChange(view: 'prompts' | 'tags' | 'settings' | 'search') {
+  function handleViewChange(view: NavView) {
     switch (view) {
       case 'prompts':
         navigate({ to: '/prompts' })
+        break
+      case 'agents':
+        navigate({ to: '/agents' })
+        break
+      case 'runs':
+        navigate({ to: '/runs' })
+        break
+      case 'resources':
+        navigate({ to: '/resources' })
         break
       case 'search':
         navigate({ to: '/search' })
@@ -114,8 +142,14 @@ function RootLayoutInner() {
 
   return (
     <>
-      <div className="flex h-screen border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-        <NavSidebar currentView={currentView} onViewChange={handleViewChange} />
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <NavSidebar
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          agentsEnabled={featureFlags.agentsEnabled}
+          resourcesEnabled={featureFlags.resourcesEnabled}
+          runsEnabled={featureFlags.runsEnabled}
+        />
         <Outlet />
       </div>
       <NewPromptDialog
@@ -126,6 +160,7 @@ function RootLayoutInner() {
         onOpenSettings={() => navigate({ to: '/settings' })}
         defaultMode={newPromptDialogMode}
       />
+      <UpdateNotification />
       <Toaster />
     </>
   )

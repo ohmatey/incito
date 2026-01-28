@@ -4,7 +4,7 @@ import type { PromptFile, Variable, ParseError, SelectOption, SerializationForma
 import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, RESERVED_KEYWORDS, isValidVariableKey, isValidTagName } from './constants'
 import { AVAILABLE_LAUNCHERS } from './launchers'
 
-const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select']
+const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select', 'image']
 const VALID_FORMATS: SerializationFormat[] = ['newline', 'comma', 'numbered', 'bullet']
 
 export function parsePromptFile(

@@ -1,17 +1,22 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
+import { useRunMode } from '@/context/RunModeContext'
 import { PromptHeader } from '@/components/PromptHeader'
 import { CenterPane } from '@/components/CenterPane'
 import { RightPanel } from '@/components/RightPanel'
 import { ResizeHandle } from '@/components/ui/resize-handle'
 import { PromptEditorDialog } from '@/components/PromptEditorDialog'
+import { RunModeChat } from '@/components/run-mode/RunModeChat'
+import { interpolate } from '@/lib/interpolate'
+import { toast } from 'sonner'
 
 export function PromptDetail() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['common', 'toasts'])
   const { promptId } = useParams({ from: '/prompts/$promptId' })
   const navigate = useNavigate()
+  const runMode = useRunMode()
   const {
     isLoading,
     promptManager,
@@ -45,6 +50,7 @@ export function PromptDetail() {
     handleSelectVariant,
     refreshDrafts,
     pinnedPromptIds,
+    featureFlags,
   } = useAppContext()
 
   // Get selected prompt from URL param
@@ -68,6 +74,28 @@ export function PromptDetail() {
     handleSelectVariant(prompt) // Store variant memory in context
     navigate({ to: '/prompts/$promptId', params: { promptId: prompt.id } })
   }
+
+  // Run mode handlers
+  const handleStartRunMode = useCallback(() => {
+    // Navigate to runs page instead of starting inline run mode
+    navigate({ to: '/runs' })
+  }, [navigate])
+
+  const handleRunModeComplete = useCallback((values: Record<string, unknown>) => {
+    // Apply the values from run mode to the form
+    for (const [key, value] of Object.entries(values)) {
+      editState.handleValueChange(key, value)
+    }
+  }, [editState])
+
+  const handleRunModeCopy = useCallback(() => {
+    if (!selectedPrompt) return
+
+    const content = interpolate(selectedPrompt.template, runMode.fieldValues, selectedPrompt.variables)
+    navigator.clipboard.writeText(content)
+    toast.success(t('toasts:success.promptCopied'))
+    handlePromptCompleted()
+  }, [selectedPrompt, runMode.fieldValues, t, handlePromptCompleted])
 
   // Redirect to prompts list if prompt not found after a delay
   // The delay allows state to propagate after creating a new prompt
@@ -97,45 +125,54 @@ export function PromptDetail() {
         <PromptHeader
           prompt={selectedPrompt}
           isEditMode={editState.isEditMode}
+          isRunMode={runMode.isActive}
           rightPanelOpen={rightPanelOpen}
           hasUnsavedChanges={editState.hasUnsavedChanges}
           nameError={editState.nameError}
+          runsEnabled={featureFlags.runsEnabled}
           onEditModeChange={handleEditModeChange}
           onRightPanelOpenChange={setRightPanelOpen}
           onTabChange={setRightPanelTab}
           onSave={handleSave}
           onCancel={handleCancel}
+          onRun={handleStartRunMode}
         />
 
-        <CenterPane
-          prompt={selectedPrompt}
-          prompts={promptManager.prompts}
-          pinnedPromptIds={pinnedPromptIds}
-          values={editState.variableValues}
-          isEditMode={editState.isEditMode}
-          localName={editState.localName}
-          localDescription={editState.localDescription}
-          localTemplate={editState.localTemplate}
-          localTags={editState.localTags}
-          nameError={editState.nameError}
-          tags={tagManager.tags}
-          activeVariableKey={editState.activeVariableKey}
-          onValueChange={editState.handleValueChange}
-          onActiveVariableChange={editState.setActiveVariableKey}
-          onLocalNameChange={editState.setLocalName}
-          onLocalDescriptionChange={editState.setLocalDescription}
-          onLocalTemplateChange={handleLocalTemplateChange}
-          onLocalTagsChange={editState.setLocalTags}
-          onCreateTag={handleCreateTag}
-          onSelectPrompt={handleSelectPrompt}
-          onPromptCompleted={handlePromptCompleted}
-          onResetForm={handleResetForm}
-          onUndo={editState.undo}
-          onRedo={editState.redo}
-          canUndo={editState.canUndo}
-          canRedo={editState.canRedo}
-          getLastChangeSource={editState.getLastChangeSource}
-          onRefineWithAI={async (template, instruction) => {
+        {runMode.isActive ? (
+          <RunModeChat
+            onComplete={handleRunModeComplete}
+            onCopy={handleRunModeCopy}
+          />
+        ) : (
+          <CenterPane
+            prompt={selectedPrompt}
+            prompts={promptManager.prompts}
+            pinnedPromptIds={pinnedPromptIds}
+            values={editState.variableValues}
+            isEditMode={editState.isEditMode}
+            localName={editState.localName}
+            localDescription={editState.localDescription}
+            localTemplate={editState.localTemplate}
+            localTags={editState.localTags}
+            nameError={editState.nameError}
+            tags={tagManager.tags}
+            activeVariableKey={editState.activeVariableKey}
+            onValueChange={editState.handleValueChange}
+            onActiveVariableChange={editState.setActiveVariableKey}
+            onLocalNameChange={editState.setLocalName}
+            onLocalDescriptionChange={editState.setLocalDescription}
+            onLocalTemplateChange={handleLocalTemplateChange}
+            onLocalTagsChange={editState.setLocalTags}
+            onCreateTag={handleCreateTag}
+            onSelectPrompt={handleSelectPrompt}
+            onPromptCompleted={handlePromptCompleted}
+            onResetForm={handleResetForm}
+            onUndo={editState.undo}
+            onRedo={editState.redo}
+            canUndo={editState.canUndo}
+            canRedo={editState.canRedo}
+            getLastChangeSource={editState.getLastChangeSource}
+            onRefineWithAI={async (template, instruction) => {
             const { refinePromptTemplate } = await import('@/lib/mastra-client')
             const result = await refinePromptTemplate(template, instruction)
             if (!result.ok) throw new Error(result.error)
@@ -154,7 +191,8 @@ export function PromptDetail() {
               totalCount: result.data.totalCount,
             }
           }}
-        />
+          />
+        )}
       </div>
 
       {/* Right Panel */}
@@ -172,6 +210,7 @@ export function PromptDetail() {
             activeTab={rightPanelTab}
             activeVariableKey={editState.activeVariableKey}
             isEditMode={editState.isEditMode}
+            runsEnabled={featureFlags.runsEnabled}
             onActiveVariableChange={editState.setActiveVariableKey}
             onValueChange={editState.handleValueChange}
             onNotesChange={handleNotesChange}

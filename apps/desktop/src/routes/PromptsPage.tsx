@@ -13,7 +13,7 @@ export function PromptsPage() {
     setShowNewPromptDialog,
     handleDuplicatePrompt,
     handleDeletePrompt,
-    setRightPanelOpen,
+    setRightPanelOpen: _setRightPanelOpen,
     panelWidths,
     handlePromptListResize,
     handlePanelResizeEnd,
@@ -32,7 +32,6 @@ export function PromptsPage() {
   if (selectedPrompt && promptManager.selectedPrompt?.id !== selectedPrompt.id) {
     promptManager.selectPrompt(selectedPrompt)
     editState.setIsEditMode(false)
-    setRightPanelOpen(true)
   }
 
   function handleSelectPrompt(prompt: PromptFile) {

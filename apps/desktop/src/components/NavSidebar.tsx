@@ -7,18 +7,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { FileText, Tags, Settings, Search, Keyboard } from 'lucide-react'
+import { FileText, Tags, Settings, Search, Keyboard, Bot, Clock, FolderArchive } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
+export type NavView = 'prompts' | 'agents' | 'resources' | 'runs' | 'tags' | 'settings' | 'search'
+
 interface NavSidebarProps {
-  currentView: 'prompts' | 'tags' | 'settings' | 'search'
-  onViewChange: (view: 'prompts' | 'tags' | 'settings' | 'search') => void
+  currentView: NavView
+  onViewChange: (view: NavView) => void
+  agentsEnabled?: boolean
+  resourcesEnabled?: boolean
+  runsEnabled?: boolean
 }
 
 export function NavSidebar({
   currentView,
   onViewChange,
+  agentsEnabled = false,
+  resourcesEnabled = false,
+  runsEnabled = false,
 }: NavSidebarProps) {
   const { t } = useTranslation('common')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -104,6 +112,75 @@ export function NavSidebar({
               <p>{t('navigation.prompts')}</p>
             </TooltipContent>
           </Tooltip>
+
+          {agentsEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('agents')}
+                  aria-label={t('navigation.agents')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'agents' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <Bot className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.agents')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {resourcesEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('resources')}
+                  aria-label={t('navigation.resources')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'resources' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <FolderArchive className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.resources')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {runsEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('runs')}
+                  aria-label={t('navigation.runs')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'runs' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <Clock className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.runs')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

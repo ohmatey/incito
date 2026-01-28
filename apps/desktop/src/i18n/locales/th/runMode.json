@@ -1,0 +1,11 @@
+{
+  "title": "โหมดรัน",
+  "fieldsProgress": "{{completed}} จาก {{total}} ฟิลด์",
+  "typeMessage": "พิมพ์ข้อความ...",
+  "complete": "กรอกครบทุกฟิลด์แล้ว!",
+  "completeDescription": "คุณได้กรอก {{required}} จาก {{total}} ฟิลด์ที่จำเป็น พร้อมใช้งานแล้ว",
+  "submit": "ส่ง",
+  "suggested": "แนะนำ",
+  "selectOption": "เลือกตัวเลือก",
+  "onePerLine": "หนึ่งรายการต่อบรรทัด"
+}

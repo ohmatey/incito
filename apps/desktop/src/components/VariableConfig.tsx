@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Variable, SerializationFormat } from '@/types/prompt'
+import type { Variable, SerializationFormat, ImageAddonValue } from '@/types/prompt'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,8 @@ import { ChevronUp, ChevronDown, Plus, X } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Slider } from '@/components/ui/slider'
+import { ImageVariableInput } from '@/components/ImageVariableInput'
+import { useAppContext } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
 interface VariableConfigProps {
@@ -45,6 +47,7 @@ export function VariableConfig({
   isLast = false,
 }: VariableConfigProps) {
   const { t } = useTranslation(['prompts'])
+  const { folderPath } = useAppContext()
   const [arrayInputValue, setArrayInputValue] = useState('')
   const [arrayDefaultInputValue, setArrayDefaultInputValue] = useState('')
 
@@ -473,6 +476,17 @@ export function VariableConfig({
         )
       }
 
+      case 'image':
+        return (
+          <ImageVariableInput
+            value={value as ImageAddonValue | null}
+            promptsFolder={folderPath || ''}
+            onValueChange={onValueChange}
+            onFocus={() => onActiveChange(true)}
+            onBlur={() => onActiveChange(false)}
+          />
+        )
+
       case 'text':
       default:
         return (
@@ -661,6 +675,7 @@ export function VariableConfig({
               <SelectItem value="select">{t('prompts:variableConfig.types.select')}</SelectItem>
               <SelectItem value="multi-select">{t('prompts:variableConfig.types.multiSelect')}</SelectItem>
               <SelectItem value="array">{t('prompts:variableConfig.types.array')}</SelectItem>
+              <SelectItem value="image">{t('prompts:variableConfig.types.image')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -768,11 +783,13 @@ export function VariableConfig({
           </div>
         )}
 
-        {/* Default value - after type-specific config */}
-        <div className="space-y-1">
-          <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.defaultValue')}</Label>
-          {renderDefaultValueInput()}
-        </div>
+        {/* Default value - after type-specific config (not shown for image type) */}
+        {variable.type !== 'image' && (
+          <div className="space-y-1">
+            <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.defaultValue')}</Label>
+            {renderDefaultValueInput()}
+          </div>
+        )}
 
         {/* Divider */}
         <div className="border-t border-gray-200 dark:border-gray-700" />

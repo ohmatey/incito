@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { RightPanelTab } from '@/components/PromptHeader'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, X, Eye, History, Settings2, StickyNote, Plus, List } from 'lucide-react'
+import { ChevronDown, X, Eye, History, Settings2, StickyNote, Plus, List, Clock } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ interface RightPanelHeaderProps {
   onTabChange: (tab: RightPanelTab) => void
   onClose: () => void
   onAddNote?: () => void
+  runsEnabled?: boolean
 }
 
 export function RightPanelHeader({
@@ -21,6 +22,7 @@ export function RightPanelHeader({
   onTabChange,
   onClose,
   onAddNote,
+  runsEnabled = false,
 }: RightPanelHeaderProps) {
   const { t } = useTranslation('common')
 
@@ -30,6 +32,7 @@ export function RightPanelHeader({
     notes: t('tabs.notes'),
     config: t('tabs.config'),
     instructions: t('tabs.instructions'),
+    runs: t('tabs.runs'),
   }
 
   const tabIcons: Record<RightPanelTab, React.ReactNode> = {
@@ -38,10 +41,13 @@ export function RightPanelHeader({
     notes: <StickyNote className="h-4 w-4" />,
     config: <Settings2 className="h-4 w-4" />,
     instructions: <List className="h-4 w-4" />,
+    runs: <Clock className="h-4 w-4" />,
   }
 
-  // Instructions tab is always available
-  const availableTabs: RightPanelTab[] = ['preview', 'instructions', 'notes', 'history', 'config']
+  // All tabs available in dropdown (runs conditional on feature flag)
+  const availableTabs: RightPanelTab[] = runsEnabled
+    ? ['preview', 'runs', 'instructions', 'notes', 'history', 'config']
+    : ['preview', 'instructions', 'notes', 'history', 'config']
 
   return (
     <div className="flex h-14 items-center justify-between border-b border-gray-200 px-3 dark:border-gray-700">

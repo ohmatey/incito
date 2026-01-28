@@ -1,13 +1,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { PromptFile, Variable, Note } from '@/types/prompt'
+import type { AgentFile } from '@/types/agent'
 import type { RightPanelTab } from '@/components/PromptHeader'
-import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, type PromptDraft, type PanelWidths } from '@/lib/store'
+import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, getTranslationSettings, getFeatureFlags, saveFeatureFlags, type PromptDraft, type PanelWidths, type FeatureFlags } from '@/lib/store'
 import { savePrompt, createVariant } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
+import { useAgentManager } from '@/lib/hooks/useAgentManager'
 import { toast } from 'sonner'
 import type { GeneratedPrompt } from '@/lib/mastra-client'
 import i18n from '@/i18n'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface AppContextValue {
   // Folder state
@@ -21,6 +24,9 @@ interface AppContextValue {
 
   // Tag manager
   tagManager: ReturnType<typeof useTagManager>
+
+  // Agent manager
+  agentManager: ReturnType<typeof useAgentManager>
 
   // Edit state
   editState: ReturnType<typeof usePromptEditState>
@@ -98,6 +104,13 @@ interface AppContextValue {
   setVariantEditorOpen: (open: boolean) => void
   handleOpenVariantEditor: () => void
   getRememberedVariantId: (parentFileName: string) => string | undefined
+
+  // Agent operations
+  handleCreateAgent: () => Promise<AgentFile | null>
+
+  // Feature flags
+  featureFlags: FeatureFlags
+  updateFeatureFlags: (flags: Partial<FeatureFlags>) => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -130,7 +143,7 @@ export function AppProvider({ children }: AppProviderProps) {
 
   // Right panel state
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('preview')
-  const [rightPanelOpen, setRightPanelOpen] = useState(true)
+  const [rightPanelOpen, setRightPanelOpen] = useState(false)
 
   // Panel widths state
   const [panelWidths, setPanelWidths] = useState<PanelWidths>({ promptList: 200, rightPanel: 300 })
@@ -150,14 +163,31 @@ export function AppProvider({ children }: AppProviderProps) {
   // Track selected variant for each parent prompt (parentFileName -> variantId)
   const [selectedVariantByParent, setSelectedVariantByParent] = useState<Record<string, string>>({})
 
+  // Feature flags state
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
+    agentsEnabled: false,
+    resourcesEnabled: false,
+    translationsEnabled: false,
+    mcpServerEnabled: false,
+    runsEnabled: false,
+  })
+
   // Custom hooks
   const promptManager = usePromptManager()
   const tagManager = useTagManager()
+  const agentManager = useAgentManager()
   const editState = usePromptEditState(promptManager.selectedPrompt, promptManager.prompts)
+  const { language: appLanguage } = useLanguage()
 
-  // Load saved folder path on mount
+  // Load saved folder path and feature flags on mount
   useEffect(() => {
     async function loadSavedFolder() {
+      // Load feature flags
+      const flagsResult = await getFeatureFlags()
+      if (flagsResult.ok) {
+        setFeatureFlags(flagsResult.data)
+      }
+
       const result = await getSavedFolderPath()
       if (result.ok && result.data) {
         handleFolderSelect(result.data)
@@ -183,6 +213,10 @@ export function AppProvider({ children }: AppProviderProps) {
 
       // Load tags from SQLite
       await tagManager.loadTags()
+
+      // Load agents from same folder
+      await agentManager.loadAgentsFromFolder(path)
+      await agentManager.loadPinnedAgents()
 
       // Load recent prompts
       const recentResult = await getRecentPromptIds()
@@ -233,6 +267,8 @@ export function AppProvider({ children }: AppProviderProps) {
     setFolderPath(null)
     promptManager.setPrompts([])
     promptManager.setSelectedPrompt(null)
+    agentManager.setAgents([])
+    agentManager.setSelectedAgent(null)
     editState.setVariableValues({})
     editState.setIsEditMode(false)
     setInProgressPrompts([])
@@ -293,7 +329,6 @@ export function AppProvider({ children }: AppProviderProps) {
   async function handleSelectPrompt(prompt: PromptFile) {
     promptManager.selectPrompt(prompt)
     editState.setIsEditMode(false)
-    setRightPanelOpen(true)
 
     // Add to recent prompts
     await addRecentPrompt(prompt.id)
@@ -364,13 +399,11 @@ export function AppProvider({ children }: AppProviderProps) {
   // Edit mode handlers
   function handleEnterEditMode() {
     editState.enterEditMode()
-    setRightPanelOpen(true)
     setRightPanelTab('instructions')
   }
 
   function handleExitEditMode() {
     editState.exitEditMode()
-    setRightPanelOpen(true)
     // 'instructions' tab is only available in edit mode, switch to preview if needed
     if (rightPanelTab === 'instructions') {
       setRightPanelTab('preview')
@@ -533,7 +566,6 @@ export function AppProvider({ children }: AppProviderProps) {
   function handleSelectVariant(prompt: PromptFile) {
     // Select variant while preserving current edit/run mode
     promptManager.selectPrompt(prompt)
-    setRightPanelOpen(true)
 
     // Remember which variant was selected for its parent
     if (prompt.variantOf) {
@@ -590,9 +622,34 @@ export function AppProvider({ children }: AppProviderProps) {
     setVariantEditorOpen(true)
   }
 
+  // Agent operations
+  async function handleCreateAgent(): Promise<AgentFile | null> {
+    if (!folderPath) return null
+
+    // Only set language if translation is enabled
+    const translationResult = await getTranslationSettings()
+    const translationEnabled = translationResult.ok && translationResult.data.enabled
+
+    const newAgent = await agentManager.createNewAgent(folderPath, translationEnabled ? {
+      settings: { language: appLanguage },
+    } : undefined)
+    return newAgent
+  }
+
   // Trigger search focus
   function triggerSearchFocus() {
     setSearchFocusTrigger((prev) => prev + 1)
+  }
+
+  // Feature flags update
+  async function updateFeatureFlags(flags: Partial<FeatureFlags>) {
+    const newFlags = { ...featureFlags, ...flags }
+    const result = await saveFeatureFlags(flags)
+    if (result.ok) {
+      setFeatureFlags(newFlags)
+    } else {
+      toast.error(result.error)
+    }
   }
 
   // Panel resize handlers
@@ -624,6 +681,7 @@ export function AppProvider({ children }: AppProviderProps) {
     // Managers
     promptManager,
     tagManager,
+    agentManager,
     editState,
 
     // Recent prompts
@@ -699,6 +757,13 @@ export function AppProvider({ children }: AppProviderProps) {
     setVariantEditorOpen,
     handleOpenVariantEditor,
     getRememberedVariantId,
+
+    // Agent operations
+    handleCreateAgent,
+
+    // Feature flags
+    featureFlags,
+    updateFeatureFlags,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

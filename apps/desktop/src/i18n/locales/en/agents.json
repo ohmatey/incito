@@ -1,0 +1,37 @@
+{
+  "list": {
+    "title": "Agents",
+    "newAgent": "New Agent",
+    "pinned": "Pinned",
+    "all": "All Agents",
+    "empty": "No agents yet. Create your first agent to get started."
+  },
+  "emptyState": {
+    "title": "No agent selected",
+    "description": "Select an agent from the list or create a new one to start chatting.",
+    "createButton": "Create Agent"
+  },
+  "contextMenu": {
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete"
+  },
+  "chat": {
+    "placeholder": "Message the agent...",
+    "newSession": "New Chat",
+    "error": "Failed to send message. Please try again."
+  },
+  "editor": {
+    "title": "Edit Agent",
+    "namePlaceholder": "Enter agent name",
+    "icon": "Icon",
+    "descriptionPlaceholder": "Brief description of what this agent does",
+    "language": "Response Language",
+    "languageHint": "The language the agent will use when responding. This is reflected in the system prompt.",
+    "systemPrompt": "System Prompt",
+    "systemPromptHint": "Instructions that define the agent's personality and behavior.",
+    "systemPromptPlaceholder": "You are a helpful assistant that..."
+  },
+  "notFound": "Agent not found",
+  "backToAgents": "Back to agents"
+}

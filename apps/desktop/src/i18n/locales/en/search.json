@@ -1,8 +1,12 @@
 {
   "title": "Search",
-  "placeholder": "Search prompts...",
+  "placeholder": "Search prompts and agents...",
   "clearFilters": "Clear filters",
   "clearAll": "Clear all",
-  "noMatches": "No prompts match your search",
-  "noPrompts": "No prompts found"
+  "noMatches": "No results match your search",
+  "noPrompts": "No prompts or agents found",
+  "filterAll": "All",
+  "filterPrompts": "Prompts",
+  "filterAgents": "Agents",
+  "shiftEnterHint": "Shift+Enter to run"
 }

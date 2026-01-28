@@ -1,0 +1,11 @@
+{
+  "title": "Run Mode",
+  "fieldsProgress": "{{completed}} of {{total}} fields",
+  "typeMessage": "Type a message...",
+  "complete": "All fields complete!",
+  "completeDescription": "You've filled {{required}} of {{total}} required fields. Your prompt is ready to use.",
+  "submit": "Submit",
+  "suggested": "Suggested",
+  "selectOption": "Select an option",
+  "onePerLine": "One item per line"
+}

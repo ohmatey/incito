@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PromptFile, Tag } from '@/types/prompt'
+import type { AgentFile } from '@/types/agent'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,36 +12,57 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Filter, X, Search } from 'lucide-react'
+import { Filter, X, Search, Bot, FileText } from 'lucide-react'
 import { PromptListItem } from './PromptListItem'
+import { AgentListItem } from './AgentListItem'
 import { cn } from '@/lib/utils'
+
+type SearchFilter = 'all' | 'prompts' | 'agents'
+
+interface SearchResultItem {
+  type: 'prompt' | 'agent'
+  item: PromptFile | AgentFile
+}
 
 interface SearchPageProps {
   prompts: PromptFile[]
+  agents?: AgentFile[]
   tags: Tag[]
   pinnedPromptIds: string[]
+  pinnedAgentIds?: string[]
   selectedPrompt: PromptFile | null
   onSelectPrompt: (prompt: PromptFile) => void
+  onSelectAgent?: (agent: AgentFile) => void
+  onRunPrompt?: (prompt: PromptFile) => void
   onDuplicatePrompt: (prompt: PromptFile) => void
   onDeletePrompt: (prompt: PromptFile) => void
+  onDeleteAgent?: (agent: AgentFile) => void
   onTogglePinPrompt: (promptId: string) => void
+  onTogglePinAgent?: (agentId: string) => void
   focusTrigger?: number
 }
 
 export function SearchPage({
   prompts,
+  agents = [],
   tags,
   pinnedPromptIds,
+  pinnedAgentIds = [],
   selectedPrompt,
   onSelectPrompt,
+  onSelectAgent,
+  onRunPrompt,
   onDuplicatePrompt,
   onDeletePrompt,
+  onDeleteAgent,
   onTogglePinPrompt,
+  onTogglePinAgent,
   focusTrigger,
 }: SearchPageProps) {
   const { t } = useTranslation(['search'])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [searchFilter, setSearchFilter] = useState<SearchFilter>('all')
   const [focusedIndex, setFocusedIndex] = useState<number>(-1)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -75,21 +97,45 @@ export function SearchPage({
     return matchesSearch && matchesTags
   })
 
+  // Filter agents by search query
+  const filteredAgents = agents.filter((agent) => {
+    const matchesSearch =
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesTags = selectedTags.length > 0
+      ? agent.tags?.some((tag) => selectedTags.includes(tag))
+      : true
+
+    return matchesSearch && matchesTags
+  })
+
+  // Build combined search results based on filter
+  const searchResults: SearchResultItem[] = []
+  if (searchFilter === 'all' || searchFilter === 'prompts') {
+    searchResults.push(...filteredPrompts.map(p => ({ type: 'prompt' as const, item: p })))
+  }
+  if (searchFilter === 'all' || searchFilter === 'agents') {
+    searchResults.push(...filteredAgents.map(a => ({ type: 'agent' as const, item: a })))
+  }
+
   const hasFilters = searchQuery || selectedTags.length > 0
+  const hasAgents = agents.length > 0
 
   function clearFilters() {
     setSearchQuery('')
     setSelectedTags([])
+    setSearchFilter('all')
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (filteredPrompts.length === 0) return
+    if (searchResults.length === 0) return
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
         setFocusedIndex((prev) => {
-          const next = prev < filteredPrompts.length - 1 ? prev + 1 : prev
+          const next = prev < searchResults.length - 1 ? prev + 1 : prev
           resultRefs.current[next]?.scrollIntoView({ block: 'nearest' })
           return next
         })
@@ -105,9 +151,19 @@ export function SearchPage({
         })
         break
       case 'Enter':
-        if (focusedIndex >= 0 && focusedIndex < filteredPrompts.length) {
+        if (focusedIndex >= 0 && focusedIndex < searchResults.length) {
           e.preventDefault()
-          onSelectPrompt(filteredPrompts[focusedIndex])
+          const result = searchResults[focusedIndex]
+          if (result.type === 'prompt') {
+            // Shift+Enter runs the prompt immediately
+            if (e.shiftKey && onRunPrompt) {
+              onRunPrompt(result.item as PromptFile)
+            } else {
+              onSelectPrompt(result.item as PromptFile)
+            }
+          } else if (result.type === 'agent' && onSelectAgent) {
+            onSelectAgent(result.item as AgentFile)
+          }
         }
         break
       case 'Escape':
@@ -206,12 +262,44 @@ export function SearchPage({
             </Button>
           )}
         </div>
+
+        {/* Type Filter Tabs - only show if agents exist */}
+        {hasAgents && (
+          <div className="mt-2 flex gap-1">
+            <Button
+              variant={searchFilter === 'all' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setSearchFilter('all')}
+              className="h-7 text-xs"
+            >
+              {t('search:filterAll')}
+            </Button>
+            <Button
+              variant={searchFilter === 'prompts' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setSearchFilter('prompts')}
+              className="h-7 gap-1 text-xs"
+            >
+              <FileText className="h-3 w-3" />
+              {t('search:filterPrompts')}
+            </Button>
+            <Button
+              variant={searchFilter === 'agents' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setSearchFilter('agents')}
+              className="h-7 gap-1 text-xs"
+            >
+              <Bot className="h-3 w-3" />
+              {t('search:filterAgents')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Results */}
       <ScrollArea className="flex-1">
         <div className="p-4">
-          {filteredPrompts.length === 0 ? (
+          {searchResults.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {hasFilters ? t('search:noMatches') : t('search:noPrompts')}
@@ -219,24 +307,35 @@ export function SearchPage({
             </div>
           ) : (
             <div className="space-y-1">
-              {filteredPrompts.map((prompt, index) => (
+              {searchResults.map((result, index) => (
                 <div
-                  key={prompt.path}
+                  key={result.type === 'prompt' ? (result.item as PromptFile).path : (result.item as AgentFile).id}
                   ref={(el) => { resultRefs.current[index] = el }}
                   className={cn(
                     'rounded-md',
                     focusedIndex === index && 'ring-2 ring-primary-500 ring-offset-1'
                   )}
                 >
-                  <PromptListItem
-                    prompt={prompt}
-                    isSelected={selectedPrompt?.path === prompt.path}
-                    isPinned={pinnedPromptIds.includes(prompt.id)}
-                    onSelect={() => onSelectPrompt(prompt)}
-                    onDuplicate={() => onDuplicatePrompt(prompt)}
-                    onDelete={() => onDeletePrompt(prompt)}
-                    onTogglePin={() => onTogglePinPrompt(prompt.id)}
-                  />
+                  {result.type === 'prompt' ? (
+                    <PromptListItem
+                      prompt={result.item as PromptFile}
+                      isSelected={selectedPrompt?.path === (result.item as PromptFile).path}
+                      isPinned={pinnedPromptIds.includes((result.item as PromptFile).id)}
+                      onSelect={() => onSelectPrompt(result.item as PromptFile)}
+                      onDuplicate={() => onDuplicatePrompt(result.item as PromptFile)}
+                      onDelete={() => onDeletePrompt(result.item as PromptFile)}
+                      onTogglePin={() => onTogglePinPrompt((result.item as PromptFile).id)}
+                    />
+                  ) : (
+                    <AgentListItem
+                      agent={result.item as AgentFile}
+                      isSelected={false}
+                      isPinned={pinnedAgentIds.includes((result.item as AgentFile).id)}
+                      onSelect={() => onSelectAgent?.(result.item as AgentFile)}
+                      onTogglePin={() => onTogglePinAgent?.((result.item as AgentFile).id)}
+                      onDelete={() => onDeleteAgent?.(result.item as AgentFile)}
+                    />
+                  )}
                 </div>
               ))}
             </div>

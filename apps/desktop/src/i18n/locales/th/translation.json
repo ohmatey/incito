@@ -1,0 +1,66 @@
+{
+  "settings": {
+    "title": "การแปลภาษา",
+    "description": "แปลภาษา prompt ก่อนคัดลอกหรือเปิดใช้งาน",
+    "enable": "เปิดใช้งานการแปลภาษา",
+    "enableDescription": "แปลภาษา prompt ก่อนคัดลอกหรือเปิดใช้งาน",
+    "sourceLanguages": "ภาษาต้นฉบับ",
+    "sourceLanguagesDescription": "ภาษาที่คุณใช้เขียน prompt",
+    "targetLanguage": "ภาษาปลายทาง",
+    "targetLanguageDescription": "ภาษาที่จะแปลไป",
+    "autoDetect": "ตรวจจับภาษาอัตโนมัติ",
+    "autoDetectDescription": "ตรวจจับข้อความที่ไม่ใช่ภาษาปลายทางโดยอัตโนมัติ",
+    "addLanguage": "เพิ่มภาษา",
+    "removeLanguage": "ลบ {{language}}",
+    "cache": "แคชการแปลภาษา",
+    "cacheDescription": "แคชการแปลสำหรับการแปลซ้ำที่รวดเร็วขึ้น",
+    "cacheEntries": "{{count}} รายการในแคช",
+    "cacheOldest": "รายการเก่าที่สุด: {{date}}",
+    "clearCache": "ล้างแคช",
+    "cacheClearedToast": "ล้างแคชการแปลแล้ว (ลบ {{count}} รายการ)"
+  },
+  "preview": {
+    "title": "ตัวอย่างการแปล",
+    "original": "ต้นฉบับ",
+    "translated": "แปลแล้ว",
+    "confidence": "ความเชื่อมั่น",
+    "confidenceHigh": "สูง",
+    "confidenceMedium": "ปานกลาง",
+    "confidenceLow": "ต่ำ",
+    "regenerate": "แปลใหม่",
+    "editTranslation": "แก้ไขการแปล (ถ้าต้องการ)",
+    "editPlaceholder": "ปรับแก้การแปลตามต้องการ...",
+    "copyOriginal": "คัดลอกต้นฉบับ",
+    "copyTranslated": "คัดลอกที่แปลแล้ว",
+    "launchWith": "เปิดด้วย",
+    "cancel": "ยกเลิก",
+    "translating": "กำลังแปล...",
+    "fromCache": "จากแคช",
+    "preservedTerms": "คำที่เก็บไว้",
+    "noPreservedTerms": "ไม่มีคำที่เก็บไว้"
+  },
+  "badge": {
+    "tooltip": "เขียนเป็น{{language}} - จะแปลเป็น{{target}}"
+  },
+  "toggle": {
+    "label": "แปลเป็น{{language}}",
+    "enabled": "เปิดใช้งานการแปล",
+    "disabled": "ปิดใช้งานการแปล"
+  },
+  "copyButton": {
+    "copyWithTranslation": "คัดลอก ({{source}} → {{target}})",
+    "copyOriginal": "คัดลอกต้นฉบับ",
+    "copyOriginalDescription": "คัดลอกโดยไม่แปล"
+  },
+  "errors": {
+    "noAiConfigured": "ยังไม่ได้ตั้งค่า AI โปรดตั้งค่าในหน้าตั้งค่า",
+    "translationFailed": "การแปลล้มเหลว โปรดลองอีกครั้ง",
+    "invalidResponse": "การตอบกลับการแปลไม่ถูกต้อง โปรดลองอีกครั้ง",
+    "rateLimited": "เกินขีดจำกัดอัตรา โปรดรอสักครู่",
+    "invalidApiKey": "API key ไม่ถูกต้อง โปรดตรวจสอบการตั้งค่า"
+  },
+  "languages": {
+    "en": "อังกฤษ",
+    "th": "ไทย"
+  }
+}

@@ -1,5 +1,6 @@
 import type { PromptFile } from '@/types/prompt'
 import { useTranslation } from 'react-i18next'
+import { useAppContext } from '@/context/AppContext'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,6 +20,8 @@ import {
 import { cn } from '@/lib/utils'
 import { AlertTriangle, Copy, Trash2, Pin, PinOff } from 'lucide-react'
 import { useState } from 'react'
+import { LanguageBadge } from '@/components/translation/LanguageBadge'
+import { useNeedsTranslation } from '@/hooks/usePromptTranslation'
 
 interface PromptListItemProps {
   prompt: PromptFile
@@ -40,7 +43,11 @@ export function PromptListItem({
   onTogglePin,
 }: PromptListItemProps) {
   const { t } = useTranslation(['prompts', 'common'])
+  const { featureFlags } = useAppContext()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Check if prompt needs translation (only if translations feature is enabled)
+  const { needsTranslation, detectedLanguage, targetLanguage } = useNeedsTranslation(prompt.template)
 
   return (
     <>
@@ -59,6 +66,13 @@ export function PromptListItem({
           >
             {!prompt.isValid && (
               <AlertTriangle className="h-4 w-4 flex-shrink-0 text-yellow-500" aria-hidden="true" />
+            )}
+            {featureFlags.translationsEnabled && needsTranslation && detectedLanguage && targetLanguage && (
+              <LanguageBadge
+                languageCode={detectedLanguage}
+                targetLanguage={targetLanguage}
+                size="sm"
+              />
             )}
             <span className="flex-1 truncate">{prompt.name}</span>
             <button
