@@ -1,5 +1,11 @@
 {
   "title": "Settings",
+  "analytics": {
+    "title": "Anonymous Analytics",
+    "description": "Help improve Incito by sharing anonymous usage data. No personal information or prompt content is ever collected.",
+    "enable": "Enable Analytics",
+    "privacy": "We only track feature usage, not your content."
+  },
   "appearance": {
     "title": "Appearance",
     "description": "Choose your preferred color theme.",
@@ -10,6 +16,20 @@
   "language": {
     "title": "Language",
     "description": "Choose your preferred language."
+  },
+  "experimental": {
+    "title": "Experimental Features",
+    "description": "Enable features that are still in development. These may change or be removed in future updates.",
+    "agents": "Agents",
+    "agentsDescription": "AI agents for running and testing prompts with different models.",
+    "resources": "Resources",
+    "resourcesDescription": "Upload and manage assets (images, documents) with local RAG indexing.",
+    "translations": "Translations",
+    "translationsDescription": "AI-powered translation for prompts written in different languages.",
+    "mcpServer": "MCP Integration",
+    "mcpServerDescription": "Connect prompts to AI assistants via Model Context Protocol.",
+    "runs": "Run Mode",
+    "runsDescription": "Interactive prompt execution with AI-guided variable filling."
   },
   "aiProvider": {
     "title": "AI Provider",
@@ -28,7 +48,36 @@
     "providers": {
       "openai": "OpenAI",
       "anthropic": "Anthropic",
-      "google": "Google"
+      "google": "Google",
+      "claude-code": "Claude Code"
+    },
+    "authentication": "Authentication",
+    "cliAuthentication": "CLI Authentication",
+    "claudeCodeAuth": {
+      "title": "CLI Authentication",
+      "description": "Claude Code uses your existing Claude Pro/Max subscription. Run this command in your terminal to authenticate:"
+    },
+    "claudeCodePath": {
+      "label": "Executable Path",
+      "placeholder": "Leave empty to use system PATH (e.g., /usr/local/bin/claude)",
+      "hint": "Only set this if Claude Code is not in your system PATH or you're seeing executable errors.",
+      "findButton": "Find Claude Code",
+      "testButton": "Test path",
+      "found": "Found Claude Code at {{path}}",
+      "notFound": "Claude Code not found in system PATH",
+      "findError": "Failed to search for Claude Code",
+      "enterPathFirst": "Enter a path first",
+      "valid": "Path is valid (version: {{version}})",
+      "invalid": "Invalid path or not a Claude Code executable",
+      "checkError": "Failed to check path",
+      "versionDetected": "Detected: {{version}}"
+    },
+    "claudeCodeTest": {
+      "button": "Test Connection",
+      "success": "Connection successful!",
+      "failed": "Connection test failed",
+      "serverFailed": "Could not start Claude Code server",
+      "notAuthenticated": "Not authenticated. Run 'claude login' in terminal."
     }
   },
   "promptsFolder": {
@@ -43,5 +92,13 @@
     "availableTools": "Available tools:",
     "viewDocs": "View Documentation",
     "copied": "MCP configuration copied"
+  },
+  "updates": {
+    "title": "App Updates",
+    "description": "Keep Incito up to date with the latest features and improvements.",
+    "currentVersion": "Current Version",
+    "checkForUpdates": "Check for Updates",
+    "checking": "Checking...",
+    "upToDate": "You're running the latest version."
   }
 }

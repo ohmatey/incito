@@ -1,7 +1,8 @@
 import { generate, refine, summarizeChanges as summarize } from './agents/prompt-generator'
 import { fillFields } from './agents/field-filler'
 import { fillSingleField as fillSingle } from './agents/single-field-filler'
-import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult, type SummarizeChangesInput, type SummarizeChangesResult, type FillFieldsInput, type FillFieldsResult, type FillFieldDefinition, type FillSingleFieldInput, type FillSingleFieldResult } from './types'
+import { translate } from './agents/prompt-translator'
+import { GeneratedPromptSchema, type AIConfig, type GeneratePromptInput, type GeneratePromptResult, type RefineTemplateInput, type RefineTemplateResult, type SummarizeChangesInput, type SummarizeChangesResult, type FillFieldsInput, type FillFieldsResult, type FillFieldDefinition, type FillSingleFieldInput, type FillSingleFieldResult, type TranslatePromptInput, type TranslatePromptResult, type TranslationOutput } from './types'
 
 // Valid variable types
 const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select'] as const
@@ -512,6 +513,92 @@ export async function fillSingleField(
       ok: false,
       error: `Failed to generate content: ${errorMessage}`,
       code: 'GENERATION_FAILED',
+    }
+  }
+}
+
+export async function translatePrompt(
+  input: TranslatePromptInput,
+  config: AIConfig
+): Promise<TranslatePromptResult> {
+  try {
+    const responseText = await translate(input, config)
+
+    // Try to parse the JSON response
+    let parsed: TranslationOutput
+    try {
+      // Handle potential markdown code blocks
+      let jsonText = responseText.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.slice(7)
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.slice(3)
+      }
+      if (jsonText.endsWith('```')) {
+        jsonText = jsonText.slice(0, -3)
+      }
+      jsonText = jsonText.trim()
+
+      parsed = JSON.parse(jsonText)
+    } catch {
+      return {
+        ok: false,
+        error: 'Failed to parse translation response. Please try again.',
+        code: 'INVALID_RESPONSE',
+      }
+    }
+
+    // Validate the parsed response structure
+    if (!parsed.translated || typeof parsed.translated !== 'string') {
+      return {
+        ok: false,
+        error: 'Invalid translation response structure. Please try again.',
+        code: 'INVALID_RESPONSE',
+      }
+    }
+
+    // Normalize confidence
+    const validConfidences = ['high', 'medium', 'low'] as const
+    const confidence = validConfidences.includes(parsed.confidence as typeof validConfidences[number])
+      ? parsed.confidence
+      : 'medium'
+
+    // Ensure preservedTerms is an array
+    const preservedTerms = Array.isArray(parsed.preservedTerms)
+      ? parsed.preservedTerms.filter((t): t is string => typeof t === 'string')
+      : []
+
+    return {
+      ok: true,
+      data: {
+        translated: parsed.translated,
+        confidence,
+        preservedTerms,
+      },
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('invalid_api_key')) {
+      return {
+        ok: false,
+        error: 'Invalid API key. Please check your API key in Settings.',
+        code: 'INVALID_API_KEY',
+      }
+    }
+
+    if (errorMessage.includes('429') || errorMessage.includes('rate_limit') || errorMessage.includes('Rate limit')) {
+      return {
+        ok: false,
+        error: 'Rate limit exceeded. Please wait a moment and try again.',
+        code: 'RATE_LIMITED',
+      }
+    }
+
+    return {
+      ok: false,
+      error: `Failed to translate: ${errorMessage}`,
+      code: 'TRANSLATION_FAILED',
     }
   }
 }

@@ -9,6 +9,12 @@ import enPrompts from './locales/en/prompts.json'
 import enToasts from './locales/en/toasts.json'
 import enTags from './locales/en/tags.json'
 import enSearch from './locales/en/search.json'
+import enTranslation from './locales/en/translation.json'
+import enAgents from './locales/en/agents.json'
+import enRunMode from './locales/en/runMode.json'
+import enResources from './locales/en/resources.json'
+import enRuns from './locales/en/runs.json'
+import enUpdates from './locales/en/updates.json'
 
 // Import Thai translations
 import thCommon from './locales/th/common.json'
@@ -17,6 +23,12 @@ import thPrompts from './locales/th/prompts.json'
 import thToasts from './locales/th/toasts.json'
 import thTags from './locales/th/tags.json'
 import thSearch from './locales/th/search.json'
+import thTranslation from './locales/th/translation.json'
+import thAgents from './locales/th/agents.json'
+import thRunMode from './locales/th/runMode.json'
+import thResources from './locales/th/resources.json'
+import thRuns from './locales/th/runs.json'
+import thUpdates from './locales/th/updates.json'
 
 const resources = {
   en: {
@@ -26,6 +38,12 @@ const resources = {
     toasts: enToasts,
     tags: enTags,
     search: enSearch,
+    translation: enTranslation,
+    agents: enAgents,
+    runMode: enRunMode,
+    resources: enResources,
+    runs: enRuns,
+    updates: enUpdates,
   },
   th: {
     common: thCommon,
@@ -34,6 +52,12 @@ const resources = {
     toasts: thToasts,
     tags: thTags,
     search: thSearch,
+    translation: thTranslation,
+    agents: thAgents,
+    runMode: thRunMode,
+    resources: thResources,
+    runs: thRuns,
+    updates: thUpdates,
   },
 }
 

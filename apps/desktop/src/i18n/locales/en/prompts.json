@@ -201,6 +201,23 @@
     "toCreatePrompt": "to create a new prompt, or",
     "toSearch": "to search."
   },
+  "addons": {
+    "title": "Addons",
+    "add": "Add",
+    "remove": "Remove addon",
+    "emptyHint": "Add extra context fields for AI run mode",
+    "enabledInRunMode": "Addon fields are enabled in Run Mode",
+    "runModeOnly": "Run mode only",
+    "types": {
+      "image": "Image"
+    },
+    "image": {
+      "selectPrompt": "Click to select an image",
+      "loading": "Loading...",
+      "loadError": "Failed to load image",
+      "replace": "Replace"
+    }
+  },
   "variableConfig": {
     "types": {
       "text": "Text",
@@ -209,7 +226,15 @@
       "slider": "Slider",
       "select": "Select",
       "multiSelect": "Multi-Select",
-      "array": "Array"
+      "array": "Array",
+      "image": "Image Upload"
+    },
+    "imageField": {
+      "selectImage": "Click to upload image",
+      "replace": "Replace",
+      "clear": "Clear",
+      "loading": "Uploading...",
+      "loadError": "Failed to load image"
     },
     "fields": {
       "label": "Label",

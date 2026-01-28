@@ -3,9 +3,15 @@
   "private": true,
   "scripts": {
     "dev:desktop": "pnpm --filter @incito/desktop dev",
+    "dev:desktop:full": "pnpm build:claude-code-server && pnpm --filter @incito/desktop dev",
     "dev:landing": "pnpm --filter @incito/landing dev",
-    "build:desktop": "pnpm --filter @incito/desktop build",
+    "build:desktop": "pnpm build:claude-code-server && pnpm --filter @incito/desktop build",
+    "build:desktop:app-only": "pnpm --filter @incito/desktop build",
+    "build:desktop:full": "pnpm build:claude-code-server && pnpm build:tauri && pnpm --filter @incito/desktop build",
+    "build:claude-code-server": "bash scripts/build-claude-code-server.sh",
+    "build:tauri": "cd apps/desktop/src-tauri && cargo build",
     "build:landing": "pnpm --filter @incito/landing build",
+    "rebuild": "pnpm build:claude-code-server && pnpm build:tauri",
     "tauri": "pnpm --filter @incito/desktop tauri"
   }
 }

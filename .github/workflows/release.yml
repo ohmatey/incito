@@ -56,6 +56,10 @@ jobs:
         run: pnpm --filter @incito/mastra run build:mcp
         shell: bash
 
+      - name: Build Claude Code server
+        run: pnpm build:claude-code-server
+        shell: bash
+
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:

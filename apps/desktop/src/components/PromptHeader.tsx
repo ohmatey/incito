@@ -12,34 +12,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Pencil, Eye, History, StickyNote, Settings2, List, Save } from 'lucide-react'
+import { Pencil, Eye, History, StickyNote, Settings2, List, Save, Play, Clock } from 'lucide-react'
 
-export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions'
+export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions' | 'runs'
 
 interface PromptHeaderProps {
   prompt: PromptFile | null
   isEditMode: boolean
+  isRunMode?: boolean
   rightPanelOpen: boolean
   hasUnsavedChanges: boolean
   nameError: string | null
+  runsEnabled?: boolean
   onEditModeChange: (editMode: boolean) => void
   onRightPanelOpenChange: (open: boolean) => void
   onTabChange: (tab: RightPanelTab) => void
   onSave: () => void
   onCancel: () => void
+  onRun?: () => void
 }
 
 export function PromptHeader({
   prompt,
   isEditMode,
+  isRunMode = false,
   rightPanelOpen,
   hasUnsavedChanges,
   nameError,
+  runsEnabled = false,
   onEditModeChange,
   onRightPanelOpenChange,
   onTabChange,
   onSave,
   onCancel,
+  onRun,
 }: PromptHeaderProps) {
   const { t } = useTranslation('common')
   const [showCancelDialog, setShowCancelDialog] = useState(false)
@@ -63,6 +69,7 @@ export function PromptHeader({
     notes: t('tabs.notes'),
     config: t('tabs.config'),
     instructions: t('tabs.instructions'),
+    runs: t('tabs.runs'),
   }
 
   const tabIcons: Record<RightPanelTab, React.ReactNode> = {
@@ -71,12 +78,15 @@ export function PromptHeader({
     notes: <StickyNote className="h-4 w-4" />,
     config: <Settings2 className="h-4 w-4" />,
     instructions: <List className="h-4 w-4" />,
+    runs: <Clock className="h-4 w-4" />,
   }
 
-  // Tabs available depends on edit mode
+  // Tabs available depends on edit mode and feature flags
   const availableTabs: RightPanelTab[] = isEditMode
     ? ['preview', 'instructions', 'notes', 'history', 'config']
-    : ['preview', 'notes', 'history', 'config']
+    : runsEnabled
+      ? ['preview', 'runs', 'notes', 'history', 'config']
+      : ['preview', 'notes', 'history', 'config']
 
   function handleTabSelect(tab: RightPanelTab) {
     onTabChange(tab)
@@ -124,16 +134,27 @@ export function PromptHeader({
           </>
         )}
 
+        {/* Run button - prominent, show when not in edit or run mode, and runs feature is enabled */}
+        {runsEnabled && !isEditMode && !isRunMode && onRun && prompt.variables.length > 0 && (
+          <Button
+            size="sm"
+            onClick={onRun}
+            className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Play className="h-4 w-4" />
+            {t('buttons.run')}
+          </Button>
+        )}
+
         {/* Edit button - only show when not in edit mode */}
-        {!isEditMode && (
+        {!isEditMode && !isRunMode && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => onEditModeChange(true)}
-            className="gap-1.5"
+            title={t('buttons.edit')}
           >
             <Pencil className="h-4 w-4" />
-            {t('buttons.edit')}
           </Button>
         )}
 

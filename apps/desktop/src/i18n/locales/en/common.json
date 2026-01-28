@@ -2,6 +2,9 @@
   "navigation": {
     "search": "Search",
     "prompts": "Prompts",
+    "agents": "Agents",
+    "resources": "Resources",
+    "runs": "Runs",
     "tags": "Tags",
     "settings": "Settings",
     "keyboardShortcuts": "Keyboard Shortcuts",
@@ -19,7 +22,9 @@
     "changeFolder": "Change Folder",
     "selectFolder": "Select Folder",
     "configure": "Configure",
-    "remove": "Remove"
+    "remove": "Remove",
+    "run": "Run",
+    "done": "Done"
   },
   "labels": {
     "loading": "Loading...",
@@ -73,7 +78,8 @@
     "config": "Config",
     "instructions": "Instructions",
     "preview": "Preview",
-    "variables": "Variables"
+    "variables": "Variables",
+    "runs": "Runs"
   },
   "rightPanel": {
     "addNote": "Add note",
@@ -107,7 +113,15 @@
     "variants": "Variants",
     "newVariant": "New variant",
     "baseVersion": "Base version",
-    "closePanel": "Close panel"
+    "closePanel": "Close panel",
+    "noRuns": "No runs yet",
+    "runsDescription": "Run history will appear here when you copy or run this prompt.",
+    "runCompleted": "Completed",
+    "runFailed": "Failed",
+    "runPending": "Pending",
+    "runInProgress": "In Progress",
+    "runCancelled": "Cancelled",
+    "duration": "Duration"
   },
   "ai": {
     "disclaimer": "AI can make mistakes. Please review generated content.",

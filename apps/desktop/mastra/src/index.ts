@@ -16,6 +16,10 @@ export type {
   FillFieldsResult,
   FillSingleFieldInput,
   FillSingleFieldResult,
+  TranslationConfidence,
+  TranslatePromptInput,
+  TranslationOutput,
+  TranslatePromptResult,
 } from './types'
 
 export {
@@ -25,7 +29,10 @@ export {
 } from './types'
 
 // API
-export { generatePrompt, refineTemplate, summarizeChanges, fillFormFields, fillSingleField } from './api'
+export { generatePrompt, refineTemplate, summarizeChanges, fillFormFields, fillSingleField, translatePrompt } from './api'
 
 // Generator utilities
-export { generate, getModel, SYSTEM_PROMPT } from './agents/prompt-generator'
+export { generate, SYSTEM_PROMPT } from './agents/prompt-generator'
+
+// Translation utilities
+export { translate, getLanguageName } from './agents/prompt-translator'

@@ -16,7 +16,11 @@
     "aiConfigured": "AI provider configured",
     "aiRemoved": "AI provider removed",
     "mcpCopied": "MCP configuration copied",
-    "variantCreated": "Created variant: {{name}}"
+    "variantCreated": "Created variant: {{name}}",
+    "agentCreated": "Created new agent",
+    "agentDeleted": "Deleted agent",
+    "agentDuplicated": "Duplicated agent",
+    "agentSaved": "Saved agent"
   },
   "error": {
     "copyFailed": "Failed to copy",
@@ -43,7 +47,11 @@
     "notesSaveFailed": "Failed to save notes",
     "launchersSaveFailed": "Failed to save default launchers",
     "variantCreateFailed": "Failed to create variant",
-    "invalidName": "Invalid name"
+    "invalidName": "Invalid name",
+    "agentCreateFailed": "Failed to create agent",
+    "agentDeleteFailed": "Failed to delete agent",
+    "agentDuplicateFailed": "Failed to duplicate agent",
+    "agentSaveFailed": "Failed to save agent"
   },
   "info": {
     "noChanges": "No changes to save"

@@ -4,7 +4,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { generateText } from 'ai'
 import type { AIConfig } from '../types'
 
-const SYSTEM_PROMPT = `You are a prompt template generator for Incito, an application that helps users create and manage reusable prompt templates.
+export const SYSTEM_PROMPT = `You are a prompt template generator for Incito, an application that helps users create and manage reusable prompt templates.
 
 When generating a prompt template, you must output valid JSON with this exact structure:
 {
@@ -54,7 +54,7 @@ Guidelines for generating templates:
 Always respond with ONLY the JSON object, no additional text or markdown formatting.`
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getModel(config: AIConfig): any {
+export function getModel(config: AIConfig): any {
   switch (config.provider) {
     case 'openai': {
       const openai = createOpenAI({ apiKey: config.apiKey })
@@ -67,6 +67,11 @@ function getModel(config: AIConfig): any {
     case 'google': {
       const google = createGoogleGenerativeAI({ apiKey: config.apiKey })
       return google(config.model)
+    }
+    case 'claude-code': {
+      // Claude Code provider requires Node.js environment and CLI authentication
+      // It cannot run directly in the browser. This feature requires Tauri backend integration.
+      throw new Error('Claude Code is not yet available. The Claude Code provider requires CLI integration which is coming in a future update. Please use the Anthropic provider with an API key for now.')
     }
     default:
       throw new Error(`Unsupported provider: ${config.provider}`)
@@ -173,4 +178,3 @@ Summarize what changed in 5-10 words.`
   return text.trim()
 }
 
-export { SYSTEM_PROMPT, getModel }

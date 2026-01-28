@@ -2,6 +2,9 @@
   "navigation": {
     "search": "ค้นหา",
     "prompts": "พรอมต์",
+    "agents": "เอเจนต์",
+    "resources": "ทรัพยากร",
+    "runs": "การรัน",
     "tags": "แท็ก",
     "settings": "ตั้งค่า",
     "keyboardShortcuts": "แป้นพิมพ์ลัด",
@@ -19,7 +22,9 @@
     "changeFolder": "เปลี่ยนโฟลเดอร์",
     "selectFolder": "เลือกโฟลเดอร์",
     "configure": "ตั้งค่า",
-    "remove": "ลบออก"
+    "remove": "ลบออก",
+    "run": "รัน",
+    "done": "เสร็จสิ้น"
   },
   "labels": {
     "loading": "กำลังโหลด...",
@@ -73,7 +78,8 @@
     "config": "ตั้งค่า",
     "instructions": "คำแนะนำ",
     "preview": "ตัวอย่าง",
-    "variables": "ตัวแปร"
+    "variables": "ตัวแปร",
+    "runs": "การรัน"
   },
   "rightPanel": {
     "addNote": "เพิ่มบันทึก",
@@ -107,7 +113,15 @@
     "variants": "ตัวแปร",
     "newVariant": "ตัวแปรใหม่",
     "baseVersion": "เวอร์ชันฐาน",
-    "closePanel": "ปิดแผง"
+    "closePanel": "ปิดแผง",
+    "noRuns": "ยังไม่มีการรัน",
+    "runsDescription": "ประวัติการรันจะปรากฏที่นี่เมื่อคุณคัดลอกหรือรันพรอมต์นี้",
+    "runCompleted": "เสร็จสิ้น",
+    "runFailed": "ล้มเหลว",
+    "runPending": "รอดำเนินการ",
+    "runInProgress": "กำลังดำเนินการ",
+    "runCancelled": "ยกเลิก",
+    "duration": "ระยะเวลา"
   },
   "ai": {
     "disclaimer": "AI อาจผิดพลาดได้ กรุณาตรวจสอบเนื้อหาที่สร้าง",

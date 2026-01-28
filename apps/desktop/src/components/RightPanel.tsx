@@ -7,6 +7,7 @@ import { HistoryTab } from './right-panel/HistoryTab'
 import { NotesTab } from './right-panel/NotesTab'
 import { ConfigTab } from './right-panel/ConfigTab'
 import { InstructionsTab } from './right-panel/InstructionsTab'
+import { RunsTab } from './right-panel/RunsTab'
 
 interface RightPanelProps {
   prompt: PromptFile | null
@@ -15,6 +16,7 @@ interface RightPanelProps {
   activeTab: RightPanelTab
   activeVariableKey: string | null
   isEditMode?: boolean
+  runsEnabled?: boolean
   onActiveVariableChange: (key: string | null) => void
   onValueChange: (key: string, value: unknown) => void
   onNotesChange: (notes: Note[]) => void
@@ -38,6 +40,7 @@ export function RightPanel({
   activeTab,
   activeVariableKey,
   isEditMode = false,
+  runsEnabled = false,
   onActiveVariableChange,
   onValueChange,
   onNotesChange,
@@ -65,6 +68,7 @@ export function RightPanel({
         onTabChange={onTabChange}
         onClose={onClose}
         onAddNote={() => setIsAddingNote(true)}
+        runsEnabled={runsEnabled}
       />
       <div className="flex-1 overflow-hidden">
         {activeTab === 'preview' && (
@@ -107,6 +111,7 @@ export function RightPanel({
             onVariableMove={onVariableMove}
           />
         )}
+        {activeTab === 'runs' && runsEnabled && prompt && <RunsTab prompt={prompt} />}
       </div>
     </div>
   )

@@ -1,0 +1,15 @@
+{
+  "title": "มีอัปเดตใหม่",
+  "upToDateTitle": "ไม่มีอัปเดตใหม่",
+  "errorTitle": "ตรวจสอบอัปเดตล้มเหลว",
+  "description": "เวอร์ชันใหม่ ({{version}}) พร้อมติดตั้งแล้ว",
+  "releaseNotes": "มีอะไรใหม่",
+  "downloading": "กำลังดาวน์โหลดอัปเดต...",
+  "updateNow": "อัปเดตเลย",
+  "later": "ภายหลัง",
+  "ok": "ตกลง",
+  "error": "อัปเดตล้มเหลว: {{message}}",
+  "noUpdates": "คุณใช้ Incito เวอร์ชันล่าสุดแล้ว",
+  "currentVersion": "เวอร์ชันปัจจุบัน: {{version}}",
+  "checkingForUpdates": "กำลังตรวจสอบอัปเดต..."
+}

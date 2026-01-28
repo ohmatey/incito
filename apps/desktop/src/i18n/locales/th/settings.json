@@ -1,5 +1,11 @@
 {
   "title": "ตั้งค่า",
+  "analytics": {
+    "title": "การวิเคราะห์แบบไม่ระบุตัวตน",
+    "description": "ช่วยปรับปรุง Incito ด้วยการแบ่งปันข้อมูลการใช้งานแบบไม่ระบุตัวตน ไม่มีการเก็บข้อมูลส่วนบุคคลหรือเนื้อหา prompt",
+    "enable": "เปิดใช้งานการวิเคราะห์",
+    "privacy": "เราติดตามเฉพาะการใช้งานฟีเจอร์ ไม่ใช่เนื้อหาของคุณ"
+  },
   "appearance": {
     "title": "รูปลักษณ์",
     "description": "เลือกธีมสีที่คุณต้องการ",
@@ -10,6 +16,20 @@
   "language": {
     "title": "ภาษา",
     "description": "เลือกภาษาที่คุณต้องการ"
+  },
+  "experimental": {
+    "title": "ฟีเจอร์ทดลอง",
+    "description": "เปิดใช้งานฟีเจอร์ที่ยังอยู่ในระหว่างการพัฒนา ฟีเจอร์เหล่านี้อาจเปลี่ยนแปลงหรือถูกลบในการอัปเดตในอนาคต",
+    "agents": "เอเจนต์",
+    "agentsDescription": "เอเจนต์ AI สำหรับรันและทดสอบพรอมต์ด้วยโมเดลต่างๆ",
+    "resources": "ทรัพยากร",
+    "resourcesDescription": "อัปโหลดและจัดการสินทรัพย์ (รูปภาพ, เอกสาร) พร้อมการจัดทำดัชนี RAG ในเครื่อง",
+    "translations": "การแปลภาษา",
+    "translationsDescription": "การแปลพรอมต์ที่เขียนในภาษาต่างๆ ด้วย AI",
+    "mcpServer": "การเชื่อมต่อ MCP",
+    "mcpServerDescription": "เชื่อมต่อพรอมต์กับผู้ช่วย AI ผ่าน Model Context Protocol",
+    "runs": "โหมดรัน",
+    "runsDescription": "การดำเนินการพรอมต์แบบโต้ตอบพร้อมการกรอกตัวแปรด้วย AI"
   },
   "aiProvider": {
     "title": "ผู้ให้บริการ AI",
@@ -28,7 +48,36 @@
     "providers": {
       "openai": "OpenAI",
       "anthropic": "Anthropic",
-      "google": "Google"
+      "google": "Google",
+      "claude-code": "Claude Code"
+    },
+    "authentication": "การยืนยันตัวตน",
+    "cliAuthentication": "การยืนยันตัวตนผ่าน CLI",
+    "claudeCodeAuth": {
+      "title": "การยืนยันตัวตนผ่าน CLI",
+      "description": "Claude Code ใช้บัญชี Claude Pro/Max ที่มีอยู่ของคุณ รันคำสั่งนี้ในเทอร์มินัลเพื่อยืนยันตัวตน:"
+    },
+    "claudeCodePath": {
+      "label": "เส้นทางไฟล์ปฏิบัติการ",
+      "placeholder": "เว้นว่างเพื่อใช้ system PATH (เช่น /usr/local/bin/claude)",
+      "hint": "ตั้งค่านี้เฉพาะเมื่อ Claude Code ไม่อยู่ใน system PATH หรือคุณพบข้อผิดพลาดเกี่ยวกับไฟล์ปฏิบัติการ",
+      "findButton": "ค้นหา Claude Code",
+      "testButton": "ทดสอบเส้นทาง",
+      "found": "พบ Claude Code ที่ {{path}}",
+      "notFound": "ไม่พบ Claude Code ใน system PATH",
+      "findError": "ไม่สามารถค้นหา Claude Code ได้",
+      "enterPathFirst": "กรุณาป้อนเส้นทางก่อน",
+      "valid": "เส้นทางถูกต้อง (เวอร์ชัน: {{version}})",
+      "invalid": "เส้นทางไม่ถูกต้องหรือไม่ใช่ไฟล์ปฏิบัติการ Claude Code",
+      "checkError": "ไม่สามารถตรวจสอบเส้นทางได้",
+      "versionDetected": "ตรวจพบ: {{version}}"
+    },
+    "claudeCodeTest": {
+      "button": "ทดสอบการเชื่อมต่อ",
+      "success": "เชื่อมต่อสำเร็จ!",
+      "failed": "ทดสอบการเชื่อมต่อล้มเหลว",
+      "serverFailed": "ไม่สามารถเริ่มเซิร์ฟเวอร์ Claude Code ได้",
+      "notAuthenticated": "ยังไม่ได้ยืนยันตัวตน รัน 'claude login' ในเทอร์มินัล"
     }
   },
   "promptsFolder": {
@@ -43,5 +92,13 @@
     "availableTools": "เครื่องมือที่ใช้ได้:",
     "viewDocs": "ดูเอกสาร",
     "copied": "คัดลอกการตั้งค่า MCP แล้ว"
+  },
+  "updates": {
+    "title": "อัปเดตแอป",
+    "description": "อัปเดต Incito ให้เป็นเวอร์ชันล่าสุดพร้อมฟีเจอร์และการปรับปรุงใหม่",
+    "currentVersion": "เวอร์ชันปัจจุบัน",
+    "checkForUpdates": "ตรวจสอบอัปเดต",
+    "checking": "กำลังตรวจสอบ...",
+    "upToDate": "คุณใช้เวอร์ชันล่าสุดแล้ว"
   }
 }

@@ -21,7 +21,8 @@ async function isPathInFolder(filePath: string, folderPath: string): Promise<boo
 
 export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   const entries = await readDir(folderPath)
-  const mdFiles = entries.filter((e) => e.name?.endsWith('.md'))
+  // Exclude agent files (.agent.md) - they're loaded separately
+  const mdFiles = entries.filter((e) => e.name?.endsWith('.md') && !e.name?.endsWith('.agent.md'))
 
   const prompts = await Promise.all(
     mdFiles.map(async (file) => {

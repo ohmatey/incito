@@ -30,11 +30,11 @@ export const GeneratedPromptSchema = z.object({
 export type GeneratedPrompt = z.infer<typeof GeneratedPromptSchema>
 
 // AI Provider configuration
-export type AIProvider = 'openai' | 'anthropic' | 'google'
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'claude-code'
 
 export interface AIConfig {
   provider: AIProvider
-  apiKey: string
+  apiKey: string  // Empty string for claude-code (uses CLI auth)
   model: string
 }
 
@@ -144,4 +144,29 @@ export type FillSingleFieldResult = {
   ok: false
   error: string
   code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'GENERATION_FAILED'
+}
+
+// Translation types
+export type TranslationConfidence = 'high' | 'medium' | 'low'
+
+export interface TranslatePromptInput {
+  text: string
+  sourceLanguage: string
+  targetLanguage: string
+  context?: 'coding' | 'general'
+}
+
+export interface TranslationOutput {
+  translated: string
+  confidence: TranslationConfidence
+  preservedTerms: string[]
+}
+
+export type TranslatePromptResult = {
+  ok: true
+  data: TranslationOutput
+} | {
+  ok: false
+  error: string
+  code?: 'INVALID_API_KEY' | 'RATE_LIMITED' | 'TRANSLATION_FAILED' | 'INVALID_RESPONSE'
 }

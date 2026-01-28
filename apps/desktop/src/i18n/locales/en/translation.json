@@ -1,0 +1,66 @@
+{
+  "settings": {
+    "title": "Translation",
+    "description": "Translate prompts before copying or launching",
+    "enable": "Enable Translation",
+    "enableDescription": "Translate prompts before copying or launching",
+    "sourceLanguages": "Source Languages",
+    "sourceLanguagesDescription": "Languages you write prompts in",
+    "targetLanguage": "Target Language",
+    "targetLanguageDescription": "Language to translate to",
+    "autoDetect": "Auto-detect Language",
+    "autoDetectDescription": "Automatically detect non-target language text",
+    "addLanguage": "Add language",
+    "removeLanguage": "Remove {{language}}",
+    "cache": "Translation Cache",
+    "cacheDescription": "Cached translations for faster repeat translations",
+    "cacheEntries": "{{count}} cached entries",
+    "cacheOldest": "Oldest entry: {{date}}",
+    "clearCache": "Clear Cache",
+    "cacheClearedToast": "Translation cache cleared ({{count}} entries removed)"
+  },
+  "preview": {
+    "title": "Translation Preview",
+    "original": "Original",
+    "translated": "Translated",
+    "confidence": "Confidence",
+    "confidenceHigh": "High",
+    "confidenceMedium": "Medium",
+    "confidenceLow": "Low",
+    "regenerate": "Regenerate",
+    "editTranslation": "Edit translation (optional)",
+    "editPlaceholder": "Modify the translation if needed...",
+    "copyOriginal": "Copy Original",
+    "copyTranslated": "Copy Translated",
+    "launchWith": "Launch with",
+    "cancel": "Cancel",
+    "translating": "Translating...",
+    "fromCache": "From cache",
+    "preservedTerms": "Preserved terms",
+    "noPreservedTerms": "No terms preserved"
+  },
+  "badge": {
+    "tooltip": "Written in {{language}} - will translate to {{target}}"
+  },
+  "toggle": {
+    "label": "Translate to {{language}}",
+    "enabled": "Translation enabled",
+    "disabled": "Translation disabled"
+  },
+  "copyButton": {
+    "copyWithTranslation": "Copy ({{source}} → {{target}})",
+    "copyOriginal": "Copy Original",
+    "copyOriginalDescription": "Copy without translation"
+  },
+  "errors": {
+    "noAiConfigured": "AI provider not configured. Please configure it in Settings.",
+    "translationFailed": "Translation failed. Please try again.",
+    "invalidResponse": "Invalid translation response. Please try again.",
+    "rateLimited": "Rate limit exceeded. Please wait a moment.",
+    "invalidApiKey": "Invalid API key. Please check your settings."
+  },
+  "languages": {
+    "en": "English",
+    "th": "Thai"
+  }
+}

@@ -42,12 +42,18 @@ export interface Translations {
       description: string
     }>
   }
+  chromeExtension: {
+    heading: string
+    subheading: string
+    comingSoon: string
+  }
   cta: {
     heading: string
     subheading: string
     downloadButton: string
     githubButton: string
     freeForever: string
+    comingSoon: string
   }
   footer: {
     builtBy: string

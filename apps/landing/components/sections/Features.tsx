@@ -1,13 +1,13 @@
 'use client'
 
-import { HardDrive, Zap, Braces, Sparkles, Keyboard, Paintbrush, GitBranch, LucideIcon } from 'lucide-react'
+import { Shield, Zap, Braces, FolderOpen, Sparkles, Keyboard, Paintbrush, LucideIcon } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { FadeIn } from '@/components/shared/FadeIn'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
-const featureIcons: LucideIcon[] = [HardDrive, Zap, Braces, GitBranch, Sparkles, Keyboard, Paintbrush]
-const featureColors = ['primary', 'secondary', 'accent', 'primary', 'primary', 'secondary', 'accent']
+const featureIcons: LucideIcon[] = [Shield, Zap, Braces, FolderOpen, Sparkles, Keyboard, Paintbrush]
+const featureColors = ['primary', 'secondary', 'accent', 'primary', 'accent', 'secondary', 'primary']
 
 const colorClasses = {
   primary: {

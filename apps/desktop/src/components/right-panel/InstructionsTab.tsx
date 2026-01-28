@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { PromptFile, Variable } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { VariableConfig } from '@/components/VariableConfig'
+import { AddonsSection } from '@/components/addons'
 
 interface InstructionsTabProps {
   prompt: PromptFile | null
@@ -66,6 +67,13 @@ export function InstructionsTab({
             isLast={index === prompt.variables.length - 1}
           />
         ))}
+
+        {/* Addons Section - disabled in copy mode, active in run mode */}
+        {!isEditMode && (
+          <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
+            <AddonsSection />
+          </div>
+        )}
       </div>
     </ScrollArea>
   )

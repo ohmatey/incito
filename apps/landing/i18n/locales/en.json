@@ -1,30 +1,30 @@
 {
   "header": {
     "github": "GitHub",
-    "download": "Download"
+    "download": "Download Free"
   },
   "hero": {
-    "title": "Turn prompts into",
-    "titleHighlight": "instructions.",
-    "subtitle": "Build guided forms for your best prompts. Fill in the blanks, copy, paste into any AI. Set it up once, reuse forever. 100% offline.",
-    "downloadButton": "Download for macOS",
+    "title": "Systematize your",
+    "titleHighlight": "AI workflows.",
+    "subtitle": "Transform complex prompt chains into repeatable, variable-driven workflows. Define logic with conditionals, manage context with variables, deploy precision prompts in milliseconds. 100% local. Markdown-native.",
+    "downloadButton": "Download Free for macOS",
     "githubButton": "View on GitHub",
-    "screenshotAlt": "Incito desktop application showing prompt editor"
+    "screenshotAlt": "Incito desktop application showing prompt editor with variables and conditional logic"
   },
   "problem": {
-    "heading": "Sound familiar?",
+    "heading": "Inconsistent inputs. Unreliable outputs.",
     "items": [
       {
-        "title": "Starting from scratch every time",
-        "description": "You've written the perfect prompt before, but now you're typing it out again from memory."
+        "title": "Same prompt, different results",
+        "description": "Your team runs the same campaign brief through AI. Everyone gets different outputs because everyone forgets different details. Consistency becomes guesswork."
       },
       {
-        "title": "No structure for reuse",
-        "description": "Your prompts live in random notes and chat logs. No easy way to turn them into repeatable templates."
+        "title": "Your prompts are code—treat them that way",
+        "description": "High-value prompt logic buried in chat histories and scattered notes. No version control. No structure. No way to iterate systematically."
       },
       {
-        "title": "Context gets lost",
-        "description": "You remember the prompt worked, but not the exact setup—the variables, the format, the instructions that made it work."
+        "title": "Context drift kills quality",
+        "description": "You remember a prompt worked brilliantly. But the exact variables, the specific constraints, the tone instructions—lost. Recreating magic shouldn't require archaeology."
       }
     ]
   },
@@ -33,66 +33,75 @@
     "steps": [
       {
         "step": "1",
-        "title": "Point to a folder",
-        "description": "Pick any folder. Incito reads your markdown prompt files from there."
+        "title": "BYO knowledge base",
+        "description": "Point Incito at any folder. Your Obsidian vault. A git repo. A shared Dropbox. Your prompts stay as plain markdown files—zero lock-in, zero migration."
       },
       {
         "step": "2",
-        "title": "Build your instructions",
-        "description": "Define the questions and inputs that guide prompt creation. Labels, defaults, dropdowns—Incito turns them into a form."
+        "title": "Engineer your templates",
+        "description": "Define variables, dropdowns, conditionals. Build prompts that handle edge cases without rewriting. Logic lives in the template, not your memory."
       },
       {
         "step": "3",
-        "title": "Fill in the blanks",
-        "description": "Come back anytime. Your instructions guide you through filling out the prompt without needing to see the template."
+        "title": "Execute with precision",
+        "description": "Your team fills in the variables. The template handles the complexity. Same inputs, same outputs. Every single time."
       },
       {
         "step": "4",
-        "title": "Copy and paste",
-        "description": "One click copies your completed prompt. Paste it into any AI chatbot."
+        "title": "Deploy anywhere",
+        "description": "One click copies your precision-engineered prompt. Paste into Claude, ChatGPT, Gemini—wherever your workflow takes you."
       }
     ]
   },
   "features": {
-    "heading": "Everything you need, nothing you don't",
+    "heading": "Built for professionals who engineer results",
     "items": [
       {
-        "title": "100% Offline",
-        "description": "Works completely offline. Your prompts never leave your machine—no internet required, no cloud sync, no accounts."
+        "title": "Local-first. Zero telemetry.",
+        "description": "Your IP never leaves your device until you paste it. No accounts. No cloud sync. Enterprise-ready privacy by default."
       },
       {
-        "title": "Instant",
-        "description": "Native app performance. Opens in milliseconds, not seconds. No loading spinners."
+        "title": "Native performance",
+        "description": "Opens in milliseconds. Designed for flow state—no loading screens interrupting your momentum."
       },
       {
-        "title": "Handlebars Templating",
-        "description": "Use {{variables}}, conditionals, and helpers. Your prompts become smart templates."
+        "title": "Conditional logic & variables",
+        "description": "Use {{variables}}, {{#if}} blocks, and helpers. Your prompts become programmable. Handle complexity without complexity."
       },
       {
-        "title": "Prompt Variants",
-        "description": "Create multiple versions of any prompt. Test different tones, styles, or approaches side by side."
+        "title": "Zero lock-in architecture",
+        "description": "Plain markdown files. Sync with git. Share via Dropbox. Your prompts are portable, versionable, yours."
       },
       {
-        "title": "Bring Your Own AI (Optional)",
-        "description": "Connect an AI provider if you want help generating prompts. Or skip it—the app works fully standalone."
+        "title": "AI-assisted generation*",
+        "description": "Connect your preferred AI provider to help generate prompts. Or don't—the app works fully standalone. *It's 2026. Of course there's AI. You choose the provider, on your terms."
       },
       {
         "title": "Keyboard-first",
-        "description": "Navigate, search, and copy without touching your mouse. Shortcuts for everything."
+        "description": "Navigate, search, and copy without leaving the keyboard. Designed for the ⌘-K generation."
       },
       {
-        "title": "Clean UI",
-        "description": "A distraction-free interface that gets out of your way. Light and dark modes included."
+        "title": "Minimal by design",
+        "description": "A focused interface that respects your attention. Light and dark modes. No clutter."
       }
     ]
   },
+  "chromeExtension": {
+    "heading": "Chrome extension coming",
+    "subheading": "Access your prompt library directly in Claude, ChatGPT, and any AI interface. Same precision. Zero context switching.",
+    "comingSoon": "Join the waitlist"
+  },
   "cta": {
-    "heading": "Build your prompt instructions today",
-    "subheading": "Create guided forms for your best prompts. Come back, fill in the blanks, copy. Free and offline.",
-    "downloadButton": "Download for macOS",
+    "heading": "Stop guessing. Start engineering.",
+    "subheading": "Transform your best prompts into repeatable systems. Free, open-source, and entirely yours.",
+    "downloadButton": "Download Free for macOS",
+    "githubButton": "View on GitHub",
+    "freeForever": "Free forever. Open source.",
     "comingSoon": "Windows and Linux coming soon"
   },
   "footer": {
-    "madeBy": "Made by Aaron"
+    "builtBy": "Built by",
+    "sourceCode": "Source code",
+    "openSource": "Open source"
   }
 }

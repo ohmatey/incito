@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Incito",
-  "version": "0.8.0",
+  "version": "0.10.0",
   "identifier": "com.incito.app",
   "build": {
     "beforeDevCommand": "npm run dev:vite",
@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Incito",
         "width": 1200,
         "height": 800,
@@ -21,7 +22,18 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com http://localhost:3457 https://gist.githubusercontent.com"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDMwQUZDRTFFMkU5ODk2MkYKUldRdmxwZ3VIczZ2TUdqNzRVUUJFTnRlR3pYQy9LWWlGQm1RVkg4Zm01UStaTm95Mk8wVTAra28K",
+      "endpoints": [
+        "https://gist.githubusercontent.com/ohmatey/c47e0d36ed59d7e7a396cdd2aa3d0631/raw/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   },
   "bundle": {
@@ -35,7 +47,8 @@
     ],
     "targets": "all",
     "externalBin": [
-      "binaries/incito-mcp"
+      "binaries/incito-mcp",
+      "binaries/claude-code-server"
     ]
   }
 }
