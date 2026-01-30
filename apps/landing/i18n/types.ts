@@ -42,6 +42,15 @@ export interface Translations {
       description: string
     }>
   }
+  experiments: {
+    heading: string
+    subheading: string
+    items: Array<{
+      title: string
+      description: string
+      benefit: string
+    }>
+  }
   chromeExtension: {
     heading: string
     subheading: string

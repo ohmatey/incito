@@ -4,27 +4,27 @@
     "download": "Download Free"
   },
   "hero": {
-    "title": "Systematize your",
-    "titleHighlight": "AI workflows.",
-    "subtitle": "Transform complex prompt chains into repeatable, variable-driven workflows. Define logic with conditionals, manage context with variables, deploy precision prompts in milliseconds. 100% local. Markdown-native.",
+    "title": "The prompt",
+    "titleHighlight": "engineering platform.",
+    "subtitle": "Build, test, compare, and evaluate AI prompts at scale. Create agents, run multi-provider comparisons, grade outputs automatically. Transform prompt craft into prompt engineering.",
     "downloadButton": "Download Free for macOS",
     "githubButton": "View on GitHub",
-    "screenshotAlt": "Incito desktop application showing prompt editor with variables and conditional logic"
+    "screenshotAlt": "Incito desktop application showing prompt editor with variables, agents, and run mode"
   },
   "problem": {
-    "heading": "Inconsistent inputs. Unreliable outputs.",
+    "heading": "Prompts deserve better tooling.",
     "items": [
       {
-        "title": "Same prompt, different results",
-        "description": "Your team runs the same campaign brief through AI. Everyone gets different outputs because everyone forgets different details. Consistency becomes guesswork."
+        "title": "Prompts are engineering, not guesswork",
+        "description": "You iterate on prompts but have no way to measure improvement. Did that tweak help? Which version performs better? Without evaluation, optimization is blind."
       },
       {
-        "title": "Your prompts are code—treat them that way",
-        "description": "High-value prompt logic buried in chat histories and scattered notes. No version control. No structure. No way to iterate systematically."
+        "title": "One provider isn't enough",
+        "description": "GPT-4, Claude, Gemini—each has strengths. But testing the same prompt across providers means copy-pasting and comparing manually. Time-consuming and error-prone."
       },
       {
-        "title": "Context drift kills quality",
-        "description": "You remember a prompt worked brilliantly. But the exact variables, the specific constraints, the tone instructions—lost. Recreating magic shouldn't require archaeology."
+        "title": "Prompts need version control and structure",
+        "description": "High-value prompt logic buried in chat histories and scattered notes. No way to track changes, no way to collaborate, no way to build systematic improvements."
       }
     ]
   },
@@ -33,56 +33,88 @@
     "steps": [
       {
         "step": "1",
-        "title": "BYO knowledge base",
-        "description": "Point Incito at any folder. Your Obsidian vault. A git repo. A shared Dropbox. Your prompts stay as plain markdown files—zero lock-in, zero migration."
+        "title": "Engineer your templates",
+        "description": "Create prompts with variables, conditionals, and structured inputs. Define text fields, dropdowns, sliders, images—whatever your workflow needs."
       },
       {
         "step": "2",
-        "title": "Engineer your templates",
-        "description": "Define variables, dropdowns, conditionals. Build prompts that handle edge cases without rewriting. Logic lives in the template, not your memory."
+        "title": "Run and compare",
+        "description": "Execute prompts in guided run mode. Test across multiple providers simultaneously. See outputs side-by-side with token counts and timing."
       },
       {
         "step": "3",
-        "title": "Execute with precision",
-        "description": "Your team fills in the variables. The template handles the complexity. Same inputs, same outputs. Every single time."
+        "title": "Grade and evaluate",
+        "description": "Set up automated graders—assertions for deterministic checks, LLM judges for nuanced evaluation. Know instantly if outputs meet your standards."
       },
       {
         "step": "4",
-        "title": "Deploy anywhere",
-        "description": "One click copies your precision-engineered prompt. Paste into Claude, ChatGPT, Gemini—wherever your workflow takes you."
+        "title": "Iterate with confidence",
+        "description": "Track run history, compare versions, measure improvements. Build prompts that get better over time, not just different."
       }
     ]
   },
   "features": {
-    "heading": "Built for professionals who engineer results",
+    "heading": "Core features",
     "items": [
       {
         "title": "Local-first. Zero telemetry.",
-        "description": "Your IP never leaves your device until you paste it. No accounts. No cloud sync. Enterprise-ready privacy by default."
+        "description": "Your prompts never leave your device until you choose. No accounts required. No cloud sync. Enterprise-ready privacy by default."
       },
       {
-        "title": "Native performance",
-        "description": "Opens in milliseconds. Designed for flow state—no loading screens interrupting your momentum."
+        "title": "Markdown-native",
+        "description": "Plain markdown files with YAML frontmatter. Sync with git, share via Dropbox, version control everything. Your prompts are portable and yours."
       },
       {
-        "title": "Conditional logic & variables",
-        "description": "Use {{variables}}, {{#if}} blocks, and helpers. Your prompts become programmable. Handle complexity without complexity."
+        "title": "9 variable types",
+        "description": "Text, textarea, number, slider, select, multi-select, array, image, and datetime. Build sophisticated input forms for any use case."
       },
       {
-        "title": "Zero lock-in architecture",
-        "description": "Plain markdown files. Sync with git. Share via Dropbox. Your prompts are portable, versionable, yours."
+        "title": "Conditional logic",
+        "description": "Use {{variables}}, {{#if}} blocks, and helpers. Your prompts become programmable templates that handle edge cases elegantly."
       },
       {
-        "title": "AI-assisted generation*",
-        "description": "Connect your preferred AI provider to help generate prompts. Or don't—the app works fully standalone. *It's 2026. Of course there's AI. You choose the provider, on your terms."
+        "title": "AI-assisted editing",
+        "description": "Generate prompts from descriptions, refine with instructions, auto-fill variables from context. Your AI provider, your choice."
       },
       {
-        "title": "Keyboard-first",
-        "description": "Navigate, search, and copy without leaving the keyboard. Designed for the ⌘-K generation."
+        "title": "Version history",
+        "description": "Every save creates a version. Compare changes, restore previous versions, never lose good work. Built-in undo for your prompt engineering."
+      }
+    ]
+  },
+  "experiments": {
+    "heading": "Experimental features",
+    "subheading": "Pushing the boundaries of prompt engineering. These features are in active development—enable them in settings to try them out.",
+    "items": [
+      {
+        "title": "AI Agents",
+        "description": "Create conversational AI assistants with custom system prompts and behavior. Chat directly with your prompts, iterate through conversation.",
+        "benefit": "Turn static prompts into interactive workflows"
       },
       {
-        "title": "Minimal by design",
-        "description": "A focused interface that respects your attention. Light and dark modes. No clutter."
+        "title": "Run Mode",
+        "description": "Step-through guided execution with live preview. Fill variables interactively, see your prompt assemble in real-time, execute with one click.",
+        "benefit": "Guided prompt execution for teams"
+      },
+      {
+        "title": "Multi-Provider Comparison",
+        "description": "Test the same prompt across OpenAI, Anthropic, and Google simultaneously. Compare outputs side-by-side with token counts and costs.",
+        "benefit": "Find the best model for each prompt"
+      },
+      {
+        "title": "Graders",
+        "description": "Automated evaluation with assertions (contains, regex, length checks) and LLM judges (quality scoring with custom criteria).",
+        "benefit": "Measure prompt quality automatically"
+      },
+      {
+        "title": "Resources & RAG",
+        "description": "Upload documents and images to your resource library. Semantic search with embeddings. Build context-aware prompts from your knowledge base.",
+        "benefit": "Ground prompts in your own data"
+      },
+      {
+        "title": "MCP Integration",
+        "description": "Connect to Claude Desktop, Cursor, and Claude Code via Model Context Protocol. Access your prompts from any MCP-compatible tool.",
+        "benefit": "Use prompts everywhere you work"
       }
     ]
   },
@@ -92,8 +124,8 @@
     "comingSoon": "Join the waitlist"
   },
   "cta": {
-    "heading": "Stop guessing. Start engineering.",
-    "subheading": "Transform your best prompts into repeatable systems. Free, open-source, and entirely yours.",
+    "heading": "Stop guessing. Start measuring.",
+    "subheading": "Transform your best prompts into tested, versioned, evaluated systems. Free, open-source, and entirely yours.",
     "downloadButton": "Download Free for macOS",
     "githubButton": "View on GitHub",
     "freeForever": "Free forever. Open source.",

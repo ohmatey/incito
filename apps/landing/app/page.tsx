@@ -3,6 +3,7 @@ import { Hero } from '@/components/sections/Hero'
 import { Problem } from '@/components/sections/Problem'
 import { HowItWorks } from '@/components/sections/HowItWorks'
 import { Features } from '@/components/sections/Features'
+import { Experiments } from '@/components/sections/Experiments'
 import { ChromeExtension } from '@/components/sections/ChromeExtension'
 import { FinalCTA } from '@/components/sections/FinalCTA'
 import { Footer } from '@/components/sections/Footer'
@@ -15,6 +16,7 @@ export default function Home() {
       <Problem />
       <HowItWorks />
       <Features />
+      <Experiments />
       <ChromeExtension />
       <FinalCTA />
       <Footer />

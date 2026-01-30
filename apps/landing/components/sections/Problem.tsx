@@ -1,12 +1,12 @@
 'use client'
 
-import { Shuffle, FileCode, TrendingDown } from 'lucide-react'
+import { Target, Layers, GitBranch } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { FadeIn } from '@/components/shared/FadeIn'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
-const icons = [Shuffle, FileCode, TrendingDown]
+const icons = [Target, Layers, GitBranch]
 
 export function Problem() {
   const { t } = useLanguage()

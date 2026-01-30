@@ -10,22 +10,33 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Incito - Systematize your AI workflows',
+  title: 'Incito - The prompt engineering platform',
   description:
-    'Transform complex prompt chains into repeatable, variable-driven workflows. 100% local. Markdown-native. Free and open source.',
-  keywords: ['AI', 'prompts', 'prompt management', 'ChatGPT', 'Claude', 'productivity'],
+    'Build, test, compare, and evaluate AI prompts at scale. Create agents, run multi-provider comparisons, grade outputs automatically. Local-first. Free and open source.',
+  keywords: [
+    'AI',
+    'prompts',
+    'prompt engineering',
+    'ChatGPT',
+    'Claude',
+    'GPT-4',
+    'Gemini',
+    'LLM evaluation',
+    'AI agents',
+    'prompt testing',
+  ],
   authors: [{ name: 'Aaron' }],
   openGraph: {
-    title: 'Incito - Systematize your AI workflows',
+    title: 'Incito - The prompt engineering platform',
     description:
-      'Transform complex prompt chains into repeatable, variable-driven workflows. 100% local. Markdown-native. Free and open source.',
+      'Build, test, compare, and evaluate AI prompts at scale. Create agents, run multi-provider comparisons, grade outputs automatically. Local-first. Free and open source.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Incito - Systematize your AI workflows',
+    title: 'Incito - The prompt engineering platform',
     description:
-      'Transform complex prompt chains into repeatable, variable-driven workflows. 100% local. Markdown-native. Free and open source.',
+      'Build, test, compare, and evaluate AI prompts at scale. Create agents, run multi-provider comparisons, grade outputs automatically. Local-first. Free and open source.',
   },
 }
 
