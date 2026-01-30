@@ -61,15 +61,9 @@ export function Experiments() {
                     {experiment.title}
                   </h3>
 
-                  <p className="text-gray-600 dark:text-gray-400 flex-grow">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {experiment.description}
                   </p>
-
-                  <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                    <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                      {experiment.benefit}
-                    </p>
-                  </div>
                 </div>
               </FadeIn>
             )
