@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { LANGUAGES } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Globe, Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
@@ -27,41 +28,44 @@ export function LanguageSwitcher() {
   // Focus first item when menu opens
   useEffect(() => {
     if (isOpen) {
-      const currentIndex = LANGUAGES.findIndex(l => l.code === language)
+      const currentIndex = LANGUAGES.findIndex((l) => l.code === language)
       setFocusedIndex(currentIndex >= 0 ? currentIndex : 0)
     }
   }, [isOpen, language])
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (!isOpen) {
-      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        setIsOpen(true)
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!isOpen) {
+        if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          setIsOpen(true)
+        }
+        return
       }
-      return
-    }
 
-    switch (event.key) {
-      case 'Escape':
-        event.preventDefault()
-        setIsOpen(false)
-        break
-      case 'ArrowDown':
-        event.preventDefault()
-        setFocusedIndex(i => (i + 1) % LANGUAGES.length)
-        break
-      case 'ArrowUp':
-        event.preventDefault()
-        setFocusedIndex(i => (i - 1 + LANGUAGES.length) % LANGUAGES.length)
-        break
-      case 'Enter':
-      case ' ':
-        event.preventDefault()
-        setLanguage(LANGUAGES[focusedIndex].code)
-        setIsOpen(false)
-        break
-    }
-  }, [isOpen, focusedIndex, setLanguage])
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault()
+          setIsOpen(false)
+          break
+        case 'ArrowDown':
+          event.preventDefault()
+          setFocusedIndex((i) => (i + 1) % LANGUAGES.length)
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          setFocusedIndex((i) => (i - 1 + LANGUAGES.length) % LANGUAGES.length)
+          break
+        case 'Enter':
+        case ' ':
+          event.preventDefault()
+          setLanguage(LANGUAGES[focusedIndex].code)
+          setIsOpen(false)
+          break
+      }
+    },
+    [isOpen, focusedIndex, setLanguage]
+  )
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -73,9 +77,9 @@ export function LanguageSwitcher() {
         aria-label="Change language"
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="h-9 w-9 p-0"
+        className="h-11 w-11 p-0"
       >
-        <Globe size={18} aria-hidden="true" />
+        <Globe size={20} aria-hidden="true" />
       </Button>
 
       {isOpen && (
@@ -83,7 +87,11 @@ export function LanguageSwitcher() {
           ref={menuRef}
           role="menu"
           aria-label="Select language"
-          className="absolute right-0 top-full z-50 mt-2 min-w-[140px] overflow-hidden rounded-lg border border-gray-700 bg-gray-800 shadow-lg"
+          className={cn(
+            'absolute right-0 top-full z-50 mt-2 min-w-[160px]',
+            'max-h-[min(300px,calc(100vh-120px))] overflow-y-auto overscroll-contain',
+            'rounded-lg border border-gray-700 bg-gray-800 shadow-lg'
+          )}
         >
           {LANGUAGES.map((lang, index) => (
             <button
@@ -96,9 +104,12 @@ export function LanguageSwitcher() {
               }}
               onKeyDown={handleKeyDown}
               onMouseEnter={() => setFocusedIndex(index)}
-              className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-700 ${
-                focusedIndex === index ? 'bg-gray-700' : ''
-              }`}
+              className={cn(
+                'flex w-full min-h-[44px] items-center justify-between gap-3 px-4 text-left text-sm',
+                'transition-colors',
+                'hover:bg-gray-700 active:bg-gray-600',
+                focusedIndex === index && 'bg-gray-700'
+              )}
             >
               <span className="flex items-center gap-2">
                 <span aria-hidden="true">{lang.flag}</span>

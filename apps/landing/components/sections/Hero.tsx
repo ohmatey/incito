@@ -1,6 +1,6 @@
 'use client'
 
-import { Github } from 'lucide-react'
+import { Github, Monitor, Apple } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/shared/FadeIn'
@@ -34,16 +34,37 @@ export function Hero() {
           </FadeIn>
 
           <FadeIn delay={0.2}>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a href={DOWNLOAD_URL}>
-                <Button size="lg">{t.hero.downloadButton}</Button>
-              </a>
-              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" size="lg">
+            {/* Desktop CTA buttons */}
+            <div className="mt-10 hidden flex-col items-center justify-center gap-4 sm:flex sm:flex-row">
+              <Button size="lg" asChild>
+                <a href={DOWNLOAD_URL}>
+                  <Apple size={20} className="mr-2" aria-hidden="true" />
+                  {t.hero.downloadButton}
+                </a>
+              </Button>
+              <Button variant="secondary" size="lg" asChild>
+                <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                   <Github size={20} className="mr-2" aria-hidden="true" />
                   {t.hero.githubButton}
-                </Button>
-              </a>
+                </a>
+              </Button>
+            </div>
+
+            {/* Mobile: Desktop app notice */}
+            <div className="mt-10 flex flex-col items-center gap-4 sm:hidden">
+              <div className="flex items-center gap-3 rounded-2xl border border-gray-700 bg-gray-800/50 px-6 py-4">
+                <Monitor size={24} className="text-primary-500" aria-hidden="true" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-100">Desktop App for macOS</p>
+                  <p className="text-sm text-gray-400">Visit on your Mac to download</p>
+                </div>
+              </div>
+              <Button variant="secondary" size="md" asChild>
+                <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                  <Github size={20} className="mr-2" aria-hidden="true" />
+                  {t.hero.githubButton}
+                </a>
+              </Button>
             </div>
           </FadeIn>
         </div>
