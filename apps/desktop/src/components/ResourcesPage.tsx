@@ -13,7 +13,7 @@ interface ResourcesPageComponentProps {
 
 export function ResourcesPageComponent({ children }: ResourcesPageComponentProps) {
   const { t: _t } = useTranslation('resources')
-  const { folderPath, panelWidths } = useAppContext()
+  const { folderPath, panelWidths, listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
 
   const [resources, setResources] = useState<Resource[]>([])
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
@@ -77,23 +77,28 @@ export function ResourcesPageComponent({ children }: ResourcesPageComponentProps
     }
   }
 
+  // Show list panel when not collapsed OR when no resource is selected
+  const showListPanel = !listPanelCollapsed || !selectedResource
+
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Left panel - Resource list */}
-      <div
-        className="flex flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-        style={{ width: panelWidths.promptList }}
-      >
-        <ResourceList
-          resources={filteredResources}
-          selectedResource={selectedResource}
-          onSelectResource={handleSelectResource}
-          onUploadComplete={handleUploadComplete}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          isLoading={isLoading}
-        />
-      </div>
+      {showListPanel && (
+        <div
+          className="flex flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+          style={{ width: panelWidths.promptList }}
+        >
+          <ResourceList
+            resources={filteredResources}
+            selectedResource={selectedResource}
+            onSelectResource={handleSelectResource}
+            onUploadComplete={handleUploadComplete}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
 
       {/* Center panel - Resource detail or empty state */}
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -101,6 +106,8 @@ export function ResourcesPageComponent({ children }: ResourcesPageComponentProps
           <ResourceDetail
             resource={selectedResource}
             onDelete={() => handleDeleteResource(selectedResource.id)}
+            listPanelCollapsed={listPanelCollapsed}
+            onToggleListPanel={toggleListPanelCollapsed}
           />
         ) : (
           children

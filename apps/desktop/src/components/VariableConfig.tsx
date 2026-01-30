@@ -15,8 +15,10 @@ import { ChevronUp, ChevronDown, Plus, X } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Slider } from '@/components/ui/slider'
+import { DatetimePicker } from '@/components/ui/datetime-picker'
 import { ImageVariableInput } from '@/components/ImageVariableInput'
 import { useAppContext } from '@/context/AppContext'
+import { useRunMode } from '@/context/RunModeContext'
 import { cn } from '@/lib/utils'
 
 interface VariableConfigProps {
@@ -48,6 +50,7 @@ export function VariableConfig({
 }: VariableConfigProps) {
   const { t } = useTranslation(['prompts'])
   const { folderPath } = useAppContext()
+  const runMode = useRunMode()
   const [arrayInputValue, setArrayInputValue] = useState('')
   const [arrayDefaultInputValue, setArrayDefaultInputValue] = useState('')
 
@@ -69,6 +72,11 @@ export function VariableConfig({
     if (newType !== 'array' && newType !== 'multi-select') {
       updates.format = undefined
     }
+    if (newType !== 'datetime') {
+      updates.showDate = undefined
+      updates.showTime = undefined
+      updates.timeFormat = undefined
+    }
 
     // Initialize defaults for new types
     if (newType === 'slider') {
@@ -81,6 +89,10 @@ export function VariableConfig({
     }
     if (newType === 'array' || newType === 'multi-select') {
       updates.format = 'comma'
+    }
+    if (newType === 'datetime') {
+      updates.showDate = true
+      updates.showTime = false
     }
 
     onVariableUpdate({
@@ -481,7 +493,22 @@ export function VariableConfig({
           <ImageVariableInput
             value={value as ImageAddonValue | null}
             promptsFolder={folderPath || ''}
+            disabled={!runMode.isActive}
             onValueChange={onValueChange}
+            onFocus={() => onActiveChange(true)}
+            onBlur={() => onActiveChange(false)}
+          />
+        )
+
+      case 'datetime':
+        return (
+          <DatetimePicker
+            value={value as string}
+            onChange={onValueChange}
+            showDate={variable.showDate !== false}
+            showTime={variable.showTime === true}
+            timeFormat={variable.timeFormat || '24h'}
+            placeholder={variable.placeholder}
             onFocus={() => onActiveChange(true)}
             onBlur={() => onActiveChange(false)}
           />
@@ -676,6 +703,7 @@ export function VariableConfig({
               <SelectItem value="multi-select">{t('prompts:variableConfig.types.multiSelect')}</SelectItem>
               <SelectItem value="array">{t('prompts:variableConfig.types.array')}</SelectItem>
               <SelectItem value="image">{t('prompts:variableConfig.types.image')}</SelectItem>
+              <SelectItem value="datetime">{t('prompts:variableConfig.types.datetime')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -783,8 +811,68 @@ export function VariableConfig({
           </div>
         )}
 
-        {/* Default value - after type-specific config (not shown for image type) */}
-        {variable.type !== 'image' && (
+        {/* Datetime config */}
+        {variable.type === 'datetime' && (
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.datetime.configLabel')}</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`showDate-${variable.key}`}
+                  checked={variable.showDate !== false}
+                  onCheckedChange={(checked) => {
+                    // Don't allow disabling both date and time
+                    if (!checked && !variable.showTime) return
+                    onVariableUpdate({ ...variable, showDate: checked === true })
+                  }}
+                />
+                <Label
+                  htmlFor={`showDate-${variable.key}`}
+                  className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                >
+                  {t('prompts:variableConfig.datetime.showDate')}
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`showTime-${variable.key}`}
+                  checked={variable.showTime === true}
+                  onCheckedChange={(checked) => {
+                    // Don't allow disabling both date and time
+                    if (!checked && variable.showDate === false) return
+                    onVariableUpdate({ ...variable, showTime: checked === true })
+                  }}
+                />
+                <Label
+                  htmlFor={`showTime-${variable.key}`}
+                  className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
+                >
+                  {t('prompts:variableConfig.datetime.showTime')}
+                </Label>
+              </div>
+              {variable.showTime && (
+                <div className="space-y-1 pl-6">
+                  <Label className="text-xs text-gray-400">{t('prompts:variableConfig.datetime.timeFormat')}</Label>
+                  <Select
+                    value={variable.timeFormat || '24h'}
+                    onValueChange={(v) => onVariableUpdate({ ...variable, timeFormat: v as '12h' | '24h' })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="24h">{t('prompts:variableConfig.datetime.format24h')}</SelectItem>
+                      <SelectItem value="12h">{t('prompts:variableConfig.datetime.format12h')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Default value - after type-specific config (not shown for image or datetime type) */}
+        {variable.type !== 'image' && variable.type !== 'datetime' && (
           <div className="space-y-1">
             <Label className="text-xs text-gray-500 dark:text-gray-400">{t('prompts:variableConfig.fields.defaultValue')}</Label>
             {renderDefaultValueInput()}

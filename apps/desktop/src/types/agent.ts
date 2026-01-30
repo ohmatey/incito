@@ -25,6 +25,7 @@ export interface AgentTool {
 }
 
 export interface AgentSettings {
+  providerId?: string | null // null = use default provider
   model?: string
   temperature?: number
   maxTokens?: number
@@ -59,6 +60,18 @@ export interface AgentParseError {
 
 export type ChatRole = 'user' | 'assistant' | 'system'
 
+export type AttachmentType = 'image' | 'pdf' | 'text' | 'document'
+
+export interface ChatAttachment {
+  id: string
+  fileName: string
+  mimeType: string
+  base64Data: string
+  previewUrl?: string
+  type: AttachmentType
+  size: number
+}
+
 export interface ToolCallResult {
   toolCallId: string
   toolName: string
@@ -73,6 +86,7 @@ export interface ChatMessage {
   content: string
   timestamp: string
   toolCalls?: ToolCallResult[]
+  attachments?: ChatAttachment[]
 }
 
 export interface ChatSession {

@@ -1,0 +1,139 @@
+{
+  "title": "Graders",
+  "description": "Score and validate your prompt outputs with automated tests",
+  "emptyState": {
+    "title": "No grader selected",
+    "description": "Select a grader from the list to view or edit it"
+  },
+  "list": {
+    "title": "Graders",
+    "assertions": "Assertions",
+    "llmJudges": "AI Judges",
+    "builtin": "Built-in",
+    "custom": "Custom",
+    "searchPlaceholder": "Search graders...",
+    "empty": "No graders found",
+    "createFirst": "Create your first grader to start scoring prompt outputs"
+  },
+  "create": {
+    "title": "Create Grader",
+    "button": "New Grader",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g., No Competitor Mentions",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What does this grader check?",
+    "typeLabel": "Type",
+    "types": {
+      "assertion": {
+        "label": "Logic Check (Assertion)",
+        "description": "Fast, free, deterministic - great for fact-checking, formatting, forbidden words"
+      },
+      "llm_judge": {
+        "label": "AI Review (LLM Judge)",
+        "description": "Slow, paid, probabilistic - great for tone, empathy, hallucination detection"
+      }
+    }
+  },
+  "detail": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this grader?",
+    "deleteWarning": "This will also remove it from all prompts using it.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "builtinBadge": "Built-in",
+    "customBadge": "Custom"
+  },
+  "assertion": {
+    "title": "Assertion Configuration",
+    "operatorLabel": "Operator",
+    "valueLabel": "Value",
+    "valuePlaceholder": "Enter value...",
+    "caseSensitive": "Case sensitive",
+    "operators": {
+      "contains": "Contains",
+      "not_contains": "Does not contain",
+      "starts_with": "Starts with",
+      "ends_with": "Ends with",
+      "equals": "Equals",
+      "max_length": "Maximum length",
+      "min_length": "Minimum length",
+      "regex": "Matches regex",
+      "json_valid": "Valid JSON"
+    }
+  },
+  "llmJudge": {
+    "title": "AI Judge Configuration",
+    "providerLabel": "AI Provider",
+    "providerHint": "Select which AI provider to use for evaluation. Leave as default to use your primary provider.",
+    "modelLabel": "Model",
+    "models": {
+      "gpt-4o-mini": "GPT-4o Mini (Fast, Cheap)",
+      "gpt-4o": "GPT-4o (Accurate)",
+      "claude-haiku-4-5": "Claude Haiku 4.5 (Fast, Cheap)",
+      "claude-sonnet-4-5": "Claude Sonnet 4.5 (Accurate)"
+    },
+    "promptTemplateLabel": "Evaluation Prompt",
+    "promptTemplatePlaceholder": "Write the prompt that will evaluate the output...\n\nAvailable variables: {{input}}, {{output}}",
+    "systemPromptLabel": "System Prompt (Optional)",
+    "systemPromptPlaceholder": "Optional context for the judge...",
+    "outputSchemaLabel": "Output Format",
+    "schemas": {
+      "score_1_to_5": "Score 1-5",
+      "score_1_to_10": "Score 1-10",
+      "boolean": "Pass/Fail",
+      "pass_fail_reason": "Pass/Fail with Reason"
+    }
+  },
+  "playground": {
+    "title": "Test Grader",
+    "inputLabel": "Input (Original Prompt)",
+    "inputPlaceholder": "Enter the original prompt...",
+    "outputLabel": "Output (AI Response)",
+    "outputPlaceholder": "Enter the AI response to evaluate...",
+    "runButton": "Run Test",
+    "running": "Testing...",
+    "result": {
+      "title": "Result",
+      "score": "Score",
+      "passed": "Passed",
+      "failed": "Failed",
+      "reason": "Reason",
+      "executionTime": "Execution Time"
+    }
+  },
+  "selector": {
+    "title": "Select Graders",
+    "description": "Choose which graders to run on this prompt's outputs",
+    "selectAll": "Select All",
+    "clearAll": "Clear All",
+    "selected": "{{count}} selected",
+    "noGraders": "No graders available. Create one in the Graders section."
+  },
+  "badge": {
+    "pass": "Pass",
+    "fail": "Fail",
+    "assertion": "Assertion",
+    "llmJudge": "AI Judge"
+  },
+  "results": {
+    "title": "Grader Results",
+    "showFailuresOnly": "Show failures only",
+    "allPassed": "All graders passed",
+    "someFailed": "{{count}} of {{total}} failed",
+    "noResults": "No grader results"
+  },
+  "errors": {
+    "createFailed": "Failed to create grader",
+    "updateFailed": "Failed to update grader",
+    "deleteFailed": "Failed to delete grader",
+    "loadFailed": "Failed to load graders",
+    "testFailed": "Failed to test grader",
+    "runFailed": "Failed to run graders"
+  },
+  "success": {
+    "created": "Grader created",
+    "updated": "Grader updated",
+    "deleted": "Grader deleted"
+  }
+}

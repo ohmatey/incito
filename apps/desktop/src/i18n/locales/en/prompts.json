@@ -22,7 +22,9 @@
     "filtered": "No prompts match your search",
     "pinned": "Pinned",
     "recent": "Recent",
-    "all": "All Prompts"
+    "all": "All Prompts",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "editor": {
     "untitled": "Untitled",
@@ -227,7 +229,16 @@
       "select": "Select",
       "multiSelect": "Multi-Select",
       "array": "Array",
-      "image": "Image Upload"
+      "image": "Image Upload",
+      "datetime": "Date/Time"
+    },
+    "datetime": {
+      "configLabel": "Date/Time Settings",
+      "showDate": "Show date picker",
+      "showTime": "Show time picker",
+      "timeFormat": "Time format",
+      "format12h": "12-hour (AM/PM)",
+      "format24h": "24-hour"
     },
     "imageField": {
       "selectImage": "Click to upload image",

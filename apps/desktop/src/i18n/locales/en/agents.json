@@ -4,7 +4,9 @@
     "newAgent": "New Agent",
     "pinned": "Pinned",
     "all": "All Agents",
-    "empty": "No agents yet. Create your first agent to get started."
+    "empty": "No agents yet. Create your first agent to get started.",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "emptyState": {
     "title": "No agent selected",
@@ -28,6 +30,8 @@
     "descriptionPlaceholder": "Brief description of what this agent does",
     "language": "Response Language",
     "languageHint": "The language the agent will use when responding. This is reflected in the system prompt.",
+    "provider": "AI Provider",
+    "providerHint": "Select which AI provider to use for this agent. Leave as default to use your primary provider.",
     "systemPrompt": "System Prompt",
     "systemPromptHint": "Instructions that define the agent's personality and behavior.",
     "systemPromptPlaceholder": "You are a helpful assistant that..."

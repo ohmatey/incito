@@ -17,6 +17,10 @@ import { ResourcesEmptyState } from '@/routes/ResourcesEmptyState'
 import { SearchPage } from '@/routes/SearchPage'
 import { TagsPage } from '@/routes/TagsPage'
 import { RunsPage } from '@/routes/RunsPage'
+import { RunDetailPage } from '@/routes/RunDetailPage'
+import { GradersPage } from '@/routes/GradersPage'
+import { GradersEmptyState } from '@/routes/GradersEmptyState'
+import { GraderDetail } from '@/routes/GraderDetail'
 import { SettingsPage } from '@/routes/SettingsPage'
 
 // Create root route with layout
@@ -111,6 +115,36 @@ const runsRoute = createRoute({
   component: RunsPage,
 })
 
+// Run detail route
+const runDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/runs/$runId',
+  component: RunDetailPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    variable: typeof search.variable === 'string' ? search.variable : undefined,
+  }),
+})
+
+// Graders route with optional child for selected grader
+const gradersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/graders',
+  component: GradersPage,
+})
+
+// Index route for graders (no grader selected)
+const gradersIndexRoute = createRoute({
+  getParentRoute: () => gradersRoute,
+  path: '/',
+  component: GradersEmptyState,
+})
+
+const graderDetailRoute = createRoute({
+  getParentRoute: () => gradersRoute,
+  path: '/$graderId',
+  component: GraderDetail,
+})
+
 // Settings route
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -124,9 +158,11 @@ const routeTree = rootRoute.addChildren([
   promptsRoute.addChildren([promptsIndexRoute, promptDetailRoute]),
   agentsRoute.addChildren([agentsIndexRoute, agentDetailRoute]),
   resourcesRoute.addChildren([resourcesIndexRoute]),
+  gradersRoute.addChildren([gradersIndexRoute, graderDetailRoute]),
   searchRoute,
   tagsRoute,
   runsRoute,
+  runDetailRoute,
   settingsRoute,
 ])
 

@@ -7,5 +7,22 @@
   "submit": "ส่ง",
   "suggested": "แนะนำ",
   "selectOption": "เลือกตัวเลือก",
-  "onePerLine": "หนึ่งรายการต่อบรรทัด"
+  "onePerLine": "หนึ่งรายการต่อบรรทัด",
+  "execute": "รันและคัดลอก",
+  "preview": "ตัวอย่าง",
+  "output": "ผลลัพธ์",
+  "noVariablesTitle": "ไม่มีตัวแปรที่ต้องกำหนดค่า",
+  "noVariablesDescription": "พรอมต์นี้ไม่มีตัวแปร คลิก รันและคัดลอก เพื่อคัดลอกเทมเพลตโดยตรง",
+  "comparison": {
+    "noProviders": "ไม่ได้เลือกผู้ให้บริการ",
+    "waiting": "รอเริ่มต้น...",
+    "streaming": "กำลังสร้างคำตอบ...",
+    "status": {
+      "idle": "รอ",
+      "pending": "รอดำเนินการ",
+      "streaming": "กำลังสตรีม",
+      "completed": "เสร็จสิ้น",
+      "error": "ผิดพลาด"
+    }
+  }
 }

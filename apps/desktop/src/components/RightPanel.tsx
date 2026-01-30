@@ -65,6 +65,7 @@ export function RightPanel({
     >
       <RightPanelHeader
         activeTab={activeTab}
+        isEditMode={isEditMode}
         onTabChange={onTabChange}
         onClose={onClose}
         onAddNote={() => setIsAddingNote(true)}

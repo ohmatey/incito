@@ -20,6 +20,7 @@ export function PromptsPage() {
     pinnedPromptIds,
     togglePinPrompt,
     getRememberedVariantId,
+    listPanelCollapsed,
   } = useAppContext()
 
   // Derive selected prompt from URL param
@@ -48,24 +49,31 @@ export function PromptsPage() {
     }
   }
 
+  // Show list panel when not collapsed OR when no prompt is selected
+  const showListPanel = !listPanelCollapsed || !selectedPrompt
+
   return (
     <>
-      <PromptList
-        prompts={promptManager.prompts}
-        pinnedPromptIds={pinnedPromptIds}
-        selectedPrompt={selectedPrompt}
-        onSelectPrompt={handleSelectPrompt}
-        onDuplicatePrompt={handleDuplicateAndNavigate}
-        onDeletePrompt={handleDeletePrompt}
-        onTogglePinPrompt={togglePinPrompt}
-        onNewPrompt={() => setShowNewPromptDialog(true)}
-        width={panelWidths.promptList}
-      />
-      <ResizeHandle
-        side="left"
-        onResize={handlePromptListResize}
-        onResizeEnd={handlePanelResizeEnd}
-      />
+      {showListPanel && (
+        <>
+          <PromptList
+            prompts={promptManager.prompts}
+            pinnedPromptIds={pinnedPromptIds}
+            selectedPrompt={selectedPrompt}
+            onSelectPrompt={handleSelectPrompt}
+            onDuplicatePrompt={handleDuplicateAndNavigate}
+            onDeletePrompt={handleDeletePrompt}
+            onTogglePinPrompt={togglePinPrompt}
+            onNewPrompt={() => setShowNewPromptDialog(true)}
+            width={panelWidths.promptList}
+          />
+          <ResizeHandle
+            side="left"
+            onResize={handlePromptListResize}
+            onResizeEnd={handlePanelResizeEnd}
+          />
+        </>
+      )}
       <Outlet />
     </>
   )

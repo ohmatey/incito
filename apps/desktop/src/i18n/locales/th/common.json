@@ -5,6 +5,7 @@
     "agents": "เอเจนต์",
     "resources": "ทรัพยากร",
     "runs": "การรัน",
+    "graders": "ตัวให้คะแนน",
     "tags": "แท็ก",
     "settings": "ตั้งค่า",
     "keyboardShortcuts": "แป้นพิมพ์ลัด",
@@ -34,7 +35,16 @@
     "description": "คำอธิบาย",
     "provider": "ผู้ให้บริการ",
     "apiKey": "คีย์ API",
-    "model": "โมเดล"
+    "model": "โมเดล",
+    "error": "ข้อผิดพลาด"
+  },
+  "actions": {
+    "back": "กลับ"
+  },
+  "errors": {
+    "notFound": "ไม่พบ",
+    "loadFailed": "ไม่สามารถโหลดข้อมูล",
+    "executionFailed": "การดำเนินการล้มเหลว"
   },
   "shortcuts": {
     "title": "แป้นพิมพ์ลัด",
@@ -69,7 +79,9 @@
     "discardChanges": "ยกเลิกการเปลี่ยนแปลง?",
     "unsavedChangesWarning": "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? การเปลี่ยนแปลงของคุณจะหายไป",
     "keepEditing": "แก้ไขต่อ",
-    "discardChangesButton": "ยกเลิกการเปลี่ยนแปลง"
+    "discardChangesButton": "ยกเลิกการเปลี่ยนแปลง",
+    "collapseSidebar": "ย่อแถบข้าง",
+    "expandSidebar": "ขยายแถบข้าง"
   },
   "tabs": {
     "prompt": "พรอมต์",
@@ -82,6 +94,9 @@
     "runs": "การรัน"
   },
   "rightPanel": {
+    "panelOptions": "ตัวเลือกแผง",
+    "openMenu": "เปิดเมนู",
+    "closePanel": "ปิดแผง",
     "addNote": "เพิ่มบันทึก",
     "writeNote": "เขียนบันทึก...",
     "addNoteButton": "เพิ่มบันทึก",
@@ -121,7 +136,9 @@
     "runPending": "รอดำเนินการ",
     "runInProgress": "กำลังดำเนินการ",
     "runCancelled": "ยกเลิก",
-    "duration": "ระยะเวลา"
+    "duration": "ระยะเวลา",
+    "totalTokens": "โทเค็นทั้งหมด",
+    "totalCost": "ค่าใช้จ่ายทั้งหมด"
   },
   "ai": {
     "disclaimer": "AI อาจผิดพลาดได้ กรุณาตรวจสอบเนื้อหาที่สร้าง",

@@ -26,18 +26,26 @@ Incito is a Tauri v2 desktop application for managing prompt templates. Security
 
 ## Current Security Status
 
-**Last Audit:** 2026-01-20
-**Overall Risk Level:** MEDIUM-HIGH
+**Last Audit:** 2026-01-30
+**Overall Risk Level:** HIGH
 
 ### Open Security Issues
 
 | ID | Severity | Title | Status | Source |
 |----|----------|-------|--------|--------|
+| SEC-PROMPT-001 | CRITICAL | Wildcard CORS Allows Cross-Origin Attacks | Open | Prompts API Audit |
 | SEC-001 | CRITICAL | CSP Disabled | Open | Desktop Audit |
+| SEC-PROMPT-002 | HIGH | Authentication Disabled by Default | Open | Prompts API Audit |
+| SEC-PROMPT-003 | HIGH | No Rate Limiting - DoS Risk | Open | Prompts API Audit |
+| SEC-PROMPT-004 | HIGH | Handlebars Template Injection | Open | Prompts API Audit |
 | SEC-002 | HIGH | Overly Permissive FS Permissions | Open | Desktop Audit |
 | SEC-003 | HIGH | Plaintext API Key Storage | Open | Desktop Audit, MCP Audit |
 | SEC-004 | HIGH | Missing Path Validation | Open | Desktop Audit |
 | MCP-001 | HIGH | Plaintext API Key Storage | Open | MCP Audit |
+| SEC-PROMPT-005 | MEDIUM | Error Messages Leak Implementation Details | Open | Prompts API Audit |
+| SEC-PROMPT-006 | MEDIUM | Timing Attack on Token Comparison | Open | Prompts API Audit |
+| SEC-PROMPT-007 | MEDIUM | No Request Body Size Limits | Open | Prompts API Audit |
+| SEC-PROMPT-008 | MEDIUM | Insufficient Prompt ID Validation | Open | Prompts API Audit |
 | MCP-002 | MEDIUM | Path Traversal Risk | Open | MCP Audit |
 | MCP-003 | MEDIUM | Handlebars Template Injection | Open | MCP Audit |
 | MCP-004 | MEDIUM | No MCP Authentication | Open | MCP Audit |
@@ -45,18 +53,26 @@ Incito is a Tauri v2 desktop application for managing prompt templates. Security
 | SEC-006 | MEDIUM | SQL Query Safety | Monitored | Desktop Audit |
 | SEC-007 | MEDIUM | AI Content Validation | Open | Desktop Audit |
 | SEC-008 | MEDIUM | URL Length Validation | Open | Desktop Audit |
+| SEC-PROMPT-009 | LOW | Console Logging May Expose Sensitive Data | Open | Prompts API Audit |
+| SEC-PROMPT-010 | LOW | Missing Security Headers | Open | Prompts API Audit |
 
 ## Recent Reports
 
 ### Audit Reports
 
-1. **[MCP Implementation Security Audit - 2026-01-20](./audit-reports/audit-mcp-implementation-2026-01-20.md)**
+1. **[Claude Code Server Prompts API Audit - 2026-01-30](./audit-reports/audit-claude-code-server-prompts-api-2026-01-30.md)** (NEW)
+   - Security audit of new prompts HTTP API endpoints
+   - 1 CRITICAL, 3 HIGH, 4 MEDIUM, 2 LOW findings
+   - Focus: CORS misconfiguration, authentication, rate limiting, template injection
+   - **Priority**: Fix wildcard CORS immediately, enable authentication by default
+
+2. **[MCP Implementation Security Audit - 2026-01-20](./audit-reports/audit-mcp-implementation-2026-01-20.md)**
    - Security audit of Model Context Protocol (MCP) server implementation
    - 1 HIGH, 4 MEDIUM, 3 LOW findings
    - Focus: API key storage, path traversal, template injection, authentication
    - **Priority**: Secure credential storage and MCP authentication
 
-2. **[Desktop App Security Audit - 2026-01-19](./audit-reports/audit-desktop-app-2026-01-19.md)**
+3. **[Desktop App Security Audit - 2026-01-19](./audit-reports/audit-desktop-app-2026-01-19.md)**
    - Full security audit of Tauri v2 desktop application
    - 1 CRITICAL, 3 HIGH, 4 MEDIUM findings
    - Immediate action required on CSP and file permissions

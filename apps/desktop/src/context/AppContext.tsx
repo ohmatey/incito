@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { AgentFile } from '@/types/agent'
 import type { RightPanelTab } from '@/components/PromptHeader'
-import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, getTranslationSettings, getFeatureFlags, saveFeatureFlags, type PromptDraft, type PanelWidths, type FeatureFlags } from '@/lib/store'
+import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getListPanelCollapsed, saveListPanelCollapsed, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, getTranslationSettings, getFeatureFlags, saveFeatureFlags, type PromptDraft, type PanelWidths, type FeatureFlags } from '@/lib/store'
 import { savePrompt, createVariant } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
@@ -61,6 +61,10 @@ interface AppContextValue {
   handlePromptListResize: (delta: number) => void
   handleRightPanelResize: (delta: number) => void
   handlePanelResizeEnd: () => void
+
+  // List panel collapse state
+  listPanelCollapsed: boolean
+  toggleListPanelCollapsed: () => void
 
   // Prompt operations
   handleCreatePrompt: () => Promise<PromptFile | null>
@@ -148,6 +152,9 @@ export function AppProvider({ children }: AppProviderProps) {
   // Panel widths state
   const [panelWidths, setPanelWidths] = useState<PanelWidths>({ promptList: 200, rightPanel: 300 })
 
+  // List panel collapsed state
+  const [listPanelCollapsed, setListPanelCollapsed] = useState(false)
+
   // Recent prompts state
   const [recentPromptIds, setRecentPromptIds] = useState<string[]>([])
 
@@ -234,6 +241,12 @@ export function AppProvider({ children }: AppProviderProps) {
       const panelWidthsResult = await getPanelWidths()
       if (panelWidthsResult.ok) {
         setPanelWidths(panelWidthsResult.data)
+      }
+
+      // Load list panel collapsed state
+      const collapsedResult = await getListPanelCollapsed()
+      if (collapsedResult.ok) {
+        setListPanelCollapsed(collapsedResult.data)
       }
 
       // Load in-progress drafts
@@ -671,6 +684,16 @@ export function AppProvider({ children }: AppProviderProps) {
     await savePanelWidths(panelWidths)
   }
 
+  // List panel collapse toggle
+  function toggleListPanelCollapsed() {
+    setListPanelCollapsed((prev) => {
+      const newCollapsed = !prev
+      // Fire and forget - don't block UI for persistence
+      saveListPanelCollapsed(newCollapsed)
+      return newCollapsed
+    })
+  }
+
   const value: AppContextValue = {
     // Folder state
     folderPath,
@@ -714,6 +737,10 @@ export function AppProvider({ children }: AppProviderProps) {
     handlePromptListResize,
     handleRightPanelResize,
     handlePanelResizeEnd,
+
+    // List panel collapse
+    listPanelCollapsed,
+    toggleListPanelCollapsed,
 
     // Prompt operations
     handleCreatePrompt,

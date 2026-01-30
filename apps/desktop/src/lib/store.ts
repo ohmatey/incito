@@ -23,6 +23,24 @@ export interface AISettings {
   claudeCodeExecutablePath: string | null
 }
 
+// Multi-provider configuration types
+export interface ProviderConfig {
+  id: string
+  alias: string                        // User-friendly name, e.g., "Claude Production"
+  provider: AIProvider
+  apiKey: string | null                // null for claude-code
+  model: string
+  claudeCodeExecutablePath?: string | null
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProviderConfigsSettings {
+  configs: ProviderConfig[]
+  defaultConfigId: string | null
+}
+
 // Available models per provider
 export const AI_MODELS: Record<AIProvider, { id: string; name: string }[]> = {
   openai: [
@@ -191,6 +209,38 @@ async function getDb(): Promise<Database> {
       CREATE INDEX IF NOT EXISTS idx_run_analytics_prompt_id ON run_analytics_daily(prompt_id)
     `)
 
+    // Add token columns to prompt_runs (migration for existing DBs)
+    // SQLite doesn't support IF NOT EXISTS for columns, so we use try/catch
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN input_tokens INTEGER`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN output_tokens INTEGER`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN total_tokens INTEGER`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN model_id TEXT`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN provider TEXT`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN estimated_cost_usd REAL`)
+    } catch { /* Column may already exist */ }
+
+    // Add token columns to run_analytics_daily (migration for existing DBs)
+    try {
+      await db.execute(`ALTER TABLE run_analytics_daily ADD COLUMN total_input_tokens INTEGER NOT NULL DEFAULT 0`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE run_analytics_daily ADD COLUMN total_output_tokens INTEGER NOT NULL DEFAULT 0`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE run_analytics_daily ADD COLUMN total_estimated_cost_usd REAL NOT NULL DEFAULT 0`)
+    } catch { /* Column may already exist */ }
+
     // Chat sessions table for agent conversations
     await db.execute(`
       CREATE TABLE IF NOT EXISTS chat_sessions (
@@ -266,6 +316,62 @@ async function getDb(): Promise<Database> {
     `)
     await db.execute(`
       CREATE INDEX IF NOT EXISTS idx_resource_chunks_resource_id ON resource_chunks(resource_id)
+    `)
+
+    // Graders table (stores both Assertion and LLM Judge types)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS graders (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        type TEXT NOT NULL CHECK (type IN ('assertion', 'llm_judge')),
+        config TEXT NOT NULL,
+        is_builtin INTEGER NOT NULL DEFAULT 0,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_graders_type ON graders(type)
+    `)
+
+    // Prompt-Grader associations (which graders to run for each prompt)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS prompt_graders (
+        id TEXT PRIMARY KEY,
+        prompt_id TEXT NOT NULL,
+        grader_id TEXT NOT NULL,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        UNIQUE(prompt_id, grader_id)
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_prompt_graders_prompt ON prompt_graders(prompt_id)
+    `)
+
+    // Grader results linked to runs
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS grader_results (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        grader_id TEXT NOT NULL,
+        score REAL NOT NULL,
+        passed INTEGER NOT NULL,
+        reason TEXT,
+        raw_score REAL,
+        execution_time_ms INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (run_id) REFERENCES prompt_runs(id) ON DELETE CASCADE,
+        FOREIGN KEY (grader_id) REFERENCES graders(id) ON DELETE CASCADE
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_grader_results_run ON grader_results(run_id)
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_grader_results_passed ON grader_results(passed)
     `)
   }
   return db
@@ -605,6 +711,309 @@ export async function hasAIConfigured(): Promise<Result<boolean>> {
   }
 }
 
+// ============================================================================
+// Multi-Provider Configuration Operations
+// ============================================================================
+
+const PROVIDER_CONFIGS_KEY = 'provider_configs'
+
+const DEFAULT_PROVIDER_CONFIGS: ProviderConfigsSettings = {
+  configs: [],
+  defaultConfigId: null,
+}
+
+// Migration: Convert single-provider settings to multi-provider format
+async function migrateToMultiProvider(): Promise<void> {
+  const database = await getDb()
+
+  // Check if migration already done
+  const existingResult = await database.select<{ value: string }[]>(
+    'SELECT value FROM settings WHERE key = ?',
+    [PROVIDER_CONFIGS_KEY]
+  )
+
+  if (existingResult.length > 0) {
+    // Already migrated
+    return
+  }
+
+  // Read old single-provider settings
+  const aiSettings = await getAISettings()
+  if (!aiSettings.ok || !aiSettings.data.provider) {
+    // No existing settings to migrate
+    return
+  }
+
+  const { provider, apiKey, model, claudeCodeExecutablePath } = aiSettings.data
+
+  // Create a single ProviderConfig from old settings
+  const now = new Date().toISOString()
+  const config: ProviderConfig = {
+    id: crypto.randomUUID(),
+    alias: getDefaultAliasForProvider(provider),
+    provider,
+    apiKey,
+    model: model || getDefaultModelForProvider(provider),
+    claudeCodeExecutablePath,
+    isDefault: true,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  const settings: ProviderConfigsSettings = {
+    configs: [config],
+    defaultConfigId: config.id,
+  }
+
+  // Save to new format
+  await database.execute(
+    'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+    [PROVIDER_CONFIGS_KEY, JSON.stringify(settings)]
+  )
+}
+
+function getDefaultAliasForProvider(provider: AIProvider): string {
+  switch (provider) {
+    case 'openai': return 'OpenAI'
+    case 'anthropic': return 'Anthropic'
+    case 'google': return 'Google AI'
+    case 'claude-code': return 'Claude Code'
+    default: return 'AI Provider'
+  }
+}
+
+function getDefaultModelForProvider(provider: AIProvider): string {
+  switch (provider) {
+    case 'openai': return 'gpt-5.2'
+    case 'anthropic': return 'claude-sonnet-4-5'
+    case 'google': return 'gemini-2.5-flash'
+    case 'claude-code': return 'sonnet'
+    default: return ''
+  }
+}
+
+export async function getProviderConfigs(): Promise<Result<ProviderConfigsSettings>> {
+  try {
+    // Run migration if needed
+    await migrateToMultiProvider()
+
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      [PROVIDER_CONFIGS_KEY]
+    )
+
+    if (result.length > 0) {
+      const parsed = JSON.parse(result[0].value) as ProviderConfigsSettings
+      return { ok: true, data: parsed }
+    }
+
+    return { ok: true, data: DEFAULT_PROVIDER_CONFIGS }
+  } catch (err) {
+    return { ok: false, error: `Failed to get provider configs: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getProviderConfig(id: string): Promise<Result<ProviderConfig | null>> {
+  try {
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const config = configsResult.data.configs.find(c => c.id === id)
+    return { ok: true, data: config || null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getDefaultProviderConfig(): Promise<Result<ProviderConfig | null>> {
+  try {
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const { configs, defaultConfigId } = configsResult.data
+
+    if (defaultConfigId) {
+      const config = configs.find(c => c.id === defaultConfigId)
+      if (config) return { ok: true, data: config }
+    }
+
+    // Fall back to first config if no default set
+    if (configs.length > 0) {
+      return { ok: true, data: configs[0] }
+    }
+
+    return { ok: true, data: null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get default provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function createProviderConfig(
+  config: Omit<ProviderConfig, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<Result<ProviderConfig>> {
+  try {
+    const database = await getDb()
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const now = new Date().toISOString()
+    const newConfig: ProviderConfig = {
+      ...config,
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    const updatedConfigs = [...configsResult.data.configs, newConfig]
+
+    // If this is the first config or marked as default, set it as default
+    let defaultConfigId = configsResult.data.defaultConfigId
+    if (config.isDefault || !defaultConfigId) {
+      defaultConfigId = newConfig.id
+      // Unset isDefault on other configs
+      updatedConfigs.forEach(c => {
+        if (c.id !== newConfig.id) {
+          c.isDefault = false
+        }
+      })
+    }
+
+    const newSettings: ProviderConfigsSettings = {
+      configs: updatedConfigs,
+      defaultConfigId,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [PROVIDER_CONFIGS_KEY, JSON.stringify(newSettings)]
+    )
+
+    return { ok: true, data: newConfig }
+  } catch (err) {
+    return { ok: false, error: `Failed to create provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function updateProviderConfig(
+  id: string,
+  updates: Partial<Omit<ProviderConfig, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const configIndex = configsResult.data.configs.findIndex(c => c.id === id)
+    if (configIndex === -1) {
+      return { ok: false, error: 'Provider config not found' }
+    }
+
+    const updatedConfig = {
+      ...configsResult.data.configs[configIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const updatedConfigs = [...configsResult.data.configs]
+    updatedConfigs[configIndex] = updatedConfig
+
+    // Handle isDefault changes
+    let defaultConfigId = configsResult.data.defaultConfigId
+    if (updates.isDefault) {
+      defaultConfigId = id
+      // Unset isDefault on other configs
+      updatedConfigs.forEach(c => {
+        if (c.id !== id) {
+          c.isDefault = false
+        }
+      })
+    }
+
+    const newSettings: ProviderConfigsSettings = {
+      configs: updatedConfigs,
+      defaultConfigId,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [PROVIDER_CONFIGS_KEY, JSON.stringify(newSettings)]
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deleteProviderConfig(id: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const updatedConfigs = configsResult.data.configs.filter(c => c.id !== id)
+
+    // If we deleted the default, set a new default
+    let defaultConfigId = configsResult.data.defaultConfigId
+    if (defaultConfigId === id) {
+      defaultConfigId = updatedConfigs.length > 0 ? updatedConfigs[0].id : null
+      if (defaultConfigId) {
+        const newDefault = updatedConfigs.find(c => c.id === defaultConfigId)
+        if (newDefault) newDefault.isDefault = true
+      }
+    }
+
+    const newSettings: ProviderConfigsSettings = {
+      configs: updatedConfigs,
+      defaultConfigId,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [PROVIDER_CONFIGS_KEY, JSON.stringify(newSettings)]
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function setDefaultProviderConfig(id: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const configsResult = await getProviderConfigs()
+    if (!configsResult.ok) return configsResult
+
+    const config = configsResult.data.configs.find(c => c.id === id)
+    if (!config) {
+      return { ok: false, error: 'Provider config not found' }
+    }
+
+    // Update isDefault flags
+    const updatedConfigs = configsResult.data.configs.map(c => ({
+      ...c,
+      isDefault: c.id === id,
+      updatedAt: c.id === id ? new Date().toISOString() : c.updatedAt,
+    }))
+
+    const newSettings: ProviderConfigsSettings = {
+      configs: updatedConfigs,
+      defaultConfigId: id,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [PROVIDER_CONFIGS_KEY, JSON.stringify(newSettings)]
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to set default provider config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
 // Prompt Version operations
 
 export interface PromptVersionRow {
@@ -833,6 +1242,34 @@ export interface PanelWidths {
 const DEFAULT_PANEL_WIDTHS: PanelWidths = {
   promptList: 200,
   rightPanel: 300,
+}
+
+// List panel collapsed state
+
+export async function getListPanelCollapsed(): Promise<Result<boolean>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['list_panel_collapsed']
+    )
+    return { ok: true, data: result.length > 0 ? result[0].value === 'true' : false }
+  } catch (err) {
+    return { ok: false, error: `Failed to get list panel collapsed: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveListPanelCollapsed(collapsed: boolean): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['list_panel_collapsed', collapsed ? 'true' : 'false']
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save list panel collapsed: ${err instanceof Error ? err.message : String(err)}` }
+  }
 }
 
 export async function getPanelWidths(): Promise<Result<PanelWidths>> {
@@ -1160,6 +1597,13 @@ interface PromptRunRow {
   execution_time_ms: number | null
   run_file_path: string | null
   created_at: string
+  // Token tracking columns
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  model_id: string | null
+  provider: string | null
+  estimated_cost_usd: number | null
 }
 
 function rowToPromptRun(row: PromptRunRow): PromptRun {
@@ -1176,6 +1620,13 @@ function rowToPromptRun(row: PromptRunRow): PromptRun {
     executionTimeMs: row.execution_time_ms ?? undefined,
     runFilePath: row.run_file_path ?? undefined,
     createdAt: row.created_at,
+    // Token tracking fields
+    inputTokens: row.input_tokens ?? undefined,
+    outputTokens: row.output_tokens ?? undefined,
+    totalTokens: row.total_tokens ?? undefined,
+    modelId: row.model_id ?? undefined,
+    provider: row.provider ?? undefined,
+    estimatedCostUsd: row.estimated_cost_usd ?? undefined,
   }
 }
 
@@ -1253,6 +1704,68 @@ export async function updatePromptRunStatus(
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to update run status: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export interface TokenUsageInfo {
+  inputTokens: number
+  outputTokens: number
+  modelId: string
+  provider: string
+}
+
+export async function updatePromptRunTokens(
+  runId: string,
+  tokens: TokenUsageInfo,
+  estimatedCostUsd?: number
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const totalTokens = tokens.inputTokens + tokens.outputTokens
+
+    await database.execute(
+      `UPDATE prompt_runs
+       SET input_tokens = ?, output_tokens = ?, total_tokens = ?, model_id = ?, provider = ?, estimated_cost_usd = ?
+       WHERE id = ?`,
+      [tokens.inputTokens, tokens.outputTokens, totalTokens, tokens.modelId, tokens.provider, estimatedCostUsd ?? null, runId]
+    )
+
+    // Update daily analytics with token info
+    await updateRunAnalyticsTokens(runId, tokens.inputTokens, tokens.outputTokens, estimatedCostUsd)
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update run tokens: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+async function updateRunAnalyticsTokens(
+  runId: string,
+  inputTokens: number,
+  outputTokens: number,
+  estimatedCostUsd?: number
+): Promise<void> {
+  try {
+    const database = await getDb()
+    const runResult = await database.select<PromptRunRow[]>(
+      'SELECT * FROM prompt_runs WHERE id = ?',
+      [runId]
+    )
+    if (runResult.length === 0) return
+
+    const run = runResult[0]
+    const date = run.started_at.split('T')[0] // YYYY-MM-DD
+
+    await database.execute(
+      `UPDATE run_analytics_daily SET
+       total_input_tokens = total_input_tokens + ?,
+       total_output_tokens = total_output_tokens + ?,
+       total_estimated_cost_usd = total_estimated_cost_usd + ?
+       WHERE prompt_id = ? AND date = ?`,
+      [inputTokens, outputTokens, estimatedCostUsd ?? 0, run.prompt_id, date]
+    )
+  } catch (err) {
+    console.error('Failed to update run analytics tokens:', err)
   }
 }
 
@@ -1680,6 +2193,7 @@ export interface FeatureFlags {
   translationsEnabled: boolean // AI-powered prompt translation
   mcpServerEnabled: boolean   // MCP integration configuration UI
   runsEnabled: boolean        // Run mode and run history
+  gradersEnabled: boolean     // Graders for scoring prompt outputs (requires runsEnabled)
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -1688,6 +2202,7 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   translationsEnabled: false,
   mcpServerEnabled: false,
   runsEnabled: false,
+  gradersEnabled: false,
 }
 
 export async function getFeatureFlags(): Promise<Result<FeatureFlags>> {
@@ -1707,6 +2222,7 @@ export async function getFeatureFlags(): Promise<Result<FeatureFlags>> {
           translationsEnabled: parsed.translationsEnabled ?? DEFAULT_FEATURE_FLAGS.translationsEnabled,
           mcpServerEnabled: parsed.mcpServerEnabled ?? DEFAULT_FEATURE_FLAGS.mcpServerEnabled,
           runsEnabled: parsed.runsEnabled ?? DEFAULT_FEATURE_FLAGS.runsEnabled,
+          gradersEnabled: parsed.gradersEnabled ?? DEFAULT_FEATURE_FLAGS.gradersEnabled,
         },
       }
     }
@@ -1793,5 +2309,461 @@ export async function saveAnalyticsSettings(settings: Partial<AnalyticsSettings>
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to save analytics settings: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Grader Operations
+// ============================================================================
+
+import type {
+  Grader,
+  AssertionGrader,
+  LLMJudgeGrader,
+  GraderResult,
+  GraderResultWithGrader,
+  PromptGrader,
+  GraderType,
+} from '../types/grader'
+
+interface GraderRow {
+  id: string
+  name: string
+  description: string | null
+  type: string
+  config: string
+  is_builtin: number
+  enabled: number
+  created_at: string
+  updated_at: string
+}
+
+function rowToGrader(row: GraderRow): Grader {
+  const config = JSON.parse(row.config)
+
+  if (row.type === 'assertion') {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description ?? undefined,
+      type: 'assertion',
+      logic: config,
+      isBuiltin: row.is_builtin === 1,
+      enabled: row.enabled === 1,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    } as AssertionGrader
+  } else {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description ?? undefined,
+      type: 'llm_judge',
+      config,
+      isBuiltin: row.is_builtin === 1,
+      enabled: row.enabled === 1,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    } as LLMJudgeGrader
+  }
+}
+
+export async function getAllGraders(): Promise<Result<Grader[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<GraderRow[]>(
+      'SELECT * FROM graders ORDER BY is_builtin DESC, name ASC'
+    )
+    return { ok: true, data: result.map(rowToGrader) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get graders: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getGrader(id: string): Promise<Result<Grader | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<GraderRow[]>(
+      'SELECT * FROM graders WHERE id = ?',
+      [id]
+    )
+    return { ok: true, data: result.length > 0 ? rowToGrader(result[0]) : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get grader: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function createGrader(
+  grader: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'> | Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<Result<Grader>> {
+  try {
+    const database = await getDb()
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const config = grader.type === 'assertion'
+      ? JSON.stringify((grader as Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>).logic)
+      : JSON.stringify((grader as Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>).config)
+
+    await database.execute(
+      `INSERT INTO graders (id, name, description, type, config, is_builtin, enabled, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        grader.name,
+        grader.description ?? null,
+        grader.type,
+        config,
+        grader.isBuiltin ? 1 : 0,
+        grader.enabled ? 1 : 0,
+        now,
+        now,
+      ]
+    )
+
+    const createdGrader: Grader = grader.type === 'assertion'
+      ? {
+          ...(grader as Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>),
+          id,
+          createdAt: now,
+          updatedAt: now,
+        } as AssertionGrader
+      : {
+          ...(grader as Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>),
+          id,
+          createdAt: now,
+          updatedAt: now,
+        } as LLMJudgeGrader
+
+    return { ok: true, data: createdGrader }
+  } catch (err) {
+    return { ok: false, error: `Failed to create grader: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function updateGrader(
+  id: string,
+  updates: Partial<Omit<Grader, 'id' | 'type' | 'createdAt' | 'updatedAt'>>
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    // Get existing grader to merge
+    const existingResult = await getGrader(id)
+    if (!existingResult.ok) return existingResult
+    if (!existingResult.data) return { ok: false, error: 'Grader not found' }
+
+    const existing = existingResult.data
+
+    // Build config based on type
+    let config: string | undefined
+    if (existing.type === 'assertion' && 'logic' in updates) {
+      config = JSON.stringify(updates.logic)
+    } else if (existing.type === 'llm_judge' && 'config' in updates) {
+      config = JSON.stringify(updates.config)
+    }
+
+    // Build update query dynamically
+    const setClauses: string[] = ['updated_at = ?']
+    const params: (string | number | null)[] = [now]
+
+    if (updates.name !== undefined) {
+      setClauses.push('name = ?')
+      params.push(updates.name)
+    }
+    if (updates.description !== undefined) {
+      setClauses.push('description = ?')
+      params.push(updates.description ?? null)
+    }
+    if (config !== undefined) {
+      setClauses.push('config = ?')
+      params.push(config)
+    }
+    if (updates.enabled !== undefined) {
+      setClauses.push('enabled = ?')
+      params.push(updates.enabled ? 1 : 0)
+    }
+
+    params.push(id)
+
+    await database.execute(
+      `UPDATE graders SET ${setClauses.join(', ')} WHERE id = ?`,
+      params
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update grader: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deleteGrader(id: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    // Delete associated prompt_graders entries first
+    await database.execute('DELETE FROM prompt_graders WHERE grader_id = ?', [id])
+    // Delete grader results
+    await database.execute('DELETE FROM grader_results WHERE grader_id = ?', [id])
+    // Delete grader
+    await database.execute('DELETE FROM graders WHERE id = ?', [id])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete grader: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Prompt-Grader association operations
+
+export async function getPromptGraders(promptId: string): Promise<Result<Grader[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<GraderRow[]>(
+      `SELECT g.* FROM graders g
+       JOIN prompt_graders pg ON g.id = pg.grader_id
+       WHERE pg.prompt_id = ? AND pg.enabled = 1
+       ORDER BY g.is_builtin DESC, g.name ASC`,
+      [promptId]
+    )
+    return { ok: true, data: result.map(rowToGrader) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt graders: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function setPromptGraders(promptId: string, graderIds: string[]): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    // Clear existing associations
+    await database.execute('DELETE FROM prompt_graders WHERE prompt_id = ?', [promptId])
+
+    // Add new associations
+    for (const graderId of graderIds) {
+      const id = crypto.randomUUID()
+      await database.execute(
+        `INSERT INTO prompt_graders (id, prompt_id, grader_id, enabled, created_at)
+         VALUES (?, ?, ?, 1, ?)`,
+        [id, promptId, graderId, now]
+      )
+    }
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to set prompt graders: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Grader results operations
+
+interface GraderResultRow {
+  id: string
+  run_id: string
+  grader_id: string
+  score: number
+  passed: number
+  reason: string | null
+  raw_score: number | null
+  execution_time_ms: number
+  created_at: string
+}
+
+function rowToGraderResult(row: GraderResultRow): GraderResult {
+  return {
+    id: row.id,
+    runId: row.run_id,
+    graderId: row.grader_id,
+    score: row.score,
+    passed: row.passed === 1,
+    reason: row.reason ?? undefined,
+    rawScore: row.raw_score ?? undefined,
+    executionTimeMs: row.execution_time_ms,
+    createdAt: row.created_at,
+  }
+}
+
+export async function saveGraderResults(
+  results: Omit<GraderResult, 'id' | 'createdAt'>[]
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    for (const result of results) {
+      const id = crypto.randomUUID()
+      await database.execute(
+        `INSERT INTO grader_results (id, run_id, grader_id, score, passed, reason, raw_score, execution_time_ms, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          result.runId,
+          result.graderId,
+          result.score,
+          result.passed ? 1 : 0,
+          result.reason ?? null,
+          result.rawScore ?? null,
+          result.executionTimeMs,
+          now,
+        ]
+      )
+    }
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save grader results: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getRunGraderResults(runId: string): Promise<Result<GraderResultWithGrader[]>> {
+  try {
+    const database = await getDb()
+
+    // Get grader results
+    const resultRows = await database.select<GraderResultRow[]>(
+      'SELECT * FROM grader_results WHERE run_id = ?',
+      [runId]
+    )
+
+    // Get associated graders
+    const graderIds = [...new Set(resultRows.map(r => r.grader_id))]
+    const graders: Map<string, Grader> = new Map()
+
+    for (const graderId of graderIds) {
+      const graderResult = await getGrader(graderId)
+      if (graderResult.ok && graderResult.data) {
+        graders.set(graderId, graderResult.data)
+      }
+    }
+
+    // Combine results with graders
+    const resultsWithGraders: GraderResultWithGrader[] = resultRows
+      .filter(row => graders.has(row.grader_id))
+      .map(row => ({
+        ...rowToGraderResult(row),
+        grader: graders.get(row.grader_id)!,
+      }))
+
+    return { ok: true, data: resultsWithGraders }
+  } catch (err) {
+    return { ok: false, error: `Failed to get run grader results: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Seed built-in graders
+
+export async function seedBuiltinGraders(): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+
+    // Check if we already have built-in graders
+    const existing = await database.select<{ count: number }[]>(
+      'SELECT COUNT(*) as count FROM graders WHERE is_builtin = 1'
+    )
+    if (existing[0]?.count > 0) {
+      return { ok: true, data: undefined }
+    }
+
+    // Built-in Assertion Graders
+    const assertionGraders: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>[] = [
+      {
+        name: 'Max Length (500)',
+        description: 'Ensure output is at most 500 characters',
+        type: 'assertion',
+        logic: { operator: 'max_length', value: 500 },
+        isBuiltin: true,
+        enabled: true,
+      },
+      {
+        name: 'Min Length (50)',
+        description: 'Ensure output is at least 50 characters',
+        type: 'assertion',
+        logic: { operator: 'min_length', value: 50 },
+        isBuiltin: true,
+        enabled: true,
+      },
+      {
+        name: 'Valid JSON',
+        description: 'Ensure output is valid JSON',
+        type: 'assertion',
+        logic: { operator: 'json_valid', value: '' },
+        isBuiltin: true,
+        enabled: true,
+      },
+    ]
+
+    // Built-in LLM Judge Graders
+    const llmJudgeGraders: Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>[] = [
+      {
+        name: 'Tone Consistency',
+        description: 'Check if the output maintains a consistent and appropriate tone',
+        type: 'llm_judge',
+        config: {
+          providerId: null, // Uses default provider
+          promptTemplate: `Evaluate the tone of the following text on a scale of 1-5:
+1 = Inconsistent or inappropriate tone
+5 = Perfectly consistent and appropriate tone
+
+Text to evaluate:
+{{output}}
+
+Rate the tone consistency and explain your reasoning.`,
+          outputSchema: 'score_1_to_5',
+          systemPrompt: 'You are a tone and style evaluator. Assess whether the text maintains an appropriate and consistent tone throughout.',
+        },
+        isBuiltin: true,
+        enabled: true,
+      },
+      {
+        name: 'Task Completion',
+        description: 'Verify if the AI completed the requested task',
+        type: 'llm_judge',
+        config: {
+          providerId: null, // Uses default provider
+          promptTemplate: `Given the original prompt and the AI's response, determine if the task was completed satisfactorily.
+
+Original prompt:
+{{input}}
+
+AI response:
+{{output}}
+
+Did the AI complete the task? Answer with PASS or FAIL and explain why.`,
+          outputSchema: 'pass_fail_reason',
+          systemPrompt: 'You are a task completion evaluator. Determine if the AI response adequately addresses what was asked in the original prompt.',
+        },
+        isBuiltin: true,
+        enabled: true,
+      },
+      {
+        name: 'Empathy Score',
+        description: 'Assess the empathy and emotional intelligence in the response',
+        type: 'llm_judge',
+        config: {
+          providerId: null, // Uses default provider
+          promptTemplate: `Rate the empathy and emotional intelligence of the following response on a scale of 1-5:
+1 = Cold, dismissive, or inappropriate
+5 = Highly empathetic and emotionally intelligent
+
+Response to evaluate:
+{{output}}
+
+Rate the empathy level and explain your reasoning.`,
+          outputSchema: 'score_1_to_5',
+          systemPrompt: 'You are an empathy evaluator. Assess how well the response demonstrates understanding, compassion, and emotional intelligence.',
+        },
+        isBuiltin: true,
+        enabled: true,
+      },
+    ]
+
+    // Create all built-in graders
+    for (const grader of [...assertionGraders, ...llmJudgeGraders]) {
+      await createGrader(grader)
+    }
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to seed built-in graders: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

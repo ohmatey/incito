@@ -13,13 +13,18 @@ import type {
   DisplayFieldTool,
   CompleteFieldTool,
   AskFollowUpTool,
+  ProviderRunResult,
 } from '@/types/run.ts'
+import type { Grader, GraderResult, GraderResultWithGrader } from '@/types/grader'
+import { isAssertionGrader } from '@/types/grader'
 import { getRunModeTools, parseToolCallArgs } from '@/lib/run-mode/tools'
 import {
   buildRunModeSystemPrompt,
   buildProgressContext,
 } from '@/lib/run-mode/system-prompt'
 import { streamChat, type StreamChatMessage } from '@/lib/mastra-client'
+import { executeAssertionGrader } from '@/lib/grader-executor'
+import { getPromptGraders, getGrader, saveGraderResults } from '@/lib/store'
 import { toast } from 'sonner'
 
 interface RunModeContextValue {
@@ -33,12 +38,27 @@ interface RunModeContextValue {
   currentDisplayField: DisplayFieldTool | null
   isFinished: boolean
 
+  // Multi-provider state
+  selectedProviderIds: string[]
+  providerResults: Record<string, ProviderRunResult>
+
+  // Grader state
+  selectedGraderIds: string[]
+  availableGraders: Grader[]
+  graderResults: GraderResultWithGrader[]
+  isRunningGraders: boolean
+
   // Actions
   startRunMode: (prompt: PromptFile, customInstructions?: string) => void
   exitRunMode: () => void
   sendMessage: (content: string) => Promise<void>
   submitFieldValue: (key: string, value: unknown) => Promise<void>
   stopGeneration: () => void
+  setSelectedProviderIds: (ids: string[]) => void
+  clearProviderResults: () => void
+  updateProviderResult: (providerId: string, update: Partial<ProviderRunResult>) => void
+  setSelectedGraderIds: (ids: string[]) => void
+  runGraders: (input: string, output: string, runId?: string) => Promise<GraderResultWithGrader[]>
 }
 
 const RunModeContext = createContext<RunModeContextValue | null>(null)
@@ -66,6 +86,16 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
   const [isFinished, setIsFinished] = useState(false)
   const [customInstructions, setCustomInstructions] = useState<string | undefined>()
   const [shouldStartConversation, setShouldStartConversation] = useState(false)
+
+  // Multi-provider state
+  const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([])
+  const [providerResults, setProviderResults] = useState<Record<string, ProviderRunResult>>({})
+
+  // Grader state
+  const [selectedGraderIds, setSelectedGraderIds] = useState<string[]>([])
+  const [availableGraders, setAvailableGraders] = useState<Grader[]>([])
+  const [graderResults, setGraderResults] = useState<GraderResultWithGrader[]>([])
+  const [isRunningGraders, setIsRunningGraders] = useState(false)
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -207,6 +237,148 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     }
   }, [shouldStartConversation, isActive, prompt, messages.length, callAI])
 
+  // Load available graders for the prompt when it changes
+  useEffect(() => {
+    async function loadGraders() {
+      if (!prompt) {
+        setAvailableGraders([])
+        setSelectedGraderIds([])
+        return
+      }
+
+      const result = await getPromptGraders(prompt.id)
+      if (result.ok) {
+        setAvailableGraders(result.data)
+        // Auto-select all enabled graders by default
+        setSelectedGraderIds(result.data.filter(g => g.enabled).map(g => g.id))
+      }
+    }
+
+    loadGraders()
+  }, [prompt?.id])
+
+  // Run graders on the output
+  const runGraders = useCallback(
+    async (input: string, output: string, runId?: string): Promise<GraderResultWithGrader[]> => {
+      if (selectedGraderIds.length === 0) {
+        return []
+      }
+
+      setIsRunningGraders(true)
+
+      try {
+        // Fetch all selected graders in parallel (async-parallel rule)
+        const graderResults = await Promise.all(
+          selectedGraderIds.map(id => getGrader(id))
+        )
+        const graders = graderResults
+          .filter((r): r is { ok: true; data: Grader } => r.ok && r.data !== null)
+          .map(r => r.data)
+
+        // Execute graders: assertions in parallel (instant), LLM judges sequentially (rate limits)
+        const assertionGraders = graders.filter(isAssertionGrader)
+        const llmJudgeGraders = graders.filter(g => !isAssertionGrader(g))
+
+        // Helper to build result object
+        const buildResult = (
+          grader: Grader,
+          result: { score: number; passed: boolean; reason?: string; rawScore?: number; executionTimeMs: number }
+        ): GraderResultWithGrader => ({
+          id: crypto.randomUUID(),
+          runId: runId || '',
+          graderId: grader.id,
+          score: result.score,
+          passed: result.passed,
+          reason: result.reason,
+          rawScore: result.rawScore,
+          executionTimeMs: result.executionTimeMs,
+          createdAt: new Date().toISOString(),
+          grader,
+        })
+
+        const buildErrorResult = (grader: Grader, error: unknown): GraderResultWithGrader => ({
+          id: crypto.randomUUID(),
+          runId: runId || '',
+          graderId: grader.id,
+          score: 0,
+          passed: false,
+          reason: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          executionTimeMs: 0,
+          createdAt: new Date().toISOString(),
+          grader,
+        })
+
+        // Execute all assertion graders in parallel (they're instant, no rate limits)
+        const assertionResultsPromise = Promise.all(
+          assertionGraders.map(grader => {
+            try {
+              const result = executeAssertionGrader(grader, output)
+              return buildResult(grader, result)
+            } catch (error) {
+              return buildErrorResult(grader, error)
+            }
+          })
+        )
+
+        // Execute LLM judges sequentially to avoid rate limits
+        const llmJudgeResults: GraderResultWithGrader[] = []
+        for (const grader of llmJudgeGraders) {
+          try {
+            const response = await fetch('http://localhost:3457/graders/run-llm-judge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ grader, input, output }),
+            })
+
+            const result = response.ok
+              ? await response.json()
+              : {
+                  score: 0,
+                  passed: false,
+                  reason: (await response.json()).error || 'LLM judge execution failed',
+                  executionTimeMs: 0,
+                }
+
+            llmJudgeResults.push(buildResult(grader, result))
+          } catch (error) {
+            llmJudgeResults.push(buildErrorResult(grader, error))
+          }
+        }
+
+        // Wait for assertion results (they should be done by now)
+        const assertionResults = await assertionResultsPromise
+
+        // Combine results
+        const results = [...assertionResults, ...llmJudgeResults]
+
+        // Save results to database if we have a runId
+        if (runId && results.length > 0) {
+          await saveGraderResults(
+            results.map(r => ({
+              runId: r.runId,
+              graderId: r.graderId,
+              score: r.score,
+              passed: r.passed,
+              reason: r.reason,
+              rawScore: r.rawScore,
+              executionTimeMs: r.executionTimeMs,
+            }))
+          )
+        }
+
+        setGraderResults(results)
+        return results
+      } catch (error) {
+        console.error('Error running graders:', error)
+        toast.error('Failed to run some graders')
+        return []
+      } finally {
+        setIsRunningGraders(false)
+      }
+    },
+    [selectedGraderIds]
+  )
+
   const startRunMode = useCallback(
     (newPrompt: PromptFile, instructions?: string) => {
       setPrompt(newPrompt)
@@ -216,6 +388,8 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
       setCurrentDisplayField(null)
       setIsFinished(false)
       setCustomInstructions(instructions)
+      setProviderResults({})
+      setGraderResults([])
       setIsActive(true)
       setShouldStartConversation(true)
     },
@@ -233,6 +407,10 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     setIsFinished(false)
     setCustomInstructions(undefined)
     setShouldStartConversation(false)
+    setSelectedProviderIds([])
+    setProviderResults({})
+    setSelectedGraderIds([])
+    setGraderResults([])
   }, [])
 
   const sendMessage = useCallback(
@@ -279,6 +457,23 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     setIsLoading(false)
   }, [])
 
+  const clearProviderResults = useCallback(() => {
+    setProviderResults({})
+  }, [])
+
+  const updateProviderResult = useCallback(
+    (providerId: string, update: Partial<ProviderRunResult>) => {
+      setProviderResults((prev) => ({
+        ...prev,
+        [providerId]: {
+          ...prev[providerId],
+          ...update,
+        } as ProviderRunResult,
+      }))
+    },
+    []
+  )
+
   const value: RunModeContextValue = {
     isActive,
     prompt,
@@ -288,11 +483,22 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     isLoading,
     currentDisplayField,
     isFinished,
+    selectedProviderIds,
+    providerResults,
+    selectedGraderIds,
+    availableGraders,
+    graderResults,
+    isRunningGraders,
     startRunMode,
     exitRunMode,
     sendMessage,
     submitFieldValue,
     stopGeneration,
+    setSelectedProviderIds,
+    clearProviderResults,
+    updateProviderResult,
+    setSelectedGraderIds,
+    runGraders,
   }
 
   return (

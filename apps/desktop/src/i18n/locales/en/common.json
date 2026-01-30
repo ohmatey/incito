@@ -5,6 +5,7 @@
     "agents": "Agents",
     "resources": "Resources",
     "runs": "Runs",
+    "graders": "Graders",
     "tags": "Tags",
     "settings": "Settings",
     "keyboardShortcuts": "Keyboard Shortcuts",
@@ -34,7 +35,16 @@
     "description": "Description",
     "provider": "Provider",
     "apiKey": "API Key",
-    "model": "Model"
+    "model": "Model",
+    "error": "Error"
+  },
+  "actions": {
+    "back": "Back"
+  },
+  "errors": {
+    "notFound": "Not found",
+    "loadFailed": "Failed to load data",
+    "executionFailed": "Execution failed"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
@@ -69,7 +79,9 @@
     "discardChanges": "Discard changes?",
     "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to cancel? Your changes will be lost.",
     "keepEditing": "Keep editing",
-    "discardChangesButton": "Discard changes"
+    "discardChangesButton": "Discard changes",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "tabs": {
     "prompt": "Prompt",
@@ -82,6 +94,9 @@
     "runs": "Runs"
   },
   "rightPanel": {
+    "panelOptions": "Panel options",
+    "openMenu": "Open menu",
+    "closePanel": "Close panel",
     "addNote": "Add note",
     "writeNote": "Write a note...",
     "addNoteButton": "Add Note",
@@ -121,7 +136,9 @@
     "runPending": "Pending",
     "runInProgress": "In Progress",
     "runCancelled": "Cancelled",
-    "duration": "Duration"
+    "duration": "Duration",
+    "totalTokens": "Total Tokens",
+    "totalCost": "Total Cost"
   },
   "ai": {
     "disclaimer": "AI can make mistakes. Please review generated content.",

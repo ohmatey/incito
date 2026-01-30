@@ -1,6 +1,7 @@
 import type { ChatMessage } from '@/types/agent'
 import { cn } from '@/lib/utils'
 import { User, Bot } from 'lucide-react'
+import { AttachmentGrid } from './AttachmentGrid'
 
 interface ChatMessageBubbleProps {
   message: ChatMessage
@@ -8,6 +9,7 @@ interface ChatMessageBubbleProps {
 
 export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user'
+  const hasAttachments = message.attachments && message.attachments.length > 0
 
   return (
     <div
@@ -41,7 +43,17 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
             : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
         )}
       >
-        <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+        {message.content && (
+          <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+        )}
+        {hasAttachments && (
+          <div className={cn('mt-2', !message.content && '-mt-0')}>
+            <AttachmentGrid
+              attachments={message.attachments!}
+              size="sm"
+            />
+          </div>
+        )}
         {message.timestamp && (
           <div
             className={cn(

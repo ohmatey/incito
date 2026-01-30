@@ -32,12 +32,16 @@ import {
   Globe,
   Save,
   X,
+  PanelLeft,
+  PanelLeftClose,
 } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAppContext } from '@/context/AppContext'
 import { LANGUAGES } from '@/i18n/types'
 import { getTranslationSettings } from '@/lib/store'
 import { TagSelector } from './TagSelector'
 import { TagBadge } from './TagBadge'
+import { ProviderSelector } from './ui/ProviderSelector'
 
 const ICON_OPTIONS: { value: AgentIcon; icon: React.ComponentType<{ className?: string }>; label: string }[] = [
   { value: 'bot', icon: Bot, label: 'Bot' },
@@ -68,12 +72,14 @@ interface AgentEditorProps {
 export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: AgentEditorProps) {
   const { t } = useTranslation(['agents', 'common', 'settings', 'tags'])
   const { language: appLanguage } = useLanguage()
+  const { listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
 
   const [name, setName] = useState(agent.name)
   const [description, setDescription] = useState(agent.description)
   const [systemPrompt, setSystemPrompt] = useState(agent.systemPrompt)
   const [icon, setIcon] = useState<AgentIcon>(agent.icon)
   const [language, setLanguage] = useState(agent.settings.language || appLanguage)
+  const [providerId, setProviderId] = useState<string | null>(agent.settings.providerId ?? null)
   const [localTags, setLocalTags] = useState<string[]>(agent.tags || [])
   const [isSaving, setIsSaving] = useState(false)
   const [translationEnabled, setTranslationEnabled] = useState(false)
@@ -96,6 +102,7 @@ export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: Agen
     setSystemPrompt(agent.systemPrompt)
     setIcon(agent.icon)
     setLanguage(agent.settings.language || appLanguage)
+    setProviderId(agent.settings.providerId ?? null)
     setLocalTags(agent.tags || [])
   }, [agent.id, appLanguage])
 
@@ -134,6 +141,7 @@ export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: Agen
         settings: {
           ...agent.settings,
           language,
+          providerId,
         },
       }
       await onSave(updatedAgent)
@@ -149,6 +157,19 @@ export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: Agen
       {/* Header */}
       <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleListPanelCollapsed}
+            className="h-8 w-8"
+            aria-label={listPanelCollapsed ? t('agents:list.expand') : t('agents:list.collapse')}
+          >
+            {listPanelCollapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
             <SelectedIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
           </div>
@@ -270,6 +291,19 @@ export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: Agen
               </Select>
             </div>
           )}
+
+          {/* AI Provider */}
+          <div className="space-y-2">
+            <Label>{t('agents:editor.provider')}</Label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('agents:editor.providerHint')}
+            </p>
+            <ProviderSelector
+              value={providerId}
+              onChange={setProviderId}
+              showDefaultOption={true}
+            />
+          </div>
 
           {/* System Prompt */}
           <div className="space-y-2">

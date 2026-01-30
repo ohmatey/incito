@@ -1,0 +1,139 @@
+{
+  "title": "ตัวให้คะแนน",
+  "description": "ให้คะแนนและตรวจสอบผลลัพธ์ของพรอมต์ด้วยการทดสอบอัตโนมัติ",
+  "emptyState": {
+    "title": "ยังไม่ได้เลือกตัวให้คะแนน",
+    "description": "เลือกตัวให้คะแนนจากรายการเพื่อดูหรือแก้ไข"
+  },
+  "list": {
+    "title": "ตัวให้คะแนน",
+    "assertions": "การยืนยัน",
+    "llmJudges": "ผู้ตัดสิน AI",
+    "builtin": "ในตัว",
+    "custom": "กำหนดเอง",
+    "searchPlaceholder": "ค้นหาตัวให้คะแนน...",
+    "empty": "ไม่พบตัวให้คะแนน",
+    "createFirst": "สร้างตัวให้คะแนนแรกเพื่อเริ่มให้คะแนนผลลัพธ์ของพรอมต์"
+  },
+  "create": {
+    "title": "สร้างตัวให้คะแนน",
+    "button": "ตัวให้คะแนนใหม่",
+    "nameLabel": "ชื่อ",
+    "namePlaceholder": "เช่น ไม่กล่าวถึงคู่แข่ง",
+    "descriptionLabel": "คำอธิบาย",
+    "descriptionPlaceholder": "ตัวให้คะแนนนี้ตรวจสอบอะไร?",
+    "typeLabel": "ประเภท",
+    "types": {
+      "assertion": {
+        "label": "ตรวจสอบตรรกะ (Assertion)",
+        "description": "เร็ว ฟรี แน่นอน - เหมาะสำหรับตรวจสอบข้อเท็จจริง รูปแบบ คำต้องห้าม"
+      },
+      "llm_judge": {
+        "label": "รีวิว AI (LLM Judge)",
+        "description": "ช้า เสียค่าใช้จ่าย ไม่แน่นอน - เหมาะสำหรับน้ำเสียง ความเห็นอกเห็นใจ ตรวจจับข้อมูลเท็จ"
+      }
+    }
+  },
+  "detail": {
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "deleteConfirm": "ลบตัวให้คะแนนนี้?",
+    "deleteWarning": "นี่จะลบออกจากพรอมต์ทั้งหมดที่ใช้งานด้วย",
+    "enabled": "เปิดใช้งาน",
+    "disabled": "ปิดใช้งาน",
+    "builtinBadge": "ในตัว",
+    "customBadge": "กำหนดเอง"
+  },
+  "assertion": {
+    "title": "การกำหนดค่า Assertion",
+    "operatorLabel": "ตัวดำเนินการ",
+    "valueLabel": "ค่า",
+    "valuePlaceholder": "ป้อนค่า...",
+    "caseSensitive": "แยกแยะตัวพิมพ์",
+    "operators": {
+      "contains": "มี",
+      "not_contains": "ไม่มี",
+      "starts_with": "เริ่มต้นด้วย",
+      "ends_with": "ลงท้ายด้วย",
+      "equals": "เท่ากับ",
+      "max_length": "ความยาวสูงสุด",
+      "min_length": "ความยาวขั้นต่ำ",
+      "regex": "ตรงกับ regex",
+      "json_valid": "JSON ถูกต้อง"
+    }
+  },
+  "llmJudge": {
+    "title": "การกำหนดค่าผู้ตัดสิน AI",
+    "providerLabel": "ผู้ให้บริการ AI",
+    "providerHint": "เลือกผู้ให้บริการ AI ที่จะใช้ประเมิน เว้นไว้เป็นค่าเริ่มต้นเพื่อใช้ผู้ให้บริการหลักของคุณ",
+    "modelLabel": "โมเดล",
+    "models": {
+      "gpt-4o-mini": "GPT-4o Mini (เร็ว ถูก)",
+      "gpt-4o": "GPT-4o (แม่นยำ)",
+      "claude-haiku-4-5": "Claude Haiku 4.5 (เร็ว ถูก)",
+      "claude-sonnet-4-5": "Claude Sonnet 4.5 (แม่นยำ)"
+    },
+    "promptTemplateLabel": "พรอมต์ประเมิน",
+    "promptTemplatePlaceholder": "เขียนพรอมต์ที่จะประเมินผลลัพธ์...\n\nตัวแปรที่ใช้ได้: {{input}}, {{output}}",
+    "systemPromptLabel": "System Prompt (ตัวเลือก)",
+    "systemPromptPlaceholder": "บริบทเพิ่มเติมสำหรับผู้ตัดสิน...",
+    "outputSchemaLabel": "รูปแบบผลลัพธ์",
+    "schemas": {
+      "score_1_to_5": "คะแนน 1-5",
+      "score_1_to_10": "คะแนน 1-10",
+      "boolean": "ผ่าน/ไม่ผ่าน",
+      "pass_fail_reason": "ผ่าน/ไม่ผ่าน พร้อมเหตุผล"
+    }
+  },
+  "playground": {
+    "title": "ทดสอบตัวให้คะแนน",
+    "inputLabel": "อินพุต (พรอมต์ต้นฉบับ)",
+    "inputPlaceholder": "ป้อนพรอมต์ต้นฉบับ...",
+    "outputLabel": "เอาต์พุต (คำตอบ AI)",
+    "outputPlaceholder": "ป้อนคำตอบ AI เพื่อประเมิน...",
+    "runButton": "ทดสอบ",
+    "running": "กำลังทดสอบ...",
+    "result": {
+      "title": "ผลลัพธ์",
+      "score": "คะแนน",
+      "passed": "ผ่าน",
+      "failed": "ไม่ผ่าน",
+      "reason": "เหตุผล",
+      "executionTime": "เวลาดำเนินการ"
+    }
+  },
+  "selector": {
+    "title": "เลือกตัวให้คะแนน",
+    "description": "เลือกตัวให้คะแนนที่จะใช้กับผลลัพธ์ของพรอมต์นี้",
+    "selectAll": "เลือกทั้งหมด",
+    "clearAll": "ล้างทั้งหมด",
+    "selected": "เลือก {{count}} รายการ",
+    "noGraders": "ไม่มีตัวให้คะแนน สร้างใหม่ในส่วนตัวให้คะแนน"
+  },
+  "badge": {
+    "pass": "ผ่าน",
+    "fail": "ไม่ผ่าน",
+    "assertion": "Assertion",
+    "llmJudge": "ผู้ตัดสิน AI"
+  },
+  "results": {
+    "title": "ผลลัพธ์ตัวให้คะแนน",
+    "showFailuresOnly": "แสดงเฉพาะที่ไม่ผ่าน",
+    "allPassed": "ตัวให้คะแนนทั้งหมดผ่าน",
+    "someFailed": "{{count}} จาก {{total}} ไม่ผ่าน",
+    "noResults": "ไม่มีผลลัพธ์ตัวให้คะแนน"
+  },
+  "errors": {
+    "createFailed": "ไม่สามารถสร้างตัวให้คะแนน",
+    "updateFailed": "ไม่สามารถอัปเดตตัวให้คะแนน",
+    "deleteFailed": "ไม่สามารถลบตัวให้คะแนน",
+    "loadFailed": "ไม่สามารถโหลดตัวให้คะแนน",
+    "testFailed": "ไม่สามารถทดสอบตัวให้คะแนน",
+    "runFailed": "ไม่สามารถรันตัวให้คะแนน"
+  },
+  "success": {
+    "created": "สร้างตัวให้คะแนนแล้ว",
+    "updated": "อัปเดตตัวให้คะแนนแล้ว",
+    "deleted": "ลบตัวให้คะแนนแล้ว"
+  }
+}

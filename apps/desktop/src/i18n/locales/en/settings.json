@@ -29,7 +29,10 @@
     "mcpServer": "MCP Integration",
     "mcpServerDescription": "Connect prompts to AI assistants via Model Context Protocol.",
     "runs": "Run Mode",
-    "runsDescription": "Interactive prompt execution with AI-guided variable filling."
+    "runsDescription": "Interactive prompt execution with AI-guided variable filling.",
+    "graders": "Graders",
+    "gradersDescription": "Score and validate prompt outputs with automated tests. Requires Run Mode.",
+    "gradersRequiresRuns": "Requires Run Mode to be enabled"
   },
   "aiProvider": {
     "title": "AI Provider",
@@ -100,5 +103,32 @@
     "checkForUpdates": "Check for Updates",
     "checking": "Checking...",
     "upToDate": "You're running the latest version."
+  },
+  "providerSelector": {
+    "useDefault": "Use default provider"
+  },
+  "providers": {
+    "title": "AI Providers",
+    "description": "Configure one or more AI providers for prompt generation, run mode, and agents.",
+    "addProvider": "Add Provider",
+    "editProvider": "Edit Provider",
+    "addDescription": "Configure a new AI provider connection.",
+    "editDescription": "Update the provider configuration.",
+    "alias": "Display Name",
+    "aliasPlaceholder": "e.g., Claude Production",
+    "default": "Default",
+    "setDefault": "Set as default",
+    "setAsDefault": "Set as Default",
+    "defaultDescription": "Use this provider when no specific provider is selected.",
+    "noProviders": "No providers configured",
+    "noProvidersDescription": "Add an AI provider to enable prompt generation and AI features.",
+    "saveFailed": "Failed to save provider configuration",
+    "deleteFailed": "Failed to delete provider",
+    "deleteConfirm": "Delete this provider?",
+    "deleteConfirmDescription": "This will remove the provider configuration. This action cannot be undone.",
+    "providerAdded": "Provider added",
+    "providerUpdated": "Provider updated",
+    "providerDeleted": "Provider deleted",
+    "defaultChanged": "Default provider changed"
   }
 }

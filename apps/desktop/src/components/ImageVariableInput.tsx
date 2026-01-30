@@ -4,13 +4,14 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { readFile, writeFile, exists, mkdir } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { Button } from '@/components/ui/button'
-import { ImagePlus, X, AlertCircle } from 'lucide-react'
+import { ImagePlus, X, AlertCircle, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ImageAddonValue } from '@/types/prompt'
 
 interface ImageVariableInputProps {
   value: ImageAddonValue | null
   promptsFolder: string
+  disabled?: boolean
   onValueChange: (value: ImageAddonValue | null) => void
   onFocus?: () => void
   onBlur?: () => void
@@ -19,6 +20,7 @@ interface ImageVariableInputProps {
 export const ImageVariableInput = memo(function ImageVariableInput({
   value,
   promptsFolder,
+  disabled = false,
   onValueChange,
   onFocus,
   onBlur,
@@ -28,6 +30,8 @@ export const ImageVariableInput = memo(function ImageVariableInput({
   const [error, setError] = useState<string | null>(null)
 
   const handleSelectImage = useCallback(async () => {
+    if (disabled) return
+
     setError(null)
     setIsLoading(true)
 
@@ -102,12 +106,13 @@ export const ImageVariableInput = memo(function ImageVariableInput({
     } finally {
       setIsLoading(false)
     }
-  }, [promptsFolder, onValueChange, t])
+  }, [disabled, promptsFolder, onValueChange, t])
 
   const handleClearImage = useCallback(() => {
+    if (disabled) return
     onValueChange(null)
     setError(null)
-  }, [onValueChange])
+  }, [disabled, onValueChange])
 
   return (
     <div
@@ -116,31 +121,41 @@ export const ImageVariableInput = memo(function ImageVariableInput({
     >
       {value ? (
         <div className="relative">
-          <div className="group relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
+          <div className={cn(
+            'group relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-700',
+            disabled && 'opacity-60'
+          )}>
             <img
               src={value.previewUrl}
               alt={value.fileName}
               className="h-32 w-full object-contain bg-gray-50 dark:bg-gray-900"
             />
-            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handleSelectImage}
-                disabled={isLoading}
-              >
-                {t('variableConfig.imageField.replace')}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handleClearImage}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            {!disabled && (
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSelectImage}
+                  disabled={isLoading}
+                >
+                  {t('variableConfig.imageField.replace')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleClearImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            {disabled && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <Lock className="h-5 w-5 text-white/80" />
+              </div>
+            )}
           </div>
           <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">
             {value.fileName}
@@ -150,18 +165,31 @@ export const ImageVariableInput = memo(function ImageVariableInput({
         <button
           type="button"
           onClick={handleSelectImage}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
           className={cn(
             'flex h-24 w-full flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed transition-colors',
-            'cursor-pointer border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:hover:border-gray-500 dark:hover:bg-gray-800'
+            disabled
+              ? 'cursor-not-allowed border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50'
+              : 'cursor-pointer border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:hover:border-gray-500 dark:hover:bg-gray-800'
           )}
         >
-          <ImagePlus className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {isLoading
-              ? t('variableConfig.imageField.loading')
-              : t('variableConfig.imageField.selectImage')}
-          </span>
+          {disabled ? (
+            <>
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                {t('addons.runModeOnly')}
+              </span>
+            </>
+          ) : (
+            <>
+              <ImagePlus className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {isLoading
+                  ? t('variableConfig.imageField.loading')
+                  : t('variableConfig.imageField.selectImage')}
+              </span>
+            </>
+          )}
         </button>
       )}
 

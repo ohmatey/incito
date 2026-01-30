@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
+import { DatetimePicker } from '@/components/ui/datetime-picker'
 import { Plus, X, AlertCircle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -292,6 +293,20 @@ export const VariableInputCard = memo(function VariableInputCard({
           </div>
         )
       }
+
+      case 'datetime':
+        return (
+          <DatetimePicker
+            value={value as string}
+            onChange={onValueChange}
+            showDate={variable.showDate !== false}
+            showTime={variable.showTime === true}
+            timeFormat={variable.timeFormat || '24h'}
+            placeholder={variable.placeholder}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+          />
+        )
 
       case 'text':
       default:

@@ -37,6 +37,9 @@ function RootLayoutInner() {
     if (pathname.startsWith('/runs') && !featureFlags.runsEnabled) {
       navigate({ to: '/prompts' })
     }
+    if (pathname.startsWith('/graders') && !featureFlags.gradersEnabled) {
+      navigate({ to: '/prompts' })
+    }
   }, [location.pathname, featureFlags, navigate])
 
   // Keyboard shortcuts
@@ -91,6 +94,7 @@ function RootLayoutInner() {
     if (pathname.startsWith('/search')) return 'search'
     if (pathname.startsWith('/agents')) return 'agents'
     if (pathname.startsWith('/runs')) return 'runs'
+    if (pathname.startsWith('/graders')) return 'graders'
     if (pathname.startsWith('/resources')) return 'resources'
     if (pathname.startsWith('/tags')) return 'tags'
     if (pathname.startsWith('/settings')) return 'settings'
@@ -108,6 +112,9 @@ function RootLayoutInner() {
         break
       case 'runs':
         navigate({ to: '/runs' })
+        break
+      case 'graders':
+        navigate({ to: '/graders' })
         break
       case 'resources':
         navigate({ to: '/resources' })
@@ -149,6 +156,7 @@ function RootLayoutInner() {
           agentsEnabled={featureFlags.agentsEnabled}
           resourcesEnabled={featureFlags.resourcesEnabled}
           runsEnabled={featureFlags.runsEnabled}
+          gradersEnabled={featureFlags.gradersEnabled}
         />
         <Outlet />
       </div>

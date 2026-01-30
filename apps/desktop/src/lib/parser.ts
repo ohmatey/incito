@@ -4,7 +4,7 @@ import type { PromptFile, Variable, ParseError, SelectOption, SerializationForma
 import { VARIABLE_PATTERN, BLOCK_HELPER_PATTERN, HELPER_VARIABLE_PATTERN, RESERVED_KEYWORDS, isValidVariableKey, isValidTagName } from './constants'
 import { AVAILABLE_LAUNCHERS } from './launchers'
 
-const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select', 'image']
+const VALID_TYPES = ['text', 'textarea', 'select', 'number', 'slider', 'array', 'multi-select', 'image', 'datetime']
 const VALID_FORMATS: SerializationFormat[] = ['newline', 'comma', 'numbered', 'bullet']
 
 export function parsePromptFile(
@@ -301,6 +301,20 @@ function validateVariables(variables: unknown[]): {
     if ((variable.type === 'array' || variable.type === 'multi-select') && variable.format !== undefined) {
       if (!VALID_FORMATS.includes(variable.format as SerializationFormat)) {
         errors.push({ field: `variables[${i}]`, message: `Invalid format: ${variable.format}. Must be one of: ${VALID_FORMATS.join(', ')}` })
+        return
+      }
+    }
+
+    // Validate datetime configuration
+    if (variable.type === 'datetime') {
+      const showDate = variable.showDate !== false // default true
+      const showTime = variable.showTime === true  // default false
+      if (!showDate && !showTime) {
+        errors.push({ field: `variables[${i}]`, message: 'Datetime type requires at least one of showDate or showTime to be true' })
+        return
+      }
+      if (variable.timeFormat !== undefined && variable.timeFormat !== '12h' && variable.timeFormat !== '24h') {
+        errors.push({ field: `variables[${i}]`, message: `Invalid timeFormat: ${variable.timeFormat}. Must be '12h' or '24h'` })
         return
       }
     }

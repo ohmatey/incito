@@ -18,6 +18,13 @@ export interface PromptRun {
   executionTimeMs?: number
   runFilePath?: string // Path to full run log file
   createdAt: string
+  // Token tracking fields
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  modelId?: string
+  provider?: string
+  estimatedCostUsd?: number
 }
 
 export interface RunVariable {
@@ -37,6 +44,10 @@ export interface RunAnalyticsDaily {
   errorCount: number
   totalExecutionTimeMs: number
   avgExecutionTimeMs: number
+  // Token tracking aggregates
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalEstimatedCostUsd: number
 }
 
 // Aggregated analytics for display
@@ -90,4 +101,22 @@ export interface CompleteFieldTool {
 export interface AskFollowUpTool {
   question: string
   relatedField: string
+}
+
+// Multi-provider parallel execution types
+
+export type ProviderRunStatus = 'idle' | 'pending' | 'streaming' | 'completed' | 'error'
+
+export interface ProviderRunResult {
+  providerId: string
+  providerAlias: string
+  status: ProviderRunStatus
+  content: string
+  error?: string
+  startedAt?: string
+  completedAt?: string
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  estimatedCostUsd?: number
 }

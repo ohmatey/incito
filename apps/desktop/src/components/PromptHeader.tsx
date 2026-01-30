@@ -12,7 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Pencil, Eye, History, StickyNote, Settings2, List, Save, Play, Clock } from 'lucide-react'
+import { Save, Play, PanelLeft, PanelLeftClose } from 'lucide-react'
+import { TabsDropdown } from '@/components/TabsDropdown'
 
 export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions' | 'runs'
 
@@ -21,9 +22,12 @@ interface PromptHeaderProps {
   isEditMode: boolean
   isRunMode?: boolean
   rightPanelOpen: boolean
+  activeTab: RightPanelTab
   hasUnsavedChanges: boolean
   nameError: string | null
   runsEnabled?: boolean
+  listPanelCollapsed?: boolean
+  onToggleListPanel?: () => void
   onEditModeChange: (editMode: boolean) => void
   onRightPanelOpenChange: (open: boolean) => void
   onTabChange: (tab: RightPanelTab) => void
@@ -37,9 +41,12 @@ export function PromptHeader({
   isEditMode,
   isRunMode = false,
   rightPanelOpen,
+  activeTab,
   hasUnsavedChanges,
   nameError,
   runsEnabled = false,
+  listPanelCollapsed = false,
+  onToggleListPanel,
   onEditModeChange,
   onRightPanelOpenChange,
   onTabChange,
@@ -63,31 +70,6 @@ export function PromptHeader({
     onCancel()
   }
 
-  const tabLabels: Record<RightPanelTab, string> = {
-    preview: t('tabs.prompt'),
-    history: t('tabs.history'),
-    notes: t('tabs.notes'),
-    config: t('tabs.config'),
-    instructions: t('tabs.instructions'),
-    runs: t('tabs.runs'),
-  }
-
-  const tabIcons: Record<RightPanelTab, React.ReactNode> = {
-    preview: <Eye className="h-4 w-4" />,
-    history: <History className="h-4 w-4" />,
-    notes: <StickyNote className="h-4 w-4" />,
-    config: <Settings2 className="h-4 w-4" />,
-    instructions: <List className="h-4 w-4" />,
-    runs: <Clock className="h-4 w-4" />,
-  }
-
-  // Tabs available depends on edit mode and feature flags
-  const availableTabs: RightPanelTab[] = isEditMode
-    ? ['preview', 'instructions', 'notes', 'history', 'config']
-    : runsEnabled
-      ? ['preview', 'runs', 'notes', 'history', 'config']
-      : ['preview', 'notes', 'history', 'config']
-
   function handleTabSelect(tab: RightPanelTab) {
     onTabChange(tab)
     if (!rightPanelOpen) {
@@ -105,15 +87,32 @@ export function PromptHeader({
 
   return (
     <div className="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
-      {/* Left side - Title */}
-      <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate">
-        {prompt.name}
-      </h1>
+      {/* Left side - Collapse button and Title */}
+      <div className="flex items-center gap-2 min-w-0">
+        {onToggleListPanel && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleListPanel}
+            className="h-8 w-8"
+            aria-label={listPanelCollapsed ? t('header.expandSidebar') : t('header.collapseSidebar')}
+          >
+            {listPanelCollapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate">
+          {prompt.name}
+        </h1>
+      </div>
 
       {/* Right side - Controls */}
       <div className="flex items-center gap-1">
-        {/* Save/Cancel buttons - shown in edit mode when panel is open */}
-        {isEditMode && rightPanelOpen && (
+        {/* Save/Cancel buttons - shown in edit mode */}
+        {isEditMode && (
           <>
             <Button
               variant="ghost"
@@ -146,54 +145,16 @@ export function PromptHeader({
           </Button>
         )}
 
-        {/* Edit button - only show when not in edit mode */}
-        {!isEditMode && !isRunMode && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEditModeChange(true)}
-            title={t('buttons.edit')}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
-
-        {/* Tab buttons - only show when panel is closed */}
-        {!rightPanelOpen && availableTabs.map((tab) => (
-          <Button
-            key={tab}
-            variant="ghost"
-            size="sm"
-            onClick={() => handleTabSelect(tab)}
-            className="gap-1.5"
-          >
-            {tabIcons[tab]}
-            {tabLabels[tab]}
-          </Button>
-        ))}
-
-        {/* Save/Cancel buttons with divider - shown in edit mode when panel is closed */}
-        {isEditMode && !rightPanelOpen && (
-          <>
-            <div className="ml-2 h-6 w-px bg-gray-200 dark:bg-gray-700" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelClick}
-              className="ml-2"
-            >
-              {t('buttons.cancel')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={onSave}
-              disabled={!hasUnsavedChanges || !!nameError}
-              className="gap-1.5"
-            >
-              <Save className="h-4 w-4" />
-              {t('buttons.save')}
-            </Button>
-          </>
+        {/* Tabs dropdown - show when not in run mode and sidebar is closed */}
+        {!isRunMode && !rightPanelOpen && (
+          <TabsDropdown
+            activeTab={activeTab}
+            isEditMode={isEditMode}
+            runsEnabled={runsEnabled}
+            showEditOption={!isEditMode}
+            onTabChange={handleTabSelect}
+            onEditModeChange={onEditModeChange}
+          />
         )}
       </div>
 

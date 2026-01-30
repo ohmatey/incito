@@ -15,6 +15,7 @@ import enRunMode from './locales/en/runMode.json'
 import enResources from './locales/en/resources.json'
 import enRuns from './locales/en/runs.json'
 import enUpdates from './locales/en/updates.json'
+import enGraders from './locales/en/graders.json'
 
 // Import Thai translations
 import thCommon from './locales/th/common.json'
@@ -29,6 +30,7 @@ import thRunMode from './locales/th/runMode.json'
 import thResources from './locales/th/resources.json'
 import thRuns from './locales/th/runs.json'
 import thUpdates from './locales/th/updates.json'
+import thGraders from './locales/th/graders.json'
 
 const resources = {
   en: {
@@ -44,6 +46,7 @@ const resources = {
     resources: enResources,
     runs: enRuns,
     updates: enUpdates,
+    graders: enGraders,
   },
   th: {
     common: thCommon,
@@ -58,6 +61,7 @@ const resources = {
     resources: thResources,
     runs: thRuns,
     updates: thUpdates,
+    graders: thGraders,
   },
 }
 

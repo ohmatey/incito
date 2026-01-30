@@ -7,21 +7,37 @@ interface HighlightedTextareaProps
   onValueChange?: (value: string) => void
 }
 
+// Hoisted regex patterns (avoids recreation on every render)
+// Comprehensive regex for Handlebars-like syntax:
+// - Block openers: {{#if ...}}, {{#each ...}}, {{#unless ...}}, {{#with ...}}
+// - Block closers: {{/if}}, {{/each}}, {{/unless}}, {{/with}}
+// - Else clauses: {{else}}, {{else if ...}}
+// - Variables: {{variable}}, {{object.property}}
+const TEMPLATE_SYNTAX_REGEX = /(\{\{#(?:if|each|unless|with)\s+(?:\([^)]+\)|[^}]+)\}\}|\{\{\/(?:if|each|unless|with)\}\}|\{\{else(?:\s+if\s+(?:\([^)]+\)|[^}]+))?\}\}|\{\{[^#/][^}]*\}\})/g
+const BLOCK_HELPER_REGEX = /^\{\{#/
+const BLOCK_CLOSER_REGEX = /^\{\{\//
+const ELSE_REGEX = /^\{\{else/
+
 /**
  * Highlights template syntax:
  * - {{variable}} - variable placeholders
  * - {{#if var}}...{{/if}} - conditional blocks
+ * - {{#each var}}...{{/each}} - iteration blocks
+ * - {{#unless var}}...{{/unless}} - negation blocks
+ * - {{else}} and {{else if var}} - else clauses
+ * - {{#if (helper var)}} - helper functions
  */
 function highlightTemplate(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = []
-  // Match variables {{var}}, conditionals {{#if var}}, {{/if}}, {{else}}
-  const regex = /(\{\{#if\s+\w+\}\}|\{\{\/if\}\}|\{\{else\}\}|\{\{[^}]+\}\})/g
+
+  // Reset lastIndex for global regex (global regex has mutable state)
+  TEMPLATE_SYNTAX_REGEX.lastIndex = 0
 
   let lastIndex = 0
   let match
   let key = 0
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = TEMPLATE_SYNTAX_REGEX.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       parts.push(
@@ -33,9 +49,13 @@ function highlightTemplate(text: string): React.ReactNode[] {
 
     const token = match[0]
 
-    // Determine token type and style
-    if (token.startsWith('{{#if') || token === '{{/if}}' || token === '{{else}}') {
-      // Conditional syntax - amber/orange with background
+    // Determine token type and style (using hoisted regexes)
+    const isBlockHelper = BLOCK_HELPER_REGEX.test(token)
+    const isBlockCloser = BLOCK_CLOSER_REGEX.test(token)
+    const isElse = ELSE_REGEX.test(token)
+
+    if (isBlockHelper || isBlockCloser || isElse) {
+      // Block syntax - amber/orange with background
       parts.push(
         <span
           key={key++}
@@ -56,7 +76,7 @@ function highlightTemplate(text: string): React.ReactNode[] {
       )
     }
 
-    lastIndex = regex.lastIndex
+    lastIndex = TEMPLATE_SYNTAX_REGEX.lastIndex
   }
 
   // Add remaining text
@@ -80,6 +100,15 @@ function highlightTemplate(text: string): React.ReactNode[] {
   return parts
 }
 
+// Memoized version to avoid re-computation on unchanged content
+const MemoizedHighlight = React.memo(({ text }: { text: string }) => (
+  <>
+    {highlightTemplate(text)}
+    {/* Add extra space for scrolling alignment */}
+    <br />
+  </>
+))
+
 const HighlightedTextarea = React.forwardRef<
   HTMLTextAreaElement,
   HighlightedTextareaProps
@@ -88,12 +117,29 @@ const HighlightedTextarea = React.forwardRef<
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   // Sync scroll position between textarea and highlight layer
-  const handleScroll = React.useCallback(() => {
+  const syncScroll = React.useCallback(() => {
     if (textareaRef.current && highlightRef.current) {
       highlightRef.current.scrollTop = textareaRef.current.scrollTop
       highlightRef.current.scrollLeft = textareaRef.current.scrollLeft
     }
   }, [])
+
+  // Sync dimensions on resize
+  React.useEffect(() => {
+    const textarea = textareaRef.current
+    const highlight = highlightRef.current
+    if (!textarea || !highlight) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Sync dimensions when textarea is resized
+      highlight.style.width = `${textarea.offsetWidth}px`
+      highlight.style.height = `${textarea.offsetHeight}px`
+      syncScroll()
+    })
+
+    resizeObserver.observe(textarea)
+    return () => resizeObserver.disconnect()
+  }, [syncScroll])
 
   const handleChange = React.useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -126,9 +172,7 @@ const HighlightedTextarea = React.forwardRef<
           fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
         }}
       >
-        {highlightTemplate(value || '')}
-        {/* Add extra space for scrolling alignment */}
-        <br />
+        <MemoizedHighlight text={value || ''} />
       </div>
 
       {/* Actual textarea - transparent text when has value, handles input */}
@@ -136,7 +180,7 @@ const HighlightedTextarea = React.forwardRef<
         ref={textareaRef}
         value={value}
         onChange={handleChange}
-        onScroll={handleScroll}
+        onScroll={syncScroll}
         className={cn(
           'relative w-full rounded-md border bg-transparent font-mono text-sm',
           'caret-gray-900 dark:caret-gray-100',

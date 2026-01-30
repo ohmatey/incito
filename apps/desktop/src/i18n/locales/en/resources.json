@@ -11,7 +11,9 @@
     "empty": "No resources yet",
     "emptyDescription": "Upload files to build your asset library for prompts",
     "search": "Search resources...",
-    "uploadFirst": "Upload your first resource"
+    "uploadFirst": "Upload your first resource",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "detail": {
     "metadata": "Metadata",

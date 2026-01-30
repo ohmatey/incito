@@ -19,7 +19,6 @@ import { VariableInputCard } from './VariableInputCard'
 import { TagBadge } from './TagBadge'
 import { TagSelector } from './TagSelector'
 import { AiFillFieldModal } from './AiFillFieldModal'
-import { AddonsSection } from './addons'
 
 // Lazy load TranslationPreview since it's only shown when the modal opens
 const TranslationPreview = lazy(() => import('./translation/TranslationPreview').then(m => ({ default: m.TranslationPreview })))
@@ -895,10 +894,6 @@ export function CenterPane({
               })
             )}
 
-            {/* Addons Section - disabled in copy mode, active in run mode */}
-            <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
-              <AddonsSection />
-            </div>
           </div>
           </div>
         </div>

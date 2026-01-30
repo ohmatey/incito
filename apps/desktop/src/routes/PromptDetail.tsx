@@ -10,6 +10,7 @@ import { ResizeHandle } from '@/components/ui/resize-handle'
 import { PromptEditorDialog } from '@/components/PromptEditorDialog'
 import { RunModeChat } from '@/components/run-mode/RunModeChat'
 import { interpolate } from '@/lib/interpolate'
+import { createPromptRun } from '@/lib/store'
 import { toast } from 'sonner'
 
 export function PromptDetail() {
@@ -51,6 +52,8 @@ export function PromptDetail() {
     refreshDrafts,
     pinnedPromptIds,
     featureFlags,
+    listPanelCollapsed,
+    toggleListPanelCollapsed,
   } = useAppContext()
 
   // Get selected prompt from URL param
@@ -76,10 +79,24 @@ export function PromptDetail() {
   }
 
   // Run mode handlers
-  const handleStartRunMode = useCallback(() => {
-    // Navigate to runs page instead of starting inline run mode
-    navigate({ to: '/runs' })
-  }, [navigate])
+  const handleStartRunMode = useCallback(async () => {
+    if (!selectedPrompt) return
+
+    // Create a new run with pending status
+    const result = await createPromptRun(
+      selectedPrompt.id,
+      selectedPrompt.path,
+      selectedPrompt.name,
+      'run_mode'
+    )
+
+    if (result.ok) {
+      // Navigate to run detail page
+      navigate({ to: '/runs/$runId', params: { runId: result.data.id } })
+    } else {
+      toast.error(result.error)
+    }
+  }, [selectedPrompt, navigate])
 
   const handleRunModeComplete = useCallback((values: Record<string, unknown>) => {
     // Apply the values from run mode to the form
@@ -127,9 +144,12 @@ export function PromptDetail() {
           isEditMode={editState.isEditMode}
           isRunMode={runMode.isActive}
           rightPanelOpen={rightPanelOpen}
+          activeTab={rightPanelTab}
           hasUnsavedChanges={editState.hasUnsavedChanges}
           nameError={editState.nameError}
           runsEnabled={featureFlags.runsEnabled}
+          listPanelCollapsed={listPanelCollapsed}
+          onToggleListPanel={toggleListPanelCollapsed}
           onEditModeChange={handleEditModeChange}
           onRightPanelOpenChange={setRightPanelOpen}
           onTabChange={setRightPanelTab}

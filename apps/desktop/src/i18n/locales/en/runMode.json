@@ -7,5 +7,22 @@
   "submit": "Submit",
   "suggested": "Suggested",
   "selectOption": "Select an option",
-  "onePerLine": "One item per line"
+  "onePerLine": "One item per line",
+  "execute": "Execute & Copy",
+  "preview": "Preview",
+  "output": "Output",
+  "noVariablesTitle": "No variables to configure",
+  "noVariablesDescription": "This prompt has no variables. Click Execute & Copy to copy the template directly.",
+  "comparison": {
+    "noProviders": "No providers selected",
+    "waiting": "Waiting to start...",
+    "streaming": "Generating response...",
+    "status": {
+      "idle": "Idle",
+      "pending": "Pending",
+      "streaming": "Streaming",
+      "completed": "Done",
+      "error": "Error"
+    }
+  }
 }

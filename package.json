@@ -5,6 +5,8 @@
     "dev:desktop": "pnpm --filter @incito/desktop dev",
     "dev:desktop:full": "pnpm build:claude-code-server && pnpm --filter @incito/desktop dev",
     "dev:landing": "pnpm --filter @incito/landing dev",
+    "dev:claude-code-server": "pnpm --filter @incito/claude-code-server dev",
+    "start:claude-code-server": "pnpm --filter @incito/claude-code-server start",
     "build:desktop": "pnpm build:claude-code-server && pnpm --filter @incito/desktop build",
     "build:desktop:app-only": "pnpm --filter @incito/desktop build",
     "build:desktop:full": "pnpm build:claude-code-server && pnpm build:tauri && pnpm --filter @incito/desktop build",

@@ -27,6 +27,8 @@ import {
   Globe,
   ChevronDown,
   Plus,
+  PanelLeft,
+  PanelLeftClose,
 } from 'lucide-react'
 import { LANGUAGES } from '@/i18n/types'
 import { getTranslationSettings } from '@/lib/store'
@@ -53,18 +55,22 @@ interface ChatHeaderProps {
   agent: AgentFile
   sessions: ChatSession[]
   currentSession: ChatSession | null
+  listPanelCollapsed?: boolean
   onSelectSession: (session: ChatSession) => void
   onNewSession: () => void
   onEdit?: () => void
+  onToggleListPanel?: () => void
 }
 
 export function ChatHeader({
   agent,
   sessions,
   currentSession,
+  listPanelCollapsed = false,
   onSelectSession,
   onNewSession,
   onEdit,
+  onToggleListPanel,
 }: ChatHeaderProps) {
   const { t } = useTranslation('agents')
   const IconComponent = ICON_MAP[agent.icon] || Bot
@@ -88,6 +94,21 @@ export function ChatHeader({
     <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
       {/* Agent Info */}
       <div className="flex items-center gap-3">
+        {onToggleListPanel && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleListPanel}
+            className="h-8 w-8"
+            aria-label={listPanelCollapsed ? t('list.expand') : t('list.collapse')}
+          >
+            {listPanelCollapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
+        )}
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
           <IconComponent className="h-4 w-4 text-gray-600 dark:text-gray-400" />
         </div>

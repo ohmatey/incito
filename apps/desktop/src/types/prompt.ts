@@ -8,7 +8,7 @@ export type SerializationFormat = 'newline' | 'comma' | 'numbered' | 'bullet'
 export interface Variable {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'slider' | 'array' | 'multi-select' | 'image'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'slider' | 'array' | 'multi-select' | 'image' | 'datetime'
   required?: boolean
   default?: string | number | string[]
   placeholder?: string
@@ -25,6 +25,11 @@ export interface Variable {
 
   // Array/Multi-select output format
   format?: SerializationFormat
+
+  // Datetime configuration
+  showDate?: boolean      // Default: true - show date picker
+  showTime?: boolean      // Default: false - show time picker
+  timeFormat?: '12h' | '24h'  // Default: '24h'
 }
 
 export interface Tag {

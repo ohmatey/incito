@@ -7,11 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { FileText, Tags, Settings, Search, Keyboard, Bot, Clock, FolderArchive } from 'lucide-react'
+import { FileText, Tags, Settings, Search, Keyboard, Bot, Clock, FolderArchive, FlaskConical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
-export type NavView = 'prompts' | 'agents' | 'resources' | 'runs' | 'tags' | 'settings' | 'search'
+export type NavView = 'prompts' | 'agents' | 'resources' | 'runs' | 'graders' | 'tags' | 'settings' | 'search'
 
 interface NavSidebarProps {
   currentView: NavView
@@ -19,6 +19,7 @@ interface NavSidebarProps {
   agentsEnabled?: boolean
   resourcesEnabled?: boolean
   runsEnabled?: boolean
+  gradersEnabled?: boolean
 }
 
 export function NavSidebar({
@@ -27,6 +28,7 @@ export function NavSidebar({
   agentsEnabled = false,
   resourcesEnabled = false,
   runsEnabled = false,
+  gradersEnabled = false,
 }: NavSidebarProps) {
   const { t } = useTranslation('common')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -178,6 +180,29 @@ export function NavSidebar({
               </TooltipTrigger>
               <TooltipContent side="right">
                 <p>{t('navigation.runs')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {gradersEnabled && runsEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('graders')}
+                  aria-label={t('navigation.graders')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'graders' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <FlaskConical className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.graders')}</p>
               </TooltipContent>
             </Tooltip>
           )}

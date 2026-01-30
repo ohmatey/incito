@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { AgentFile } from '@/types/agent'
+import type { AgentFile, ChatAttachment } from '@/types/agent'
 import type { ChatMessage, ChatSession } from '@/types/agent'
 import { ChatHeader } from './ChatHeader'
 import { ChatMessages } from './ChatMessages'
@@ -15,6 +15,7 @@ import {
 import { streamAgentChat } from '@/lib/mastra-client'
 import { toast } from 'sonner'
 import { LANGUAGES } from '@/i18n/types'
+import { useAppContext } from '@/context/AppContext'
 
 function buildSystemPromptWithLanguage(basePrompt: string, languageCode?: string, translationEnabled?: boolean): string {
   if (!translationEnabled || !languageCode) return basePrompt
@@ -33,6 +34,7 @@ interface AgentChatContainerProps {
 
 export function AgentChatContainer({ agent, onEdit }: AgentChatContainerProps) {
   const { t } = useTranslation('agents')
+  const { listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -93,17 +95,22 @@ export function AgentChatContainer({ agent, onEdit }: AgentChatContainerProps) {
     }
   }, [agent.id, t])
 
-  const handleSendMessage = useCallback(async () => {
-    if (!input.trim() || !currentSession || isLoading) return
+  const handleSendMessage = useCallback(async (attachments: ChatAttachment[]) => {
+    if ((!input.trim() && attachments.length === 0) || !currentSession || isLoading) return
 
     const userMessage = input.trim()
     setInput('')
     setIsLoading(true)
 
-    // Add user message to UI and database
+    // Add user message to UI and database (text only saved to DB)
     const userMsgResult = await addChatMessage(currentSession.id, 'user', userMessage)
     if (userMsgResult.ok) {
-      setMessages((prev) => [...prev, userMsgResult.data])
+      // Add attachments to the message for UI display (not persisted)
+      const messageWithAttachments: ChatMessage = {
+        ...userMsgResult.data,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      }
+      setMessages((prev) => [...prev, messageWithAttachments])
     }
 
     // Create abort controller for this request
@@ -135,8 +142,9 @@ export function AgentChatContainer({ agent, onEdit }: AgentChatContainerProps) {
       await streamAgentChat({
         agentId: agent.id,
         systemPrompt: systemPromptWithLanguage,
-        messages: [...messages, { id: '', sessionId: currentSession.id, role: 'user', content: userMessage, timestamp: '' }],
+        messages: [...messages, { id: '', sessionId: currentSession.id, role: 'user', content: userMessage, timestamp: '', attachments }],
         settings: agent.settings,
+        attachments,
         onChunk: (chunk) => {
           assistantContent += chunk
           setMessages((prev) =>
@@ -191,9 +199,11 @@ export function AgentChatContainer({ agent, onEdit }: AgentChatContainerProps) {
         agent={agent}
         sessions={sessions}
         currentSession={currentSession}
+        listPanelCollapsed={listPanelCollapsed}
         onSelectSession={setCurrentSession}
         onNewSession={handleNewSession}
         onEdit={onEdit}
+        onToggleListPanel={toggleListPanelCollapsed}
       />
       <ChatMessages messages={messages} isLoading={isLoading} />
       <ChatInput
