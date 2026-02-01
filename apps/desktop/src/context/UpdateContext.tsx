@@ -2,6 +2,12 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, ty
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: unknown
+  }
+}
+
 interface UpdateInfo {
   version: string
   body: string | null
@@ -125,6 +131,11 @@ export function UpdateProvider({ children }: UpdateProviderProps) {
 
   // Listen for menu "Check for Updates" event
   useEffect(() => {
+    // Skip if not running in Tauri context (e.g., in browser tests)
+    if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) {
+      return
+    }
+
     let unlistenFn: (() => void) | null = null
 
     listen('menu-check-updates', () => {
@@ -142,6 +153,11 @@ export function UpdateProvider({ children }: UpdateProviderProps) {
 
   // Auto-check for updates on app launch (3s delay to not block initial render)
   useEffect(() => {
+    // Skip if not running in Tauri context (e.g., in browser tests)
+    if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) {
+      return
+    }
+
     const timer = setTimeout(() => {
       checkForUpdates()
     }, 3000)

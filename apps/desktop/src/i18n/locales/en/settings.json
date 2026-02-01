@@ -1,5 +1,31 @@
 {
   "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "modelConfig": "Model Configuration",
+    "privacy": "Privacy & Data",
+    "system": "System"
+  },
+  "storagePath": {
+    "title": "Storage Path",
+    "description": "The folder where your prompt templates and data are stored."
+  },
+  "modelDefaults": {
+    "title": "Default Models",
+    "generator": "Default Generator",
+    "generatorDescription": "Model used for prompt generation and writing.",
+    "judge": "Default Judge",
+    "judgeDescription": "Model used for grading outputs and playbook evaluation.",
+    "selectModel": "Select a model",
+    "noProviders": "Configure a provider first"
+  },
+  "privacy": {
+    "title": "Privacy & Data",
+    "contextLimit": "Context Limit",
+    "contextLimitDescription": "Maximum tokens per request. Protects against accidental high-cost API calls.",
+    "contextLimitPlaceholder": "Leave empty for no limit",
+    "contextLimitHint": "Recommended: 100,000 tokens"
+  },
   "analytics": {
     "title": "Anonymous Analytics",
     "description": "Help improve Incito by sharing anonymous usage data. No personal information or prompt content is ever collected.",
@@ -32,7 +58,9 @@
     "runsDescription": "Interactive prompt execution with AI-guided variable filling.",
     "graders": "Graders",
     "gradersDescription": "Score and validate prompt outputs with automated tests. Requires Run Mode.",
-    "gradersRequiresRuns": "Requires Run Mode to be enabled"
+    "gradersRequiresRuns": "Requires Run Mode to be enabled",
+    "playbooks": "Playbooks",
+    "playbooksDescription": "Teach AI behavior through curated corrections. Requires Run Mode."
   },
   "aiProvider": {
     "title": "AI Provider",

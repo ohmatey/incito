@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useAppContext } from '@/context/AppContext'
+import { usePromptSession } from '@/context/PromptSessionContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileText, Sparkles, Clock, PlayCircle, X, Pin } from 'lucide-react'
 import { hasAIConfigured, type PromptDraft } from '@/lib/store'
@@ -13,13 +14,10 @@ export function PromptsEmptyState() {
   const navigate = useNavigate()
   const {
     promptManager,
-    recentPromptIds,
-    pinnedPromptIds,
-    inProgressPrompts,
     openNewPromptDialog,
     handleCreatePrompt,
-    clearDraftById,
   } = useAppContext()
+  const { recentPromptIds, pinnedPromptIds, inProgressPrompts, clearDraftById } = usePromptSession()
 
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
 

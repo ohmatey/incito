@@ -1,7 +1,7 @@
 import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin-fs'
 import { join, resolve } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
-import { syncPromptTags, createPromptVersion, deletePromptVersions, hasAIConfigured } from './store'
+import { syncPromptTags, createPromptVersion, deletePromptVersions, hasAIConfigured, setBaseFolderPath } from './store'
 import { summarizePromptChanges } from './mastra-client'
 import type { PromptFile, Variable } from '../types/prompt'
 
@@ -20,6 +20,9 @@ async function isPathInFolder(filePath: string, folderPath: string): Promise<boo
 }
 
 export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
+  // Set base folder path for relative path conversions (sync-ready)
+  await setBaseFolderPath(folderPath)
+
   const entries = await readDir(folderPath)
   // Exclude agent files (.agent.md) - they're loaded separately
   const mdFiles = entries.filter((e) => e.name?.endsWith('.md') && !e.name?.endsWith('.agent.md'))
@@ -38,7 +41,12 @@ export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   return prompts.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export async function savePrompt(prompt: PromptFile, skipVersion = false): Promise<void> {
+export async function savePrompt(prompt: PromptFile, folderPath: string, skipVersion = false): Promise<void> {
+  // Security: Validate path is within the allowed folder
+  if (!await isPathInFolder(prompt.path, folderPath)) {
+    throw new Error('Path traversal detected: cannot save prompt outside of prompts folder')
+  }
+
   const content = serializePrompt(prompt)
 
   // Create a version before saving (unless skipping, e.g., for restores)
@@ -129,11 +137,16 @@ export async function duplicatePrompt(
     notes: [...(original.notes || [])],
   }
 
-  await savePrompt(newPrompt)
+  await savePrompt(newPrompt, folderPath)
   return newPrompt
 }
 
-export async function deletePrompt(prompt: PromptFile): Promise<void> {
+export async function deletePrompt(prompt: PromptFile, folderPath: string): Promise<void> {
+  // Security: Validate path is within the allowed folder
+  if (!await isPathInFolder(prompt.path, folderPath)) {
+    throw new Error('Path traversal detected: cannot delete prompt outside of prompts folder')
+  }
+
   await remove(prompt.path)
   // Clean up versions when prompt is deleted
   await deletePromptVersions(prompt.path)
@@ -183,14 +196,14 @@ export async function createVariant(
   }
 
   // Save the variant
-  await savePrompt(variant)
+  await savePrompt(variant, folderPath)
 
   // Update parent's variants array
   const updatedParent: PromptFile = {
     ...parent,
     variants: [...(parent.variants || []), variantFileName],
   }
-  await savePrompt(updatedParent)
+  await savePrompt(updatedParent, folderPath)
 
   // Read back the variant to ensure consistency
   const written = await readTextFile(variantPath)
@@ -205,7 +218,8 @@ export async function createVariant(
  */
 export async function removeVariantFromParent(
   variant: PromptFile,
-  allPrompts: PromptFile[]
+  allPrompts: PromptFile[],
+  folderPath: string
 ): Promise<PromptFile | null> {
   if (!variant.variantOf) return null
 
@@ -217,7 +231,7 @@ export async function removeVariantFromParent(
     variants: parent.variants.filter(v => v !== variant.fileName),
   }
 
-  await savePrompt(updatedParent)
+  await savePrompt(updatedParent, folderPath)
   return updatedParent
 }
 

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { ChatMessage } from '@/types/agent'
 import { cn } from '@/lib/utils'
 import { User, Bot } from 'lucide-react'
@@ -7,7 +8,8 @@ interface ChatMessageBubbleProps {
   message: ChatMessage
 }
 
-export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
+// Memoized to prevent re-renders when new messages are added (rerender-memo rule)
+export const ChatMessageBubble = memo(function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user'
   const hasAttachments = message.attachments && message.attachments.length > 0
 
@@ -72,4 +74,4 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
       </div>
     </div>
   )
-}
+})

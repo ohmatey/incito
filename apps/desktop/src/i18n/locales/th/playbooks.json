@@ -1,0 +1,101 @@
+{
+  "title": "Playbooks",
+  "description": "สอนพฤติกรรม AI ผ่านการแก้ไขที่คัดสรร",
+  "emptyState": {
+    "title": "ไม่ได้เลือก Playbook",
+    "description": "เลือก Playbook จากรายการเพื่อดูหรือแก้ไขกฎ"
+  },
+  "list": {
+    "title": "Playbooks",
+    "searchPlaceholder": "ค้นหา Playbooks...",
+    "empty": "ไม่พบ Playbooks",
+    "createFirst": "สร้าง Playbook เพื่อเริ่มสอนพฤติกรรม AI",
+    "filter": {
+      "title": "กรอง",
+      "all": "ทั้งหมด",
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน"
+    }
+  },
+  "create": {
+    "title": "สร้าง Playbook",
+    "button": "Playbook ใหม่",
+    "nameLabel": "ชื่อ",
+    "namePlaceholder": "เช่น แนวทางการบริการลูกค้า",
+    "descriptionLabel": "คำอธิบาย",
+    "descriptionPlaceholder": "Playbook นี้สอนพฤติกรรมอะไร?"
+  },
+  "detail": {
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "deleteConfirm": "ลบ Playbook นี้?",
+    "deleteWarning": "จะลบกฎทั้งหมดใน Playbook นี้และนำออกจากพรอมต์ทั้งหมด",
+    "enabled": "ใช้งาน",
+    "disabled": "ไม่ใช้งาน",
+    "rulesCount": "{{count}} กฎ",
+    "rulesCountPlural": "{{count}} กฎ",
+    "noRules": "ยังไม่มีกฎ",
+    "addFirstRule": "เพิ่มกฎแรกเพื่อเริ่มสอน AI"
+  },
+  "rules": {
+    "title": "กฎ",
+    "addRule": "เพิ่มกฎ",
+    "editRule": "แก้ไขกฎ",
+    "deleteRule": "ลบกฎ",
+    "deleteRuleConfirm": "ลบกฎนี้?",
+    "deleteRuleWarning": "การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "triggerContext": "เมื่อใดที่ใช้",
+    "triggerContextPlaceholder": "เช่น เมื่อตอบข้อร้องเรียน...",
+    "instruction": "AI ควรทำอะไร",
+    "instructionPlaceholder": "เช่น ต้องยอมรับปัญหาก่อนเสมอ...",
+    "badExampleInput": "ตัวอย่าง input (ไม่บังคับ)",
+    "badExampleInputPlaceholder": "พรอมต์ที่ทำให้เกิดคำตอบไม่ดี",
+    "badExampleOutput": "คำตอบไม่ดีที่ต้องหลีกเลี่ยง (ไม่บังคับ)",
+    "badExampleOutputPlaceholder": "คำตอบที่ไม่ถูกต้อง",
+    "goldenOutput": "ตัวอย่างคำตอบที่ถูกต้อง (ไม่บังคับ)",
+    "goldenOutputPlaceholder": "AI ควรตอบอย่างไรแทน",
+    "priority": "ลำดับความสำคัญ",
+    "priorityHint": "กฎที่มีลำดับสูงกว่าจะถูกใช้ก่อน",
+    "enabled": "เปิดใช้งาน",
+    "createFromFeedback": "สร้างจากข้อเสนอแนะ",
+    "sourceRun": "สร้างจากการรัน"
+  },
+  "selector": {
+    "title": "แนบ Playbooks",
+    "description": "เลือก Playbooks ที่จะใช้กับพรอมต์นี้",
+    "selectAll": "เลือกทั้งหมด",
+    "clearAll": "ล้างทั้งหมด",
+    "selected": "เลือก {{count}} รายการ",
+    "noPlaybooks": "ไม่มี Playbooks สร้างได้ในส่วน Playbooks",
+    "rulesCount": "{{count}} กฎ"
+  },
+  "badge": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน",
+    "rules": "{{count}} กฎ"
+  },
+  "injection": {
+    "mode": "โหมดการแทรก",
+    "prepend": "ก่อน system prompt",
+    "append": "หลัง system prompt",
+    "maxRules": "จำนวนกฎสูงสุดที่จะแทรก",
+    "maxRulesHint": "เว้นว่างไว้สำหรับไม่จำกัด"
+  },
+  "errors": {
+    "createFailed": "สร้าง Playbook ไม่สำเร็จ",
+    "updateFailed": "อัปเดต Playbook ไม่สำเร็จ",
+    "deleteFailed": "ลบ Playbook ไม่สำเร็จ",
+    "loadFailed": "โหลด Playbooks ไม่สำเร็จ",
+    "createRuleFailed": "สร้างกฎไม่สำเร็จ",
+    "updateRuleFailed": "อัปเดตกฎไม่สำเร็จ",
+    "deleteRuleFailed": "ลบกฎไม่สำเร็จ"
+  },
+  "success": {
+    "created": "สร้าง Playbook แล้ว",
+    "updated": "อัปเดต Playbook แล้ว",
+    "deleted": "ลบ Playbook แล้ว",
+    "ruleCreated": "สร้างกฎแล้ว",
+    "ruleUpdated": "อัปเดตกฎแล้ว",
+    "ruleDeleted": "ลบกฎแล้ว"
+  }
+}

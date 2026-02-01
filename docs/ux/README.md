@@ -22,9 +22,10 @@ These documents are continuously updated to reflect the current state of UX unde
 
 ### Research Reports
 
+- **2026-01-30**: [Comprehensive UX Review - January 2026](/docs/ux/research-reports/incito-comprehensive-ux-review-2026-01-30.md) - **LATEST** Full application review (desktop + landing page): Significant progress on accessibility and editing UX since January; 8/10 rating. Key improvements: modal-based editing, keyboard shortcuts modal, 40+ ARIA labels added. Remaining priorities: complete tab keyboard navigation, simplify translation UX, improve landing page mobile experience.
 - **2026-01-26**: [Prompt Viewing & Editing UX Research](/docs/ux/research-reports/prompt-viewing-editing-research-2026-01-26.md) - Critical findings on template editing experience: modal blocks preview, no syntax highlighting, recommends split-pane editing with live preview
 - **2026-01-20**: [MCP Integration UX Research](/docs/ux/research-reports/mcp-integration-research-2026-01-20.md) - Comprehensive evaluation of Model Context Protocol integration, identifying critical discoverability and onboarding gaps
-- **2026-01-19**: [Incito Desktop App - Initial UX Review](/docs/ux/research-reports/incito-desktop-ux-review-2026-01-19.md)
+- **2026-01-19**: [Incito Desktop App - Initial UX Review](/docs/ux/research-reports/incito-desktop-ux-review-2026-01-19.md) - Baseline UX assessment
 
 ## Quick Links
 

@@ -3,8 +3,9 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, Upload, Loader2 } from 'lucide-react'
+import { Search, Upload, Loader2, FolderArchive } from 'lucide-react'
 import { ResourceListItem } from './ResourceListItem'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Resource } from '@/types/resource'
 import { createResource } from '@/lib/resources'
 import { isSupportedExtension } from '@/types/resource'
@@ -79,7 +80,7 @@ export function ResourceList({
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           {t('title')}
         </h2>
-        <Button variant="ghost" size="sm" onClick={handleUpload} className="h-8 w-8 p-0">
+        <Button variant="ghost" size="icon" onClick={handleUpload} className="h-8 w-8">
           <Upload className="h-4 w-4" />
         </Button>
       </div>
@@ -105,9 +106,11 @@ export function ResourceList({
               <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             </div>
           ) : resources.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              {searchQuery ? t('common:labels.noResults') : t('list.empty')}
-            </div>
+            <EmptyState
+              variant="inline"
+              icon={FolderArchive}
+              title={searchQuery ? t('common:labels.noResults') : t('list.empty')}
+            />
           ) : (
             <div className="space-y-1">
               {resources.map((resource) => (

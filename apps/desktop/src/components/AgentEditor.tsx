@@ -36,7 +36,7 @@ import {
   PanelLeftClose,
 } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
-import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
 import { LANGUAGES } from '@/i18n/types'
 import { getTranslationSettings } from '@/lib/store'
 import { TagSelector } from './TagSelector'
@@ -72,7 +72,7 @@ interface AgentEditorProps {
 export function AgentEditor({ agent, tags, onSave, onCancel, onCreateTag }: AgentEditorProps) {
   const { t } = useTranslation(['agents', 'common', 'settings', 'tags'])
   const { language: appLanguage } = useLanguage()
-  const { listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
+  const { listPanelCollapsed, toggleListPanelCollapsed } = useLayout()
 
   const [name, setName] = useState(agent.name)
   const [description, setDescription] = useState(agent.description)

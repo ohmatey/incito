@@ -29,6 +29,7 @@ export interface AssertionLogic {
 
 export interface AssertionGrader {
   id: string
+  syncId: string  // Immutable UUID for sync
   name: string
   description?: string
   type: 'assertion'
@@ -66,6 +67,7 @@ export interface LLMJudgeConfig {
 
 export interface LLMJudgeGrader {
   id: string
+  syncId: string  // Immutable UUID for sync
   name: string
   description?: string
   type: 'llm_judge'

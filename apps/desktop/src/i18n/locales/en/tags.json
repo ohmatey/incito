@@ -3,12 +3,38 @@
   "createNewTag": "Create New Tag",
   "tagName": "Tag name",
   "addTag": "Add Tag",
+  "editTag": "Edit Tag",
   "allTags": "All Tags ({{count}})",
-  "noTagsYet": "No tags created yet. Create your first tag above.",
+  "noTagsYet": "No tags created yet",
   "promptCount": "{{count}} prompt",
   "promptCountPlural": "{{count}} prompts",
   "deleteTag": "Delete Tag",
   "deleteTagDescription": "Are you sure you want to delete the tag \"{{name}}\"? This will remove it from all prompts that use it.",
+  "list": {
+    "searchPlaceholder": "Search tags...",
+    "noResults": "No matching tags"
+  },
+  "emptyState": {
+    "title": "Select a tag",
+    "description": "Choose a tag from the list to see related prompts and agents"
+  },
+  "detail": {
+    "itemCount": "{{count}} items",
+    "prompts": "Prompts",
+    "agents": "Agents",
+    "noItems": "No items with this tag",
+    "noItemsDescription": "Prompts and agents using this tag will appear here",
+    "tagNotFound": "The requested tag could not be found"
+  },
+  "dialog": {
+    "createTitle": "Create Tag",
+    "createDescription": "Create a new tag to organize your prompts and agents.",
+    "editTitle": "Edit Tag",
+    "editDescription": "Update the name and color of this tag.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter tag name...",
+    "colorLabel": "Color"
+  },
   "selector": {
     "addTag": "Add tag",
     "noTagsYet": "No tags yet",

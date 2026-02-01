@@ -2,6 +2,9 @@ import { useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
+import { usePromptSession } from '@/context/PromptSessionContext'
+import { useFeatureFlags } from '@/context/FeatureFlagsContext'
 import { useRunMode } from '@/context/RunModeContext'
 import { PromptHeader } from '@/components/PromptHeader'
 import { CenterPane } from '@/components/CenterPane'
@@ -22,14 +25,8 @@ export function PromptDetail() {
     isLoading,
     promptManager,
     tagManager,
+    agentManager,
     editState,
-    rightPanelTab,
-    setRightPanelTab,
-    rightPanelOpen,
-    setRightPanelOpen,
-    panelWidths,
-    handleRightPanelResize,
-    handlePanelResizeEnd,
     handleEditModeChange,
     handleSave,
     handleCancel,
@@ -39,6 +36,7 @@ export function PromptDetail() {
     handleLocalTemplateChange,
     handleNotesChange,
     handleDefaultLaunchersChange,
+    handleDefaultAgentChange,
     handleRestoreVersion,
     handleEnterEditMode,
     handleDeletePrompt,
@@ -49,12 +47,20 @@ export function PromptDetail() {
     setVariantEditorOpen,
     handleOpenVariantEditor,
     handleSelectVariant,
-    refreshDrafts,
-    pinnedPromptIds,
-    featureFlags,
+  } = useAppContext()
+  const {
+    rightPanelTab,
+    setRightPanelTab,
+    rightPanelOpen,
+    setRightPanelOpen,
+    panelWidths,
+    handleRightPanelResize,
+    handlePanelResizeEnd,
     listPanelCollapsed,
     toggleListPanelCollapsed,
-  } = useAppContext()
+  } = useLayout()
+  const { pinnedPromptIds, refreshDrafts } = usePromptSession()
+  const { featureFlags } = useFeatureFlags()
 
   // Get selected prompt from URL param
   // First try the prompts array, then fall back to selectedPrompt (handles race condition after creation)
@@ -69,7 +75,7 @@ export function PromptDetail() {
   async function handleResetForm() {
     editState.resetVariableValues()
     await editState.clearDraft()
-    await refreshDrafts()
+    await refreshDrafts(promptManager.prompts)
   }
 
   // Handler for selecting a variant - stores memory and navigates to the variant's URL
@@ -91,8 +97,8 @@ export function PromptDetail() {
     )
 
     if (result.ok) {
-      // Navigate to run detail page
-      navigate({ to: '/runs/$runId', params: { runId: result.data.id } })
+      // Navigate to run detail page with collapsed sidebar and output panel open
+      navigate({ to: '/runs/$runId', params: { runId: result.data.id }, search: { variable: undefined, collapsed: true, tab: 'output' } })
     } else {
       toast.error(result.error)
     }
@@ -226,6 +232,9 @@ export function PromptDetail() {
           <RightPanel
             prompt={selectedPrompt}
             allPrompts={promptManager.prompts}
+            agents={agentManager.agents}
+            agentsEnabled={featureFlags.agentsEnabled}
+            playbooksEnabled={featureFlags.playbooksEnabled}
             values={editState.variableValues}
             activeTab={rightPanelTab}
             activeVariableKey={editState.activeVariableKey}
@@ -242,6 +251,7 @@ export function PromptDetail() {
             onVariableUpdate={handleVariableUpdate}
             onVariableMove={handleVariableMove}
             onDefaultLaunchersChange={handleDefaultLaunchersChange}
+            onDefaultAgentChange={handleDefaultAgentChange}
             onSelectVariant={handleVariantSelect}
             onNewVariant={handleOpenVariantEditor}
             width={panelWidths.rightPanel}

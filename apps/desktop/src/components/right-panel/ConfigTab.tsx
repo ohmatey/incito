@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PromptFile } from '@/types/prompt'
+import type { AgentFile } from '@/types/agent'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { AgentSelectorDropdown } from '@/components/AgentSelectorDropdown'
+import { PlaybookSelector } from '@/components/playbooks/PlaybookSelector'
 import { Pencil, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
@@ -16,22 +19,62 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { AVAILABLE_LAUNCHERS } from '@/lib/launchers'
+import { getPromptPlaybooks, setPromptPlaybooks } from '@/lib/store'
+import { toast } from 'sonner'
 
 interface ConfigTabProps {
   prompt: PromptFile | null
+  agents: AgentFile[]
+  agentsEnabled: boolean
+  playbooksEnabled?: boolean
+  runsEnabled?: boolean
   onEditPrompt: () => void
   onDeletePrompt: () => void
   onDefaultLaunchersChange: (launchers: string[]) => void
+  onDefaultAgentChange: (agentId: string | null) => void
 }
 
 export function ConfigTab({
   prompt,
+  agents,
+  agentsEnabled,
+  playbooksEnabled = false,
+  runsEnabled = false,
   onEditPrompt,
   onDeletePrompt,
   onDefaultLaunchersChange,
+  onDefaultAgentChange,
 }: ConfigTabProps) {
-  const { t } = useTranslation(['prompts', 'common'])
+  const { t } = useTranslation(['prompts', 'common', 'playbooks'])
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [selectedPlaybookIds, setSelectedPlaybookIds] = useState<string[]>([])
+
+  // Load playbook associations when prompt changes
+  useEffect(() => {
+    if (!prompt?.id || !playbooksEnabled || !runsEnabled) {
+      setSelectedPlaybookIds([])
+      return
+    }
+
+    async function loadPlaybooks() {
+      const result = await getPromptPlaybooks(prompt!.id)
+      if (result.ok) {
+        setSelectedPlaybookIds(result.data.map(p => p.id))
+      }
+    }
+    loadPlaybooks()
+  }, [prompt?.id, playbooksEnabled, runsEnabled])
+
+  // Handle playbook selection changes
+  async function handlePlaybooksChange(ids: string[]) {
+    if (!prompt?.id) return
+
+    setSelectedPlaybookIds(ids)
+    const result = await setPromptPlaybooks(prompt.id, ids)
+    if (!result.ok) {
+      toast.error(t('playbooks:errors.updateFailed'))
+    }
+  }
 
   if (!prompt) {
     return (
@@ -100,6 +143,44 @@ export function ConfigTab({
               })}
             </div>
           </div>
+
+          {/* Default Agent Section - only show if agents feature is enabled and agents exist */}
+          {agentsEnabled && agents.length > 0 && (
+            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('prompts:configTab.defaultAgent')}
+              </h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t('prompts:configTab.defaultAgentDescription')}
+              </p>
+              <div className="mt-3">
+                <AgentSelectorDropdown
+                  selectedId={prompt?.defaultAgentId ?? null}
+                  onSelectionChange={onDefaultAgentChange}
+                  agents={agents}
+                  placeholder={t('runMode:agent.none')}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Playbooks Section - only show if playbooks and runs features are enabled */}
+          {playbooksEnabled && runsEnabled && (
+            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('playbooks:selector.title')}
+              </h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t('playbooks:selector.description')}
+              </p>
+              <div className="mt-3">
+                <PlaybookSelector
+                  selectedIds={selectedPlaybookIds}
+                  onSelectionChange={handlePlaybooksChange}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Delete Section */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">

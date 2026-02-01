@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from '@tanstack/react-router'
 import { AppProvider, useAppContext } from '@/context/AppContext'
+import { LayoutProvider, useLayout } from '@/context/LayoutContext'
+import { PromptSessionProvider } from '@/context/PromptSessionContext'
+import { useFeatureFlags } from '@/context/FeatureFlagsContext'
 import { FolderSelect } from '@/components/FolderSelect'
 import { NavSidebar, type NavView } from '@/components/NavSidebar'
 import { NewPromptDialog } from '@/components/NewPromptDialog'
@@ -20,10 +23,9 @@ function RootLayoutInner() {
     triggerSearchFocus,
     handleCreatePrompt,
     handleCreateFromAI,
-    rightPanelOpen,
-    setRightPanelOpen,
-    featureFlags,
   } = useAppContext()
+  const { rightPanelOpen, setRightPanelOpen } = useLayout()
+  const { featureFlags } = useFeatureFlags()
 
   // Redirect if user is on a disabled feature route
   useEffect(() => {
@@ -38,6 +40,9 @@ function RootLayoutInner() {
       navigate({ to: '/prompts' })
     }
     if (pathname.startsWith('/graders') && !featureFlags.gradersEnabled) {
+      navigate({ to: '/prompts' })
+    }
+    if (pathname.startsWith('/playbooks') && !featureFlags.playbooksEnabled) {
       navigate({ to: '/prompts' })
     }
   }, [location.pathname, featureFlags, navigate])
@@ -95,6 +100,7 @@ function RootLayoutInner() {
     if (pathname.startsWith('/agents')) return 'agents'
     if (pathname.startsWith('/runs')) return 'runs'
     if (pathname.startsWith('/graders')) return 'graders'
+    if (pathname.startsWith('/playbooks')) return 'playbooks'
     if (pathname.startsWith('/resources')) return 'resources'
     if (pathname.startsWith('/tags')) return 'tags'
     if (pathname.startsWith('/settings')) return 'settings'
@@ -116,14 +122,17 @@ function RootLayoutInner() {
       case 'graders':
         navigate({ to: '/graders' })
         break
+      case 'playbooks':
+        navigate({ to: '/playbooks' })
+        break
       case 'resources':
         navigate({ to: '/resources' })
         break
-      case 'search':
-        navigate({ to: '/search' })
-        break
       case 'tags':
         navigate({ to: '/tags' })
+        break
+      case 'search':
+        navigate({ to: '/search' })
         break
       case 'settings':
         navigate({ to: '/settings' })
@@ -157,6 +166,7 @@ function RootLayoutInner() {
           resourcesEnabled={featureFlags.resourcesEnabled}
           runsEnabled={featureFlags.runsEnabled}
           gradersEnabled={featureFlags.gradersEnabled}
+          playbooksEnabled={featureFlags.playbooksEnabled}
         />
         <Outlet />
       </div>
@@ -176,8 +186,12 @@ function RootLayoutInner() {
 
 export function RootLayout() {
   return (
-    <AppProvider>
-      <RootLayoutInner />
-    </AppProvider>
+    <LayoutProvider>
+      <PromptSessionProvider>
+        <AppProvider>
+          <RootLayoutInner />
+        </AppProvider>
+      </PromptSessionProvider>
+    </LayoutProvider>
   )
 }

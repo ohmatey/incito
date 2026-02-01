@@ -3,12 +3,38 @@
   "createNewTag": "สร้างแท็กใหม่",
   "tagName": "ชื่อแท็ก",
   "addTag": "เพิ่มแท็ก",
+  "editTag": "แก้ไขแท็ก",
   "allTags": "แท็กทั้งหมด ({{count}})",
-  "noTagsYet": "ยังไม่มีแท็ก สร้างแท็กแรกของคุณด้านบน",
+  "noTagsYet": "ยังไม่มีแท็ก",
   "promptCount": "{{count}} พรอมต์",
   "promptCountPlural": "{{count}} พรอมต์",
   "deleteTag": "ลบแท็ก",
   "deleteTagDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบแท็ก \"{{name}}\"? การดำเนินการนี้จะลบออกจากพรอมต์ทั้งหมดที่ใช้",
+  "list": {
+    "searchPlaceholder": "ค้นหาแท็ก...",
+    "noResults": "ไม่พบแท็กที่ตรงกัน"
+  },
+  "emptyState": {
+    "title": "เลือกแท็ก",
+    "description": "เลือกแท็กจากรายการเพื่อดูพรอมต์และเอเจนต์ที่เกี่ยวข้อง"
+  },
+  "detail": {
+    "itemCount": "{{count}} รายการ",
+    "prompts": "พรอมต์",
+    "agents": "เอเจนต์",
+    "noItems": "ไม่มีรายการที่ใช้แท็กนี้",
+    "noItemsDescription": "พรอมต์และเอเจนต์ที่ใช้แท็กนี้จะแสดงที่นี่",
+    "tagNotFound": "ไม่พบแท็กที่ร้องขอ"
+  },
+  "dialog": {
+    "createTitle": "สร้างแท็ก",
+    "createDescription": "สร้างแท็กใหม่เพื่อจัดระเบียบพรอมต์และเอเจนต์ของคุณ",
+    "editTitle": "แก้ไขแท็ก",
+    "editDescription": "อัปเดตชื่อและสีของแท็กนี้",
+    "nameLabel": "ชื่อ",
+    "namePlaceholder": "ใส่ชื่อแท็ก...",
+    "colorLabel": "สี"
+  },
   "selector": {
     "addTag": "เพิ่มแท็ก",
     "noTagsYet": "ยังไม่มีแท็ก",

@@ -91,6 +91,7 @@ export interface ChatMessage {
 
 export interface ChatSession {
   id: string
+  syncId: string  // Immutable UUID for sync
   agentId: string
   title: string
   createdAt: string

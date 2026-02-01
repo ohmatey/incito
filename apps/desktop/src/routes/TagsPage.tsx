@@ -1,22 +1,13 @@
-import { useAppContext } from '@/context/AppContext'
-import { TagsPage as TagsPageComponent } from '@/components/TagsPage'
+import { Outlet } from '@tanstack/react-router'
+import { TagList } from '@/components/tags/TagList'
 
 export function TagsPage() {
-  const {
-    promptManager,
-    tagManager,
-    handleCreateTag,
-    handleUpdateTag,
-    handleDeleteTag,
-  } = useAppContext()
-
   return (
-    <TagsPageComponent
-      tags={tagManager.tags}
-      prompts={promptManager.prompts}
-      onCreateTag={handleCreateTag}
-      onUpdateTag={handleUpdateTag}
-      onDeleteTag={handleDeleteTag}
-    />
+    <div className="flex h-full flex-1 overflow-hidden">
+      <TagList />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Outlet />
+      </div>
+    </div>
   )
 }

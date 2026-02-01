@@ -1,10 +1,10 @@
 import { Outlet, useParams } from '@tanstack/react-router'
 import { GraderList } from '@/components/graders/GraderList'
-import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
 
 export function GradersPage() {
   const { graderId } = useParams({ strict: false })
-  const { listPanelCollapsed } = useAppContext()
+  const { listPanelCollapsed } = useLayout()
 
   // Show list panel when not collapsed OR when no grader is selected
   const showListPanel = !listPanelCollapsed || !graderId

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { RightPanelTab } from '@/components/PromptHeader'
-import { ChevronDown, Eye, History, Settings2, StickyNote, List, Clock, Pencil } from 'lucide-react'
+import { ChevronDown, Eye, History, Settings2, StickyNote, List, Clock, Pencil, Sliders } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ const tabIcons: Record<RightPanelTab, React.ReactNode> = {
   config: <Settings2 className="h-4 w-4" aria-hidden="true" />,
   instructions: <List className="h-4 w-4" aria-hidden="true" />,
   runs: <Clock className="h-4 w-4" aria-hidden="true" />,
+  settings: <Sliders className="h-4 w-4" aria-hidden="true" />,
 }
 
 const editIcon = <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -48,14 +49,15 @@ export function TabsDropdown({
     config: t('tabs.config'),
     instructions: t('tabs.instructions'),
     runs: t('tabs.runs'),
+    settings: t('tabs.settings'),
   }
 
   // Tabs available depends on edit mode and feature flags
   const availableTabs: RightPanelTab[] = isEditMode
-    ? ['preview', 'instructions', 'notes', 'history', 'config']
+    ? ['preview', 'instructions', 'settings', 'notes', 'history', 'config']
     : runsEnabled
-      ? ['preview', 'runs', 'notes', 'history', 'config']
-      : ['preview', 'notes', 'history', 'config']
+      ? ['preview', 'runs', 'settings', 'notes', 'history', 'config']
+      : ['preview', 'settings', 'notes', 'history', 'config']
 
   return (
     <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md" role="group" aria-label={t('rightPanel.panelOptions')}>

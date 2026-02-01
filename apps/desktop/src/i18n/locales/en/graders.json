@@ -1,52 +1,103 @@
 {
-  "title": "Graders",
-  "description": "Score and validate your prompt outputs with automated tests",
+  "title": "Quality Checks",
+  "description": "Ensure your prompt outputs meet your standards",
   "emptyState": {
-    "title": "No grader selected",
-    "description": "Select a grader from the list to view or edit it"
+    "title": "No check selected",
+    "description": "Select a quality check from the list to view or edit it"
   },
   "list": {
-    "title": "Graders",
-    "assertions": "Assertions",
-    "llmJudges": "AI Judges",
+    "title": "Quality Checks",
+    "quickChecks": "Quick Checks",
+    "aiReviews": "AI Reviews",
     "builtin": "Built-in",
     "custom": "Custom",
-    "searchPlaceholder": "Search graders...",
-    "empty": "No graders found",
-    "createFirst": "Create your first grader to start scoring prompt outputs"
+    "searchPlaceholder": "Search checks...",
+    "empty": "No checks found",
+    "createFirst": "Add quality checks to ensure your prompts meet your standards",
+    "filter": {
+      "title": "Filter",
+      "all": "All",
+      "quickChecks": "Quick Checks",
+      "aiReviews": "AI Reviews",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
   },
   "create": {
-    "title": "Create Grader",
-    "button": "New Grader",
+    "title": "Add Quality Check",
+    "button": "New Check",
     "nameLabel": "Name",
     "namePlaceholder": "e.g., No Competitor Mentions",
     "descriptionLabel": "Description",
-    "descriptionPlaceholder": "What does this grader check?",
-    "typeLabel": "Type",
+    "descriptionPlaceholder": "What does this check look for?",
+    "typeLabel": "What would you like to check?",
     "types": {
       "assertion": {
-        "label": "Logic Check (Assertion)",
-        "description": "Fast, free, deterministic - great for fact-checking, formatting, forbidden words"
+        "label": "Quick Check",
+        "badge": "Free",
+        "description": "Instant, free checks for words, phrases, length, or format"
       },
       "llm_judge": {
-        "label": "AI Review (LLM Judge)",
-        "description": "Slow, paid, probabilistic - great for tone, empathy, hallucination detection"
+        "label": "AI Review",
+        "badge": "Uses AI",
+        "description": "Intelligent review for tone, quality, completeness, or custom criteria"
+      }
+    },
+    "goals": {
+      "contains": {
+        "label": "Check for words or phrases",
+        "description": "Ensure specific content appears or doesn't appear"
+      },
+      "length": {
+        "label": "Check response length",
+        "description": "Verify minimum or maximum character count"
+      },
+      "format": {
+        "label": "Validate format",
+        "description": "Check for valid JSON or regex patterns"
+      },
+      "tone": {
+        "label": "Evaluate tone",
+        "description": "Review for professional, friendly, or custom tone"
+      },
+      "completeness": {
+        "label": "Check completeness",
+        "description": "Ensure response addresses all requirements"
+      },
+      "custom": {
+        "label": "Custom review",
+        "description": "Define your own evaluation criteria"
       }
     }
   },
   "detail": {
     "edit": "Edit",
     "delete": "Delete",
-    "deleteConfirm": "Delete this grader?",
+    "deleteConfirm": "Delete this check?",
     "deleteWarning": "This will also remove it from all prompts using it.",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
+    "enabled": "Active",
+    "disabled": "Inactive",
     "builtinBadge": "Built-in",
-    "customBadge": "Custom"
+    "customBadge": "Custom",
+    "summary": {
+      "contains": "Checks if response contains \"{{value}}\"",
+      "not_contains": "Checks that response doesn't contain \"{{value}}\"",
+      "starts_with": "Checks if response starts with \"{{value}}\"",
+      "ends_with": "Checks if response ends with \"{{value}}\"",
+      "equals": "Checks if response exactly matches \"{{value}}\"",
+      "max_length": "Checks that response is at most {{value}} characters",
+      "min_length": "Checks that response is at least {{value}} characters",
+      "regex": "Checks if response matches the pattern",
+      "json_valid": "Checks that response is valid JSON",
+      "llm_judge": "Uses AI to evaluate the response"
+    },
+    "advancedSettings": "Advanced Settings",
+    "showAdvanced": "Show details",
+    "hideAdvanced": "Hide details"
   },
   "assertion": {
-    "title": "Assertion Configuration",
-    "operatorLabel": "Operator",
+    "title": "Check Configuration",
+    "operatorLabel": "Check type",
     "valueLabel": "Value",
     "valuePlaceholder": "Enter value...",
     "caseSensitive": "Case sensitive",
@@ -58,12 +109,12 @@
       "equals": "Equals",
       "max_length": "Maximum length",
       "min_length": "Minimum length",
-      "regex": "Matches regex",
+      "regex": "Matches pattern",
       "json_valid": "Valid JSON"
     }
   },
   "llmJudge": {
-    "title": "AI Judge Configuration",
+    "title": "AI Review Configuration",
     "providerLabel": "AI Provider",
     "providerHint": "Select which AI provider to use for evaluation. Leave as default to use your primary provider.",
     "modelLabel": "Model",
@@ -76,7 +127,7 @@
     "promptTemplateLabel": "Evaluation Prompt",
     "promptTemplatePlaceholder": "Write the prompt that will evaluate the output...\n\nAvailable variables: {{input}}, {{output}}",
     "systemPromptLabel": "System Prompt (Optional)",
-    "systemPromptPlaceholder": "Optional context for the judge...",
+    "systemPromptPlaceholder": "Optional context for the reviewer...",
     "outputSchemaLabel": "Output Format",
     "schemas": {
       "score_1_to_5": "Score 1-5",
@@ -86,7 +137,7 @@
     }
   },
   "playground": {
-    "title": "Test Grader",
+    "title": "Test this Check",
     "inputLabel": "Input (Original Prompt)",
     "inputPlaceholder": "Enter the original prompt...",
     "outputLabel": "Output (AI Response)",
@@ -103,37 +154,40 @@
     }
   },
   "selector": {
-    "title": "Select Graders",
-    "description": "Choose which graders to run on this prompt's outputs",
+    "title": "Select Quality Checks",
+    "description": "Choose which checks to run on this prompt's outputs",
     "selectAll": "Select All",
     "clearAll": "Clear All",
     "selected": "{{count}} selected",
-    "noGraders": "No graders available. Create one in the Graders section."
+    "noGraders": "No quality checks available. Create one in the Quality Checks section.",
+    "aiBadge": "AI"
   },
   "badge": {
     "pass": "Pass",
     "fail": "Fail",
-    "assertion": "Assertion",
-    "llmJudge": "AI Judge"
+    "quickCheck": "Quick Check",
+    "aiReview": "AI Review",
+    "usesAi": "Uses AI",
+    "free": "Free"
   },
   "results": {
-    "title": "Grader Results",
+    "title": "Quality Check Results",
     "showFailuresOnly": "Show failures only",
-    "allPassed": "All graders passed",
+    "allPassed": "All checks passed",
     "someFailed": "{{count}} of {{total}} failed",
-    "noResults": "No grader results"
+    "noResults": "No results"
   },
   "errors": {
-    "createFailed": "Failed to create grader",
-    "updateFailed": "Failed to update grader",
-    "deleteFailed": "Failed to delete grader",
-    "loadFailed": "Failed to load graders",
-    "testFailed": "Failed to test grader",
-    "runFailed": "Failed to run graders"
+    "createFailed": "Failed to create check",
+    "updateFailed": "Failed to update check",
+    "deleteFailed": "Failed to delete check",
+    "loadFailed": "Failed to load checks",
+    "testFailed": "Failed to test check",
+    "runFailed": "Failed to run checks"
   },
   "success": {
-    "created": "Grader created",
-    "updated": "Grader updated",
-    "deleted": "Grader deleted"
+    "created": "Check created",
+    "updated": "Check updated",
+    "deleted": "Check deleted"
   }
 }

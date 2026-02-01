@@ -16,7 +16,10 @@
     "aiConfigured": "ตั้งค่าผู้ให้บริการ AI แล้ว",
     "aiRemoved": "ลบผู้ให้บริการ AI แล้ว",
     "mcpCopied": "คัดลอกการตั้งค่า MCP แล้ว",
-    "variantCreated": "สร้างตัวแปร: {{name}}"
+    "variantCreated": "สร้างตัวแปร: {{name}}",
+    "settingsSaved": "บันทึกการตั้งค่าแล้ว",
+    "feedbackSaved": "บันทึกข้อเสนอแนะแล้ว",
+    "promptCopied": "คัดลอกพรอมต์แล้ว"
   },
   "error": {
     "copyFailed": "คัดลอกไม่สำเร็จ",
@@ -42,6 +45,7 @@
     "fillRequired": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมด",
     "notesSaveFailed": "บันทึกโน้ตไม่สำเร็จ",
     "launchersSaveFailed": "บันทึกตัวเปิดด่วนไม่สำเร็จ",
+    "defaultAgentSaveFailed": "บันทึกเอเจนต์เริ่มต้นไม่สำเร็จ",
     "variantCreateFailed": "สร้างตัวแปรไม่สำเร็จ",
     "invalidName": "ชื่อไม่ถูกต้อง"
   },

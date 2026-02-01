@@ -15,7 +15,7 @@ import {
 import { Save, Play, PanelLeft, PanelLeftClose } from 'lucide-react'
 import { TabsDropdown } from '@/components/TabsDropdown'
 
-export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions' | 'runs'
+export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions' | 'runs' | 'settings'
 
 interface PromptHeaderProps {
   prompt: PromptFile | null

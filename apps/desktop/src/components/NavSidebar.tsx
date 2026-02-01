@@ -7,11 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { FileText, Tags, Settings, Search, Keyboard, Bot, Clock, FolderArchive, FlaskConical } from 'lucide-react'
+import { FileText, Settings, Search, Keyboard, Bot, Play, FolderArchive, CheckCircle2, Tags, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
-export type NavView = 'prompts' | 'agents' | 'resources' | 'runs' | 'graders' | 'tags' | 'settings' | 'search'
+export type NavView = 'prompts' | 'agents' | 'resources' | 'runs' | 'graders' | 'playbooks' | 'tags' | 'settings' | 'search'
 
 interface NavSidebarProps {
   currentView: NavView
@@ -20,6 +20,7 @@ interface NavSidebarProps {
   resourcesEnabled?: boolean
   runsEnabled?: boolean
   gradersEnabled?: boolean
+  playbooksEnabled?: boolean
 }
 
 export function NavSidebar({
@@ -29,6 +30,7 @@ export function NavSidebar({
   resourcesEnabled = false,
   runsEnabled = false,
   gradersEnabled = false,
+  playbooksEnabled = false,
 }: NavSidebarProps) {
   const { t } = useTranslation('common')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -138,29 +140,6 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          {resourcesEnabled && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewChange('resources')}
-                  aria-label={t('navigation.resources')}
-                  className={cn(
-                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
-                    currentView === 'resources' &&
-                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-                  )}
-                >
-                  <FolderArchive className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>{t('navigation.resources')}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
           {runsEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -175,7 +154,7 @@ export function NavSidebar({
                       'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
                   )}
                 >
-                  <Clock className="h-5 w-5" />
+                  <Play className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -198,11 +177,57 @@ export function NavSidebar({
                       'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
                   )}
                 >
-                  <FlaskConical className="h-5 w-5" />
+                  <CheckCircle2 className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
                 <p>{t('navigation.graders')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {playbooksEnabled && runsEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('playbooks')}
+                  aria-label={t('navigation.playbooks')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'playbooks' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <BookOpen className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.playbooks')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {resourcesEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('resources')}
+                  aria-label={t('navigation.resources')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'resources' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <FolderArchive className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.resources')}</p>
               </TooltipContent>
             </Tooltip>
           )}

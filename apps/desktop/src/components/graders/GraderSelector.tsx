@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getAllGraders, seedBuiltinGraders } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Code, Brain, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2 } from 'lucide-react'
 import type { Grader } from '@/types/grader'
 import { isAssertionGrader } from '@/types/grader'
 import { cn } from '@/lib/utils'
@@ -34,21 +35,12 @@ export function GraderSelector({
     await seedBuiltinGraders()
     const result = await getAllGraders()
     if (result.ok) {
-      // Only show enabled graders
-      setGraders(result.data.filter(g => g.enabled))
+      // Only show enabled graders, sorted alphabetically (spread + sort for immutability)
+      const enabled = result.data.filter(g => g.enabled)
+      setGraders([...enabled].sort((a, b) => a.name.localeCompare(b.name)))
     }
     setIsLoading(false)
   }
-
-  const assertionGraders = useMemo(() =>
-    graders.filter(g => isAssertionGrader(g)),
-    [graders]
-  )
-
-  const llmJudgeGraders = useMemo(() =>
-    graders.filter(g => !isAssertionGrader(g)),
-    [graders]
-  )
 
   function handleToggle(graderId: string) {
     if (selectedIds.includes(graderId)) {
@@ -110,51 +102,17 @@ export function GraderSelector({
         </div>
       </div>
 
+      {/* Flat list with descriptions */}
       <ScrollArea className="max-h-[200px]">
-        <div className="space-y-3">
-          {/* Assertions */}
-          {assertionGraders.length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 px-1 py-1">
-                <Code className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-                <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  {t('list.assertions')}
-                </span>
-              </div>
-              <div className="space-y-1">
-                {assertionGraders.map((grader) => (
-                  <GraderCheckbox
-                    key={grader.id}
-                    grader={grader}
-                    checked={selectedIds.includes(grader.id)}
-                    onCheckedChange={() => handleToggle(grader.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* LLM Judges */}
-          {llmJudgeGraders.length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 px-1 py-1">
-                <Brain className="h-3 w-3 text-purple-500 dark:text-purple-400" />
-                <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  {t('list.llmJudges')}
-                </span>
-              </div>
-              <div className="space-y-1">
-                {llmJudgeGraders.map((grader) => (
-                  <GraderCheckbox
-                    key={grader.id}
-                    grader={grader}
-                    checked={selectedIds.includes(grader.id)}
-                    onCheckedChange={() => handleToggle(grader.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="space-y-1">
+          {graders.map((grader) => (
+            <GraderCheckbox
+              key={grader.id}
+              grader={grader}
+              checked={selectedIds.includes(grader.id)}
+              onCheckedChange={() => handleToggle(grader.id)}
+            />
+          ))}
         </div>
       </ScrollArea>
     </div>
@@ -167,20 +125,42 @@ interface GraderCheckboxProps {
   onCheckedChange: () => void
 }
 
-function GraderCheckbox({ grader, checked, onCheckedChange }: GraderCheckboxProps) {
+// Memoized to prevent re-renders when other checkboxes change (rerender-memo rule)
+const GraderCheckbox = memo(function GraderCheckbox({ grader, checked, onCheckedChange }: GraderCheckboxProps) {
+  const { t } = useTranslation('graders')
+  const isAssertion = isAssertionGrader(grader)
+
   return (
-    <div className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800">
+    <div className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800">
       <Checkbox
         id={grader.id}
         checked={checked}
         onCheckedChange={onCheckedChange}
+        className="mt-0.5"
       />
       <Label
         htmlFor={grader.id}
-        className="flex-1 cursor-pointer text-sm font-normal"
+        className="flex-1 cursor-pointer"
       >
-        {grader.name}
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-normal text-gray-900 dark:text-gray-100">
+            {grader.name}
+          </span>
+          {/* Show AI badge for LLM judges */}
+          {!isAssertion && (
+            <Badge variant="secondary" className="h-4 px-1.5 text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 gap-0.5">
+              <Sparkles className="h-2.5 w-2.5" />
+              {t('selector.aiBadge')}
+            </Badge>
+          )}
+        </div>
+        {/* One-line description */}
+        {grader.description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+            {grader.description}
+          </p>
+        )}
       </Label>
     </div>
   )
-}
+})

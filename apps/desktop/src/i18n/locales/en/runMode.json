@@ -1,5 +1,23 @@
 {
   "title": "Run Mode",
+  "tabs": {
+    "prompt": "Prompt",
+    "output": "Output",
+    "feedback": "Feedback",
+    "config": "Config"
+  },
+  "config": {
+    "saveAsNewVersion": "Save as new version",
+    "saving": "Saving...",
+    "versionCreated": "New version created with updated config",
+    "noChanges": "No changes to save",
+    "iterateDescription": "Tweak settings and save to create a new prompt version"
+  },
+  "agent": {
+    "label": "Agent",
+    "none": "No Agent",
+    "noneDescription": "Run without agent personality"
+  },
   "fieldsProgress": "{{completed}} of {{total}} fields",
   "typeMessage": "Type a message...",
   "complete": "All fields complete!",
@@ -8,11 +26,18 @@
   "suggested": "Suggested",
   "selectOption": "Select an option",
   "onePerLine": "One item per line",
-  "execute": "Execute & Copy",
+  "execute": "Run Prompt",
   "preview": "Preview",
   "output": "Output",
   "noVariablesTitle": "No variables to configure",
-  "noVariablesDescription": "This prompt has no variables. Click Execute & Copy to copy the template directly.",
+  "noVariablesDescription": "This prompt has no variables. Click Run Prompt to copy the template directly.",
+  "outputEmpty": {
+    "title": "No output yet",
+    "description": "Fill in the variables and run the prompt to see the output."
+  },
+  "chatMessages": "Chat messages",
+  "openPanel": "Open {{tab}} panel",
+  "switchTab": "Switch tab",
   "comparison": {
     "noProviders": "No providers selected",
     "waiting": "Waiting to start...",
@@ -24,5 +49,32 @@
       "completed": "Done",
       "error": "Error"
     }
+  },
+  "batch": {
+    "title": "Batch Run",
+    "description": "Run the same prompt multiple times to check output consistency. All runs use the same variable values.",
+    "runMultiple": "Run Multiple",
+    "running": "Running {{current}}/{{total}}",
+    "start": "Start Batch",
+    "starting": "Starting...",
+    "progressLabel": "Running {{current}} of {{total}}...",
+    "noResults": "No batch results yet",
+    "passRate": "pass rate",
+    "veryConsistent": "Very Consistent",
+    "consistent": "Consistent",
+    "moderate": "Moderate",
+    "variable": "Variable",
+    "consistencyTooltip": "How similar the outputs are across multiple runs",
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "passed": "Passed",
+      "partialPass": "Partial",
+      "error": "Error"
+    },
+    "waitingToRun": "Waiting to run...",
+    "generating": "Generating...",
+    "bestResult": "Best result",
+    "worstResult": "Lowest score"
   }
 }

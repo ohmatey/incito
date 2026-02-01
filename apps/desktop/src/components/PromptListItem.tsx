@@ -1,6 +1,7 @@
+import { memo, useState } from 'react'
 import type { PromptFile } from '@/types/prompt'
 import { useTranslation } from 'react-i18next'
-import { useAppContext } from '@/context/AppContext'
+import { useFeatureFlags } from '@/context/FeatureFlagsContext'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,7 +20,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, Copy, Trash2, Pin, PinOff } from 'lucide-react'
-import { useState } from 'react'
 import { LanguageBadge } from '@/components/translation/LanguageBadge'
 import { useNeedsTranslation } from '@/hooks/usePromptTranslation'
 
@@ -33,7 +33,8 @@ interface PromptListItemProps {
   onTogglePin: () => void
 }
 
-export function PromptListItem({
+// Memoized to prevent re-renders when other list items change (rerender-memo rule)
+export const PromptListItem = memo(function PromptListItem({
   prompt,
   isSelected,
   isPinned,
@@ -43,7 +44,7 @@ export function PromptListItem({
   onTogglePin,
 }: PromptListItemProps) {
   const { t } = useTranslation(['prompts', 'common'])
-  const { featureFlags } = useAppContext()
+  const { featureFlags } = useFeatureFlags()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Check if prompt needs translation (only if translations feature is enabled)
@@ -133,4 +134,4 @@ export function PromptListItem({
       </AlertDialog>
     </>
   )
-}
+})

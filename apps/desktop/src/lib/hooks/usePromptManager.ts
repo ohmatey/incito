@@ -16,10 +16,10 @@ export interface UsePromptManagerResult {
   createNewPrompt: (folderPath: string) => Promise<PromptFile | null>
   createFromAI: (folderPath: string, generated: GeneratedPrompt) => Promise<PromptFile | null>
   duplicate: (prompt: PromptFile, folderPath: string) => Promise<PromptFile | null>
-  remove: (prompt: PromptFile) => Promise<boolean>
-  save: (updatedPrompt: PromptFile) => Promise<boolean>
+  remove: (prompt: PromptFile, folderPath: string) => Promise<boolean>
+  save: (updatedPrompt: PromptFile, folderPath: string) => Promise<boolean>
   updateSelectedPromptVariables: (variables: Variable[]) => void
-  restoreVersion: (content: string) => Promise<boolean>
+  restoreVersion: (content: string, folderPath: string) => Promise<boolean>
   isNameUnique: (name: string, excludePath?: string) => boolean
 }
 
@@ -104,9 +104,9 @@ export function usePromptManager(): UsePromptManagerResult {
     }
   }, [prompts])
 
-  const remove = useCallback(async (prompt: PromptFile): Promise<boolean> => {
+  const remove = useCallback(async (prompt: PromptFile, folderPath: string): Promise<boolean> => {
     try {
-      await deletePrompt(prompt)
+      await deletePrompt(prompt, folderPath)
       setPrompts((prev) => {
         const remaining = prev.filter((p) => p.path !== prompt.path)
 
@@ -126,9 +126,9 @@ export function usePromptManager(): UsePromptManagerResult {
     }
   }, [selectedPrompt?.path])
 
-  const save = useCallback(async (updatedPrompt: PromptFile): Promise<boolean> => {
+  const save = useCallback(async (updatedPrompt: PromptFile, folderPath: string): Promise<boolean> => {
     try {
-      await savePrompt(updatedPrompt)
+      await savePrompt(updatedPrompt, folderPath)
       setPrompts((prev) =>
         prev
           .map((p) => (p.path === updatedPrompt.path ? updatedPrompt : p))
@@ -151,7 +151,7 @@ export function usePromptManager(): UsePromptManagerResult {
     })
   }, [])
 
-  const restoreVersion = useCallback(async (content: string): Promise<boolean> => {
+  const restoreVersion = useCallback(async (content: string, folderPath: string): Promise<boolean> => {
     if (!selectedPrompt) return false
 
     try {
@@ -162,7 +162,7 @@ export function usePromptManager(): UsePromptManagerResult {
           .map((p) => (p.path === restoredPrompt.path ? restoredPrompt : p))
           .sort((a, b) => a.name.localeCompare(b.name))
       )
-      await savePrompt(restoredPrompt)
+      await savePrompt(restoredPrompt, folderPath)
       toast.success(i18n.t('toasts:success.versionRestored'))
       return true
     } catch (error) {

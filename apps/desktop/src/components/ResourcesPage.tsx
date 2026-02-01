@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
 import { ResourceList } from './resources/ResourceList'
 import { ResourceDetail } from './resources/ResourceDetail'
 import { ResourceSidebar } from './resources/ResourceSidebar'
@@ -13,7 +14,8 @@ interface ResourcesPageComponentProps {
 
 export function ResourcesPageComponent({ children }: ResourcesPageComponentProps) {
   const { t: _t } = useTranslation('resources')
-  const { folderPath, panelWidths, listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
+  const { folderPath } = useAppContext()
+  const { panelWidths, listPanelCollapsed, toggleListPanelCollapsed } = useLayout()
 
   const [resources, setResources] = useState<Resource[]>([])
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)

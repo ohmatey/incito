@@ -149,6 +149,8 @@
     "editDescription": "แก้ไขเทมเพลต ตัวแปร และข้อมูลเมตา",
     "quickLaunch": "เปิดด่วน",
     "quickLaunchDescription": "เลือกแอปเริ่มต้นที่จะแสดงเป็นปุ่มเข้าถึงด่วน",
+    "defaultAgent": "เอเจนต์เริ่มต้น",
+    "defaultAgentDescription": "เอเจนต์ที่จะใช้เมื่อเรียกใช้พรอมต์นี้",
     "deletePrompt": "ลบพรอมต์",
     "deleteDescription": "ลบไฟล์พรอมต์นี้อย่างถาวร",
     "deleteConfirmDescription": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การกระทำนี้ไม่สามารถเลิกทำได้"
@@ -218,6 +220,69 @@
       "loading": "กำลังโหลด...",
       "loadError": "ไม่สามารถโหลดรูปภาพได้",
       "replace": "แทนที่"
+    }
+  },
+  "settings": {
+    "title": "การตั้งค่า",
+    "tab": "การตั้งค่า",
+    "saveButton": "บันทึกการตั้งค่า",
+    "saveDescription": "การเปลี่ยนแปลงจะถูกบันทึกเป็นเวอร์ชันใหม่",
+    "provider": {
+      "title": "ผู้ให้บริการ",
+      "defaultProvider": "ผู้ให้บริการเริ่มต้น",
+      "allowOverride": "อนุญาตให้ผู้ใช้แก้ไขขณะรัน",
+      "noProvider": "ไม่ได้ตั้งค่าผู้ให้บริการ"
+    },
+    "aiBehavior": {
+      "title": "พฤติกรรม AI",
+      "promptSource": "แหล่งที่มาพรอมต์ระบบ",
+      "useAgent": "ใช้เอเจนต์",
+      "useCustomPrompt": "พรอมต์กำหนดเอง",
+      "selectAgent": "เลือกเอเจนต์",
+      "selectAgentPlaceholder": "เลือกเอเจนต์...",
+      "agentSystemPrompt": "พรอมต์ระบบ:",
+      "noAgentsAvailable": "ไม่มีเอเจนต์ สร้างเอเจนต์ก่อน",
+      "systemPrompt": "พรอมต์ระบบ",
+      "systemPromptPlaceholder": "คำแนะนำสำหรับ AI...",
+      "temperature": "อุณหภูมิ",
+      "maxTokens": "โทเค็นสูงสุด"
+    },
+    "humanFeedback": {
+      "title": "ข้อเสนอแนะจากมนุษย์",
+      "enabled": "เปิดใช้งานข้อเสนอแนะจากมนุษย์",
+      "feedbackTypes": "ประเภทข้อเสนอแนะ",
+      "rating": {
+        "label": "คะแนน",
+        "scale": "มาตราส่วน",
+        "scale5": "1-5",
+        "scale10": "1-10",
+        "minLabel": "ป้ายต่ำสุด",
+        "maxLabel": "ป้ายสูงสุด"
+      },
+      "passFail": {
+        "label": "ผ่าน / ไม่ผ่าน",
+        "passLabel": "ป้ายผ่าน",
+        "failLabel": "ป้ายไม่ผ่าน"
+      },
+      "notes": {
+        "label": "บันทึก",
+        "required": "จำเป็น",
+        "placeholder": "ข้อความตัวอย่าง"
+      },
+      "tags": {
+        "label": "แท็ก",
+        "options": "ตัวเลือกแท็ก",
+        "addTag": "เพิ่มแท็ก",
+        "removeTag": "ลบ"
+      },
+      "instructions": "คำแนะนำสำหรับผู้ตรวจสอบ",
+      "instructionsPlaceholder": "คำแนะนำสำหรับผู้ตรวจสอบ..."
+    },
+    "evals": {
+      "title": "ตรวจสอบคุณภาพอัตโนมัติ",
+      "activeGraders": "การตรวจสอบคุณภาพ",
+      "runOnComplete": "รันอัตโนมัติเมื่อเสร็จสิ้น",
+      "noGraders": "ไม่ได้เลือกการตรวจสอบคุณภาพ"
     }
   },
   "variableConfig": {

@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { AgentFile } from '@/types/agent'
-import type { RightPanelTab } from '@/components/PromptHeader'
-import { getSavedFolderPath, saveFolderPath, clearFolderPath, getRecentPromptIds, addRecentPrompt, removeRecentPrompt, getAllPromptDrafts, deletePromptDraft, getPanelWidths, savePanelWidths, getListPanelCollapsed, saveListPanelCollapsed, getPinnedPromptIds, addPinnedPrompt, removePinnedPrompt, getTranslationSettings, getFeatureFlags, saveFeatureFlags, type PromptDraft, type PanelWidths, type FeatureFlags } from '@/lib/store'
+import { getSavedFolderPath, saveFolderPath, clearFolderPath, getTranslationSettings } from '@/lib/store'
 import { savePrompt, createVariant } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
 import { useAgentManager } from '@/lib/hooks/useAgentManager'
+import { usePromptSession } from '@/context/PromptSessionContext'
+import { useLayout } from '@/context/LayoutContext'
 import { toast } from 'sonner'
 import type { GeneratedPrompt } from '@/lib/mastra-client'
 import i18n from '@/i18n'
@@ -31,19 +32,6 @@ interface AppContextValue {
   // Edit state
   editState: ReturnType<typeof usePromptEditState>
 
-  // Recent prompts
-  recentPromptIds: string[]
-
-  // Pinned prompts
-  pinnedPromptIds: string[]
-  togglePinPrompt: (promptId: string) => Promise<void>
-
-  // In-progress prompts (drafts with their prompts)
-  inProgressPrompts: Array<{ draft: PromptDraft; prompt: PromptFile }>
-  refreshDrafts: () => Promise<void>
-  handlePromptCompleted: () => Promise<void>
-  clearDraftById: (promptId: string) => Promise<void>
-
   // UI state
   showNewPromptDialog: boolean
   setShowNewPromptDialog: (show: boolean) => void
@@ -51,20 +39,6 @@ interface AppContextValue {
   openNewPromptDialog: (mode?: 'blank' | 'ai') => void
   searchFocusTrigger: number
   triggerSearchFocus: () => void
-  rightPanelTab: RightPanelTab
-  setRightPanelTab: (tab: RightPanelTab) => void
-  rightPanelOpen: boolean
-  setRightPanelOpen: (open: boolean) => void
-
-  // Panel widths
-  panelWidths: PanelWidths
-  handlePromptListResize: (delta: number) => void
-  handleRightPanelResize: (delta: number) => void
-  handlePanelResizeEnd: () => void
-
-  // List panel collapse state
-  listPanelCollapsed: boolean
-  toggleListPanelCollapsed: () => void
 
   // Prompt operations
   handleCreatePrompt: () => Promise<PromptFile | null>
@@ -98,6 +72,9 @@ interface AppContextValue {
   // Default launchers handler
   handleDefaultLaunchersChange: (launchers: string[]) => Promise<void>
 
+  // Default agent handler
+  handleDefaultAgentChange: (agentId: string | null) => Promise<void>
+
   // Version restore handler
   handleRestoreVersion: (content: string) => Promise<void>
 
@@ -107,14 +84,12 @@ interface AppContextValue {
   variantEditorOpen: boolean
   setVariantEditorOpen: (open: boolean) => void
   handleOpenVariantEditor: () => void
-  getRememberedVariantId: (parentFileName: string) => string | undefined
 
   // Agent operations
   handleCreateAgent: () => Promise<AgentFile | null>
 
-  // Feature flags
-  featureFlags: FeatureFlags
-  updateFeatureFlags: (flags: Partial<FeatureFlags>) => Promise<void>
+  // Prompt completion handler
+  handlePromptCompleted: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -139,45 +114,8 @@ export function AppProvider({ children }: AppProviderProps) {
   const [newPromptDialogMode, setNewPromptDialogMode] = useState<'blank' | 'ai'>('blank')
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0)
 
-  // Open new prompt dialog with optional mode
-  function openNewPromptDialog(mode: 'blank' | 'ai' = 'blank') {
-    setNewPromptDialogMode(mode)
-    setShowNewPromptDialog(true)
-  }
-
-  // Right panel state
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('preview')
-  const [rightPanelOpen, setRightPanelOpen] = useState(false)
-
-  // Panel widths state
-  const [panelWidths, setPanelWidths] = useState<PanelWidths>({ promptList: 200, rightPanel: 300 })
-
-  // List panel collapsed state
-  const [listPanelCollapsed, setListPanelCollapsed] = useState(false)
-
-  // Recent prompts state
-  const [recentPromptIds, setRecentPromptIds] = useState<string[]>([])
-
-  // Pinned prompts state
-  const [pinnedPromptIds, setPinnedPromptIds] = useState<string[]>([])
-
-  // In-progress prompts state (drafts matched with their prompts)
-  const [inProgressPrompts, setInProgressPrompts] = useState<Array<{ draft: PromptDraft; prompt: PromptFile }>>([])
-
   // Variant editor dialog state
   const [variantEditorOpen, setVariantEditorOpen] = useState(false)
-
-  // Track selected variant for each parent prompt (parentFileName -> variantId)
-  const [selectedVariantByParent, setSelectedVariantByParent] = useState<Record<string, string>>({})
-
-  // Feature flags state
-  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
-    agentsEnabled: false,
-    resourcesEnabled: false,
-    translationsEnabled: false,
-    mcpServerEnabled: false,
-    runsEnabled: false,
-  })
 
   // Custom hooks
   const promptManager = usePromptManager()
@@ -186,15 +124,19 @@ export function AppProvider({ children }: AppProviderProps) {
   const editState = usePromptEditState(promptManager.selectedPrompt, promptManager.prompts)
   const { language: appLanguage } = useLanguage()
 
-  // Load saved folder path and feature flags on mount
+  // Get contexts
+  const session = usePromptSession()
+  const layout = useLayout()
+
+  // Open new prompt dialog with optional mode
+  function openNewPromptDialog(mode: 'blank' | 'ai' = 'blank') {
+    setNewPromptDialogMode(mode)
+    setShowNewPromptDialog(true)
+  }
+
+  // Load saved folder path on mount
   useEffect(() => {
     async function loadSavedFolder() {
-      // Load feature flags
-      const flagsResult = await getFeatureFlags()
-      if (flagsResult.ok) {
-        setFeatureFlags(flagsResult.data)
-      }
-
       const result = await getSavedFolderPath()
       if (result.ok && result.data) {
         handleFolderSelect(result.data)
@@ -214,52 +156,18 @@ export function AppProvider({ children }: AppProviderProps) {
     setIsLoading(true)
 
     try {
-      const loadedPrompts = await promptManager.loadPromptsFromFolder(path)
+      // Start all independent operations in parallel
+      const [loadedPrompts] = await Promise.all([
+        promptManager.loadPromptsFromFolder(path),
+        saveFolderPath(path),
+        tagManager.loadTags(),
+        agentManager.loadAgentsFromFolder(path).then(() => agentManager.loadPinnedAgents()),
+      ])
+
       setFolderPath(path)
-      await saveFolderPath(path)
 
-      // Load tags from SQLite
-      await tagManager.loadTags()
-
-      // Load agents from same folder
-      await agentManager.loadAgentsFromFolder(path)
-      await agentManager.loadPinnedAgents()
-
-      // Load recent prompts
-      const recentResult = await getRecentPromptIds()
-      if (recentResult.ok) {
-        setRecentPromptIds(recentResult.data)
-      }
-
-      // Load pinned prompts
-      const pinnedResult = await getPinnedPromptIds()
-      if (pinnedResult.ok) {
-        setPinnedPromptIds(pinnedResult.data)
-      }
-
-      // Load panel widths
-      const panelWidthsResult = await getPanelWidths()
-      if (panelWidthsResult.ok) {
-        setPanelWidths(panelWidthsResult.data)
-      }
-
-      // Load list panel collapsed state
-      const collapsedResult = await getListPanelCollapsed()
-      if (collapsedResult.ok) {
-        setListPanelCollapsed(collapsedResult.data)
-      }
-
-      // Load in-progress drafts
-      const draftsResult = await getAllPromptDrafts()
-      if (draftsResult.ok) {
-        const matched = draftsResult.data
-          .map((draft) => {
-            const prompt = loadedPrompts.find((p) => p.id === draft.prompt_id)
-            return prompt ? { draft, prompt } : null
-          })
-          .filter((item): item is { draft: PromptDraft; prompt: PromptFile } => item !== null)
-        setInProgressPrompts(matched)
-      }
+      // Initialize session data with loaded prompts
+      await session.initializeSession(loadedPrompts)
 
       if (loadedPrompts.length > 0) {
         promptManager.selectPrompt(loadedPrompts[0])
@@ -284,48 +192,7 @@ export function AppProvider({ children }: AppProviderProps) {
     agentManager.setSelectedAgent(null)
     editState.setVariableValues({})
     editState.setIsEditMode(false)
-    setInProgressPrompts([])
-    setSelectedVariantByParent({})
-  }
-
-  // Refresh drafts (in-progress prompts)
-  async function refreshDrafts() {
-    const draftsResult = await getAllPromptDrafts()
-    if (draftsResult.ok) {
-      // Match drafts with their prompts, filtering out orphaned drafts
-      const matched = draftsResult.data
-        .map((draft) => {
-          const prompt = promptManager.prompts.find((p) => p.id === draft.prompt_id)
-          return prompt ? { draft, prompt } : null
-        })
-        .filter((item): item is { draft: PromptDraft; prompt: PromptFile } => item !== null)
-      setInProgressPrompts(matched)
-    }
-  }
-
-  // Handle prompt completion (copy/launch success)
-  async function handlePromptCompleted() {
-    await editState.clearDraft()
-    await refreshDrafts()
-  }
-
-  // Clear a draft by prompt ID (used from empty state page)
-  async function clearDraftById(promptId: string) {
-    await deletePromptDraft(promptId)
-    await refreshDrafts()
-
-    // Clear variant memory for this prompt
-    const prompt = promptManager.prompts.find((p) => p.id === promptId)
-    if (prompt) {
-      setSelectedVariantByParent((prev) => {
-        const next = { ...prev }
-        delete next[prompt.fileName]
-        if (prompt.variantOf && prev[prompt.variantOf] === prompt.id) {
-          delete next[prompt.variantOf]
-        }
-        return next
-      })
-    }
+    session.resetSession()
   }
 
   // Prompt operations
@@ -344,11 +211,7 @@ export function AppProvider({ children }: AppProviderProps) {
     editState.setIsEditMode(false)
 
     // Add to recent prompts
-    await addRecentPrompt(prompt.id)
-    setRecentPromptIds((prev) => {
-      const filtered = prev.filter((id) => id !== prompt.id)
-      return [prompt.id, ...filtered].slice(0, 10)
-    })
+    await session.addToRecent(prompt.id)
   }
 
   async function handleDuplicatePrompt(prompt: PromptFile): Promise<PromptFile | null> {
@@ -362,43 +225,18 @@ export function AppProvider({ children }: AppProviderProps) {
   }
 
   async function handleDeletePrompt(prompt: PromptFile) {
-    await promptManager.remove(prompt)
+    if (!folderPath) return
+    await promptManager.remove(prompt, folderPath)
     editState.setIsEditMode(false)
 
-    // Remove from recent prompts
-    await removeRecentPrompt(prompt.id)
-    setRecentPromptIds((prev) => prev.filter((id) => id !== prompt.id))
-
-    // Remove any draft for this prompt
-    await deletePromptDraft(prompt.id)
-    setInProgressPrompts((prev) => prev.filter((item) => item.prompt.id !== prompt.id))
-
-    // Remove from pinned prompts
-    await removePinnedPrompt(prompt.id)
-    setPinnedPromptIds((prev) => prev.filter((id) => id !== prompt.id))
-
-    // Clear variant memory for this prompt
-    setSelectedVariantByParent((prev) => {
-      const next = { ...prev }
-      // If this was a parent prompt, remove its entry
-      delete next[prompt.fileName]
-      // If this was a variant, remove it if it was the remembered one for its parent
-      if (prompt.variantOf && prev[prompt.variantOf] === prompt.id) {
-        delete next[prompt.variantOf]
-      }
-      return next
-    })
-  }
-
-  async function togglePinPrompt(promptId: string) {
-    const isPinned = pinnedPromptIds.includes(promptId)
-    if (isPinned) {
-      await removePinnedPrompt(promptId)
-      setPinnedPromptIds((prev) => prev.filter((id) => id !== promptId))
-    } else {
-      await addPinnedPrompt(promptId)
-      setPinnedPromptIds((prev) => [...prev, promptId])
+    // Clean up session data for this prompt
+    await session.removeFromRecent(prompt.id)
+    await session.clearDraftById(prompt.id)
+    // Remove from pinned if it was pinned
+    if (session.pinnedPromptIds.includes(prompt.id)) {
+      await session.togglePinPrompt(prompt.id)
     }
+    session.clearVariantSelection(prompt)
   }
 
   async function handleCreateFromAI(generated: GeneratedPrompt): Promise<PromptFile | null> {
@@ -409,17 +247,23 @@ export function AppProvider({ children }: AppProviderProps) {
     return newPrompt
   }
 
+  // Handle prompt completion (copy/launch success)
+  async function handlePromptCompleted() {
+    await editState.clearDraft()
+    await session.refreshDrafts(promptManager.prompts)
+  }
+
   // Edit mode handlers
   function handleEnterEditMode() {
     editState.enterEditMode()
-    setRightPanelTab('instructions')
+    layout.setRightPanelTab('instructions')
   }
 
   function handleExitEditMode() {
     editState.exitEditMode()
     // 'instructions' tab is only available in edit mode, switch to preview if needed
-    if (rightPanelTab === 'instructions') {
-      setRightPanelTab('preview')
+    if (layout.rightPanelTab === 'instructions') {
+      layout.setRightPanelTab('preview')
     }
   }
 
@@ -437,6 +281,7 @@ export function AppProvider({ children }: AppProviderProps) {
   }
 
   async function handleUpdateTag(id: string, name: string, color: string) {
+    if (!folderPath) return
     await tagManager.updateTag(
       id,
       name,
@@ -444,17 +289,20 @@ export function AppProvider({ children }: AppProviderProps) {
       promptManager.prompts,
       promptManager.setPrompts,
       promptManager.selectedPrompt,
-      promptManager.setSelectedPrompt
+      promptManager.setSelectedPrompt,
+      folderPath
     )
   }
 
   async function handleDeleteTag(id: string) {
+    if (!folderPath) return
     await tagManager.deleteTag(
       id,
       promptManager.prompts,
       promptManager.setPrompts,
       promptManager.selectedPrompt,
-      promptManager.setSelectedPrompt
+      promptManager.setSelectedPrompt,
+      folderPath
     )
   }
 
@@ -480,7 +328,8 @@ export function AppProvider({ children }: AppProviderProps) {
       tags: editState.localTags,
     }
 
-    const saved = await promptManager.save(updatedPrompt)
+    if (!folderPath) return
+    const saved = await promptManager.save(updatedPrompt, folderPath)
     if (saved) {
       editState.syncFromPrompt(updatedPrompt)
       handleExitEditMode()
@@ -527,7 +376,7 @@ export function AppProvider({ children }: AppProviderProps) {
   // Notes handler
   async function handleNotesChange(notes: Note[]) {
     const { selectedPrompt } = promptManager
-    if (!selectedPrompt) return
+    if (!selectedPrompt || !folderPath) return
 
     const updatedPrompt: PromptFile = {
       ...selectedPrompt,
@@ -540,7 +389,7 @@ export function AppProvider({ children }: AppProviderProps) {
     )
 
     try {
-      await savePrompt(updatedPrompt)
+      await savePrompt(updatedPrompt, folderPath)
     } catch (error) {
       console.error('Failed to save notes:', error)
       toast.error(i18n.t('toasts:error.notesSaveFailed'))
@@ -550,7 +399,7 @@ export function AppProvider({ children }: AppProviderProps) {
   // Default launchers handler
   async function handleDefaultLaunchersChange(launchers: string[]) {
     const { selectedPrompt } = promptManager
-    if (!selectedPrompt) return
+    if (!selectedPrompt || !folderPath) return
 
     const updatedPrompt: PromptFile = {
       ...selectedPrompt,
@@ -563,42 +412,47 @@ export function AppProvider({ children }: AppProviderProps) {
     )
 
     try {
-      await savePrompt(updatedPrompt)
+      await savePrompt(updatedPrompt, folderPath)
     } catch (error) {
       console.error('Failed to save launchers:', error)
       toast.error(i18n.t('toasts:error.launchersSaveFailed'))
     }
   }
 
+  // Default agent handler
+  async function handleDefaultAgentChange(agentId: string | null) {
+    const { selectedPrompt } = promptManager
+    if (!selectedPrompt || !folderPath) return
+
+    const updatedPrompt: PromptFile = {
+      ...selectedPrompt,
+      defaultAgentId: agentId ?? undefined,
+    }
+
+    promptManager.setSelectedPrompt(updatedPrompt)
+    promptManager.setPrompts((prev) =>
+      prev.map((p) => (p.path === updatedPrompt.path ? updatedPrompt : p))
+    )
+
+    try {
+      await savePrompt(updatedPrompt, folderPath)
+    } catch (error) {
+      console.error('Failed to save default agent:', error)
+      toast.error(i18n.t('toasts:error.defaultAgentSaveFailed'))
+    }
+  }
+
   // Version restore handler
   async function handleRestoreVersion(content: string) {
-    await promptManager.restoreVersion(content)
+    if (!folderPath) return
+    await promptManager.restoreVersion(content, folderPath)
   }
 
   // Variant handlers
   function handleSelectVariant(prompt: PromptFile) {
     // Select variant while preserving current edit/run mode
     promptManager.selectPrompt(prompt)
-
-    // Remember which variant was selected for its parent
-    if (prompt.variantOf) {
-      // User selected a variant - remember it
-      setSelectedVariantByParent((prev) => ({
-        ...prev,
-        [prompt.variantOf!]: prompt.id,
-      }))
-    } else {
-      // User selected the original - clear any remembered variant
-      setSelectedVariantByParent((prev) => {
-        const next = { ...prev }
-        delete next[prompt.fileName]
-        return next
-      })
-    }
-  }
-
-  function getRememberedVariantId(parentFileName: string): string | undefined {
-    return selectedVariantByParent[parentFileName]
+    session.rememberVariantSelection(prompt)
   }
 
   async function handleCreateVariant(variantLabel: string, template: string) {
@@ -654,46 +508,6 @@ export function AppProvider({ children }: AppProviderProps) {
     setSearchFocusTrigger((prev) => prev + 1)
   }
 
-  // Feature flags update
-  async function updateFeatureFlags(flags: Partial<FeatureFlags>) {
-    const newFlags = { ...featureFlags, ...flags }
-    const result = await saveFeatureFlags(flags)
-    if (result.ok) {
-      setFeatureFlags(newFlags)
-    } else {
-      toast.error(result.error)
-    }
-  }
-
-  // Panel resize handlers
-  function handlePromptListResize(delta: number) {
-    setPanelWidths((prev) => ({
-      ...prev,
-      promptList: Math.min(400, Math.max(150, prev.promptList + delta)),
-    }))
-  }
-
-  function handleRightPanelResize(delta: number) {
-    setPanelWidths((prev) => ({
-      ...prev,
-      rightPanel: Math.min(600, Math.max(200, prev.rightPanel + delta)),
-    }))
-  }
-
-  async function handlePanelResizeEnd() {
-    await savePanelWidths(panelWidths)
-  }
-
-  // List panel collapse toggle
-  function toggleListPanelCollapsed() {
-    setListPanelCollapsed((prev) => {
-      const newCollapsed = !prev
-      // Fire and forget - don't block UI for persistence
-      saveListPanelCollapsed(newCollapsed)
-      return newCollapsed
-    })
-  }
-
   const value: AppContextValue = {
     // Folder state
     folderPath,
@@ -707,19 +521,6 @@ export function AppProvider({ children }: AppProviderProps) {
     agentManager,
     editState,
 
-    // Recent prompts
-    recentPromptIds,
-
-    // Pinned prompts
-    pinnedPromptIds,
-    togglePinPrompt,
-
-    // In-progress prompts
-    inProgressPrompts,
-    refreshDrafts,
-    handlePromptCompleted,
-    clearDraftById,
-
     // UI state
     showNewPromptDialog,
     setShowNewPromptDialog,
@@ -727,20 +528,6 @@ export function AppProvider({ children }: AppProviderProps) {
     openNewPromptDialog,
     searchFocusTrigger,
     triggerSearchFocus,
-    rightPanelTab,
-    setRightPanelTab,
-    rightPanelOpen,
-    setRightPanelOpen,
-
-    // Panel widths
-    panelWidths,
-    handlePromptListResize,
-    handleRightPanelResize,
-    handlePanelResizeEnd,
-
-    // List panel collapse
-    listPanelCollapsed,
-    toggleListPanelCollapsed,
 
     // Prompt operations
     handleCreatePrompt,
@@ -774,6 +561,9 @@ export function AppProvider({ children }: AppProviderProps) {
     // Default launchers handler
     handleDefaultLaunchersChange,
 
+    // Default agent handler
+    handleDefaultAgentChange,
+
     // Version restore handler
     handleRestoreVersion,
 
@@ -783,14 +573,12 @@ export function AppProvider({ children }: AppProviderProps) {
     variantEditorOpen,
     setVariantEditorOpen,
     handleOpenVariantEditor,
-    getRememberedVariantId,
 
     // Agent operations
     handleCreateAgent,
 
-    // Feature flags
-    featureFlags,
-    updateFeatureFlags,
+    // Prompt completion handler
+    handlePromptCompleted,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

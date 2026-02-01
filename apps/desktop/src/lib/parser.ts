@@ -37,6 +37,9 @@ export function parsePromptFile(
     const variants = validateVariants(data.variants)
     const variantOf = validateVariantOf(data.variant_of)
 
+    // Parse defaultAgentId (string or undefined)
+    const defaultAgentId = typeof data.defaultAgentId === 'string' ? data.defaultAgentId : undefined
+
     return {
       id,
       fileName,
@@ -47,6 +50,7 @@ export function parsePromptFile(
       variables: variables.valid,
       notes: notes.valid,
       defaultLaunchers: defaultLaunchers.valid,
+      defaultAgentId,
       template: template.trim(),
       rawContent: content,
       isValid: errors.length === 0 && variables.errors.length === 0 && tags.errors.length === 0 && notes.errors.length === 0,
@@ -66,6 +70,7 @@ export function parsePromptFile(
       variables: [],
       notes: [],
       defaultLaunchers: [],
+      defaultAgentId: undefined,
       template: content,
       rawContent: content,
       isValid: false,
@@ -358,6 +363,10 @@ export function serializePrompt(prompt: PromptFile): string {
 
   if (prompt.defaultLaunchers && prompt.defaultLaunchers.length > 0) {
     frontmatter.defaultLaunchers = prompt.defaultLaunchers
+  }
+
+  if (prompt.defaultAgentId) {
+    frontmatter.defaultAgentId = prompt.defaultAgentId
   }
 
   // Variant fields

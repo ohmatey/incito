@@ -1,5 +1,7 @@
 import { Outlet, useNavigate, useParams } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
+import { usePromptSession } from '@/context/PromptSessionContext'
 import { PromptList } from '@/components/PromptList'
 import { ResizeHandle } from '@/components/ui/resize-handle'
 import type { PromptFile } from '@/types/prompt'
@@ -13,15 +15,14 @@ export function PromptsPage() {
     setShowNewPromptDialog,
     handleDuplicatePrompt,
     handleDeletePrompt,
-    setRightPanelOpen: _setRightPanelOpen,
+  } = useAppContext()
+  const {
     panelWidths,
     handlePromptListResize,
     handlePanelResizeEnd,
-    pinnedPromptIds,
-    togglePinPrompt,
-    getRememberedVariantId,
     listPanelCollapsed,
-  } = useAppContext()
+  } = useLayout()
+  const { pinnedPromptIds, togglePinPrompt, getRememberedVariantId } = usePromptSession()
 
   // Derive selected prompt from URL param
   const selectedPrompt = promptId

@@ -8,10 +8,120 @@ import type {
   RunLauncher,
 } from '../types/run'
 import type { ChatSession, ChatMessage, ChatRole, ToolCallResult } from '../types/agent'
+import type {
+  Playbook,
+  PlaybookRule,
+  PlaybookRow,
+  PlaybookRuleRow,
+  CreatePlaybookData,
+  UpdatePlaybookData,
+  CreatePlaybookRuleData,
+  UpdatePlaybookRuleData,
+} from '../types/playbook'
+import { rowToPlaybook, rowToPlaybookRule } from '../types/playbook'
 import { isValidTagName } from './constants'
 
 // Result type for operations that can fail
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string }
+
+// ============================================================================
+// Relative Path Utilities (Sync-Ready)
+// ============================================================================
+// Store paths as relative to enable syncing across machines with different base folders
+
+let _baseFolderPath: string | null = null
+
+/**
+ * Set the base folder path for relative path conversions.
+ * Must be called when the prompts folder is loaded.
+ * Also triggers migration of absolute paths to relative paths.
+ */
+export async function setBaseFolderPath(path: string): Promise<void> {
+  _baseFolderPath = path
+  // Run the path migration after setting base folder
+  await migrateToRelativePaths(path)
+}
+
+/**
+ * Migrate absolute paths in path-based tables to relative paths.
+ * This runs once per base folder path.
+ */
+async function migrateToRelativePaths(basePath: string): Promise<void> {
+  try {
+    const database = await getDb()
+
+    // Check if we've already migrated for this base path
+    const migrationKey = `path_migration_v1_${basePath}`
+    const migrated = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      [migrationKey]
+    )
+
+    if (migrated.length > 0 && migrated[0].value === 'done') {
+      return // Already migrated
+    }
+
+    // Migrate prompt_tags
+    await database.execute(
+      `UPDATE prompt_tags SET prompt_path = REPLACE(prompt_path, ?, '')
+       WHERE prompt_path LIKE ?`,
+      [`${basePath}/`, `${basePath}/%`]
+    )
+
+    // Migrate prompt_versions
+    await database.execute(
+      `UPDATE prompt_versions SET prompt_path = REPLACE(prompt_path, ?, '')
+       WHERE prompt_path LIKE ?`,
+      [`${basePath}/`, `${basePath}/%`]
+    )
+
+    // Migrate prompt_runs
+    await database.execute(
+      `UPDATE prompt_runs SET prompt_path = REPLACE(prompt_path, ?, '')
+       WHERE prompt_path LIKE ?`,
+      [`${basePath}/`, `${basePath}/%`]
+    )
+
+    // Mark migration as done for this base path
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [migrationKey, 'done']
+    )
+  } catch (err) {
+    console.error('Failed to migrate to relative paths:', err)
+    // Don't throw - migration failure shouldn't break the app
+  }
+}
+
+/**
+ * Get the current base folder path.
+ */
+export function getBaseFolderPath(): string | null {
+  return _baseFolderPath
+}
+
+/**
+ * Convert an absolute path to a relative path (for storing in DB).
+ * If already relative or base path not set, returns as-is.
+ */
+export function toRelativePath(absolutePath: string): string {
+  if (!_baseFolderPath) return absolutePath
+  if (!absolutePath.startsWith(_baseFolderPath)) return absolutePath
+  // Remove base path and leading slash
+  const relative = absolutePath.slice(_baseFolderPath.length)
+  return relative.startsWith('/') ? relative.slice(1) : relative
+}
+
+/**
+ * Convert a relative path to an absolute path (for use in app).
+ * If already absolute or base path not set, returns as-is.
+ */
+export function toAbsolutePath(relativePath: string): string {
+  if (!_baseFolderPath) return relativePath
+  // Already absolute
+  if (relativePath.startsWith('/')) return relativePath
+  return `${_baseFolderPath}/${relativePath}`
+}
 
 // AI Provider types
 export type AIProvider = 'openai' | 'anthropic' | 'google' | 'claude-code'
@@ -373,6 +483,164 @@ async function getDb(): Promise<Database> {
     await db.execute(`
       CREATE INDEX IF NOT EXISTS idx_grader_results_passed ON grader_results(passed)
     `)
+
+    // Run feedback table for expert human feedback
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS run_feedback (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL UNIQUE,
+        rating INTEGER,
+        pass_fail TEXT CHECK (pass_fail IN ('pass', 'fail')),
+        notes TEXT,
+        tags TEXT,
+        time_spent_ms INTEGER,
+        reviewed_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (run_id) REFERENCES prompt_runs(id) ON DELETE CASCADE
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_run_feedback_run_id ON run_feedback(run_id)
+    `)
+
+    // Add run_config column to prompt_versions (migration for existing DBs)
+    try {
+      await db.execute(`ALTER TABLE prompt_versions ADD COLUMN run_config TEXT`)
+    } catch { /* Column may already exist */ }
+
+    // Playbooks table (stores behavior teaching containers)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS playbooks (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        rule_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_playbooks_enabled ON playbooks(enabled)
+    `)
+
+    // Playbook rules table (teaching units with before/after examples)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS playbook_rules (
+        id TEXT PRIMARY KEY,
+        playbook_id TEXT NOT NULL,
+        trigger_context TEXT NOT NULL,
+        instruction TEXT NOT NULL,
+        bad_example_input TEXT,
+        bad_example_output TEXT,
+        golden_output TEXT,
+        source_run_id TEXT,
+        priority INTEGER NOT NULL DEFAULT 100,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (playbook_id) REFERENCES playbooks(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_run_id) REFERENCES prompt_runs(id) ON DELETE SET NULL
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_playbook_rules_playbook ON playbook_rules(playbook_id)
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_playbook_rules_priority ON playbook_rules(priority)
+    `)
+
+    // Prompt-Playbook associations (which playbooks to apply for each prompt)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS prompt_playbooks (
+        id TEXT PRIMARY KEY,
+        prompt_id TEXT NOT NULL,
+        playbook_id TEXT NOT NULL,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        UNIQUE(prompt_id, playbook_id),
+        FOREIGN KEY (playbook_id) REFERENCES playbooks(id) ON DELETE CASCADE
+      )
+    `)
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_prompt_playbooks_prompt ON prompt_playbooks(prompt_id)
+    `)
+
+    // Tag timestamps migration (sync-ready)
+    try {
+      await db.execute(`ALTER TABLE tags ADD COLUMN created_at TEXT`)
+    } catch { /* Column may already exist */ }
+    try {
+      await db.execute(`ALTER TABLE tags ADD COLUMN updated_at TEXT`)
+    } catch { /* Column may already exist */ }
+    // Backfill existing tags with current timestamp
+    const now = new Date().toISOString()
+    await db.execute(
+      `UPDATE tags SET created_at = ?, updated_at = ? WHERE created_at IS NULL`,
+      [now, now]
+    )
+
+    // SyncId migration (sync-ready) - add immutable UUID for future cloud sync
+    // Tags
+    try {
+      await db.execute(`ALTER TABLE tags ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+    // Graders
+    try {
+      await db.execute(`ALTER TABLE graders ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+    // Playbooks
+    try {
+      await db.execute(`ALTER TABLE playbooks ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+    // Playbook rules
+    try {
+      await db.execute(`ALTER TABLE playbook_rules ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+    // Chat sessions
+    try {
+      await db.execute(`ALTER TABLE chat_sessions ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+    // Prompt runs
+    try {
+      await db.execute(`ALTER TABLE prompt_runs ADD COLUMN sync_id TEXT`)
+    } catch { /* Column may already exist */ }
+
+    // Backfill syncId for existing rows
+    const tables = ['tags', 'graders', 'playbooks', 'playbook_rules', 'chat_sessions', 'prompt_runs']
+    for (const table of tables) {
+      const rows = await db.select<{ id: string }[]>(
+        `SELECT id FROM ${table} WHERE sync_id IS NULL`
+      )
+      for (const row of rows) {
+        await db.execute(
+          `UPDATE ${table} SET sync_id = ? WHERE id = ?`,
+          [crypto.randomUUID(), row.id]
+        )
+      }
+    }
+
+    // Create unique indexes for syncId columns
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_sync_id ON tags(sync_id)`)
+    } catch { /* Index may already exist */ }
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_graders_sync_id ON graders(sync_id)`)
+    } catch { /* Index may already exist */ }
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_playbooks_sync_id ON playbooks(sync_id)`)
+    } catch { /* Index may already exist */ }
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_playbook_rules_sync_id ON playbook_rules(sync_id)`)
+    } catch { /* Index may already exist */ }
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_sessions_sync_id ON chat_sessions(sync_id)`)
+    } catch { /* Index may already exist */ }
+    try {
+      await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_prompt_runs_sync_id ON prompt_runs(sync_id)`)
+    } catch { /* Index may already exist */ }
   }
   return db
 }
@@ -415,11 +683,33 @@ export async function clearFolderPath(): Promise<Result<void>> {
 
 // Tag operations
 
+interface TagRow {
+  id: string
+  sync_id: string
+  name: string
+  color: string
+  created_at: string
+  updated_at: string
+}
+
+function rowToTag(row: TagRow): Tag {
+  return {
+    id: row.id,
+    syncId: row.sync_id,
+    name: row.name,
+    color: row.color,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
 export async function getAllTags(): Promise<Result<Tag[]>> {
   try {
     const database = await getDb()
-    const result = await database.select<Tag[]>('SELECT id, name, color FROM tags ORDER BY name')
-    return { ok: true, data: result }
+    const result = await database.select<TagRow[]>(
+      'SELECT id, sync_id, name, color, created_at, updated_at FROM tags ORDER BY name'
+    )
+    return { ok: true, data: result.map(rowToTag) }
   } catch (err) {
     return { ok: false, error: `Failed to get tags: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -435,11 +725,13 @@ export async function createTag(name: string, color: string = '#6b7280'): Promis
   try {
     const database = await getDb()
     const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
+    const now = new Date().toISOString()
     await database.execute(
-      'INSERT INTO tags (id, name, color) VALUES (?, ?, ?)',
-      [id, trimmedName, color]
+      'INSERT INTO tags (id, sync_id, name, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, syncId, trimmedName, color, now, now]
     )
-    return { ok: true, data: { id, name: trimmedName, color } }
+    return { ok: true, data: { id, syncId, name: trimmedName, color, createdAt: now, updatedAt: now } }
   } catch (err) {
     return { ok: false, error: `Failed to create tag: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -454,9 +746,10 @@ export async function updateTag(id: string, name: string, color: string): Promis
 
   try {
     const database = await getDb()
+    const now = new Date().toISOString()
     await database.execute(
-      'UPDATE tags SET name = ?, color = ? WHERE id = ?',
-      [trimmedName, color, id]
+      'UPDATE tags SET name = ?, color = ?, updated_at = ? WHERE id = ?',
+      [trimmedName, color, now, id]
     )
     return { ok: true, data: undefined }
   } catch (err) {
@@ -478,11 +771,11 @@ export async function deleteTag(id: string): Promise<Result<void>> {
 export async function getTagByName(name: string): Promise<Result<Tag | null>> {
   try {
     const database = await getDb()
-    const result = await database.select<Tag[]>(
-      'SELECT id, name, color FROM tags WHERE name = ?',
+    const result = await database.select<TagRow[]>(
+      'SELECT id, sync_id, name, color, created_at, updated_at FROM tags WHERE name = ?',
       [name]
     )
-    return { ok: true, data: result.length > 0 ? result[0] : null }
+    return { ok: true, data: result.length > 0 ? rowToTag(result[0]) : null }
   } catch (err) {
     return { ok: false, error: `Failed to get tag: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -498,8 +791,9 @@ export async function getOrCreateTag(name: string): Promise<Result<Tag>> {
 export async function syncPromptTags(promptPath: string, tagNames: string[]): Promise<Result<void>> {
   try {
     const database = await getDb()
+    const relativePath = toRelativePath(promptPath)
     // Clear existing prompt_tags for this prompt
-    await database.execute('DELETE FROM prompt_tags WHERE prompt_path = ?', [promptPath])
+    await database.execute('DELETE FROM prompt_tags WHERE prompt_path = ?', [relativePath])
 
     // Get or create each tag and link it
     for (const tagName of tagNames) {
@@ -507,7 +801,7 @@ export async function syncPromptTags(promptPath: string, tagNames: string[]): Pr
       if (tagResult.ok) {
         await database.execute(
           'INSERT OR IGNORE INTO prompt_tags (prompt_path, tag_id) VALUES (?, ?)',
-          [promptPath, tagResult.data.id]
+          [relativePath, tagResult.data.id]
         )
       }
     }
@@ -520,15 +814,16 @@ export async function syncPromptTags(promptPath: string, tagNames: string[]): Pr
 export async function getTagsForPrompt(promptPath: string): Promise<Result<Tag[]>> {
   try {
     const database = await getDb()
-    const result = await database.select<Tag[]>(
-      `SELECT t.id, t.name, t.color
+    const relativePath = toRelativePath(promptPath)
+    const result = await database.select<TagRow[]>(
+      `SELECT t.id, t.sync_id, t.name, t.color, t.created_at, t.updated_at
        FROM tags t
        JOIN prompt_tags pt ON t.id = pt.tag_id
        WHERE pt.prompt_path = ?
        ORDER BY t.name`,
-      [promptPath]
+      [relativePath]
     )
-    return { ok: true, data: result }
+    return { ok: true, data: result.map(rowToTag) }
   } catch (err) {
     return { ok: false, error: `Failed to get tags for prompt: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -541,7 +836,7 @@ export async function getPromptsWithTag(tagId: string): Promise<Result<string[]>
       'SELECT prompt_path FROM prompt_tags WHERE tag_id = ?',
       [tagId]
     )
-    return { ok: true, data: result.map(r => r.prompt_path) }
+    return { ok: true, data: result.map(r => toAbsolutePath(r.prompt_path)) }
   } catch (err) {
     return { ok: false, error: `Failed to get prompts with tag: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -1023,6 +1318,7 @@ export interface PromptVersionRow {
   content: string
   created_at: string
   description: string | null
+  run_config: string | null
 }
 
 const MAX_VERSIONS_PER_PROMPT = 50
@@ -1030,23 +1326,26 @@ const MAX_VERSIONS_PER_PROMPT = 50
 export async function createPromptVersion(
   promptPath: string,
   content: string,
-  description?: string
+  description?: string,
+  runConfig?: import('../types/prompt-config').PromptRunConfig
 ): Promise<Result<void>> {
   try {
     const database = await getDb()
+    const relativePath = toRelativePath(promptPath)
 
     // Get the next version number
     const maxVersionResult = await database.select<{ max_version: number | null }[]>(
       'SELECT MAX(version_number) as max_version FROM prompt_versions WHERE prompt_path = ?',
-      [promptPath]
+      [relativePath]
     )
     const nextVersion = (maxVersionResult[0]?.max_version ?? 0) + 1
 
     // Insert the new version
     const id = crypto.randomUUID()
+    const runConfigJson = runConfig ? JSON.stringify(runConfig) : null
     await database.execute(
-      'INSERT INTO prompt_versions (id, prompt_path, version_number, content, created_at, description) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, promptPath, nextVersion, content, new Date().toISOString(), description ?? null]
+      'INSERT INTO prompt_versions (id, prompt_path, version_number, content, created_at, description, run_config) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, relativePath, nextVersion, content, new Date().toISOString(), description ?? null, runConfigJson]
     )
 
     // Clean up old versions (keep only last MAX_VERSIONS_PER_PROMPT)
@@ -1058,7 +1357,7 @@ export async function createPromptVersion(
          ORDER BY version_number DESC
          LIMIT 1 OFFSET ?
        )`,
-      [promptPath, promptPath, MAX_VERSIONS_PER_PROMPT]
+      [relativePath, relativePath, MAX_VERSIONS_PER_PROMPT]
     )
 
     return { ok: true, data: undefined }
@@ -1070,11 +1369,13 @@ export async function createPromptVersion(
 export async function getPromptVersions(promptPath: string): Promise<Result<PromptVersionRow[]>> {
   try {
     const database = await getDb()
+    const relativePath = toRelativePath(promptPath)
     const result = await database.select<PromptVersionRow[]>(
-      'SELECT id, prompt_path, version_number, content, created_at, description FROM prompt_versions WHERE prompt_path = ? ORDER BY version_number DESC',
-      [promptPath]
+      'SELECT id, prompt_path, version_number, content, created_at, description, run_config FROM prompt_versions WHERE prompt_path = ? ORDER BY version_number DESC',
+      [relativePath]
     )
-    return { ok: true, data: result }
+    // Convert stored relative paths back to absolute for the app
+    return { ok: true, data: result.map(r => ({ ...r, prompt_path: toAbsolutePath(r.prompt_path) })) }
   } catch (err) {
     return { ok: false, error: `Failed to get versions: ${err instanceof Error ? err.message : String(err)}` }
   }
@@ -1084,7 +1385,7 @@ export async function getPromptVersion(id: string): Promise<Result<PromptVersion
   try {
     const database = await getDb()
     const result = await database.select<PromptVersionRow[]>(
-      'SELECT id, prompt_path, version_number, content, created_at, description FROM prompt_versions WHERE id = ?',
+      'SELECT id, prompt_path, version_number, content, created_at, description, run_config FROM prompt_versions WHERE id = ?',
       [id]
     )
     return { ok: true, data: result.length > 0 ? result[0] : null }
@@ -1096,10 +1397,52 @@ export async function getPromptVersion(id: string): Promise<Result<PromptVersion
 export async function deletePromptVersions(promptPath: string): Promise<Result<void>> {
   try {
     const database = await getDb()
-    await database.execute('DELETE FROM prompt_versions WHERE prompt_path = ?', [promptPath])
+    const relativePath = toRelativePath(promptPath)
+    await database.execute('DELETE FROM prompt_versions WHERE prompt_path = ?', [relativePath])
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to delete versions: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getLatestPromptRunConfig(
+  promptPath: string
+): Promise<Result<import('../types/prompt-config').PromptRunConfig | null>> {
+  try {
+    const database = await getDb()
+    const relativePath = toRelativePath(promptPath)
+    const result = await database.select<{ run_config: string | null }[]>(
+      'SELECT run_config FROM prompt_versions WHERE prompt_path = ? ORDER BY version_number DESC LIMIT 1',
+      [relativePath]
+    )
+    if (result.length === 0 || !result[0].run_config) {
+      return { ok: true, data: null }
+    }
+    return { ok: true, data: JSON.parse(result[0].run_config) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt run config: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function updatePromptRunConfig(
+  promptPath: string,
+  runConfig: import('../types/prompt-config').PromptRunConfig
+): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const relativePath = toRelativePath(promptPath)
+    // Update the latest version with the new run config
+    await database.execute(
+      `UPDATE prompt_versions
+       SET run_config = ?
+       WHERE prompt_path = ? AND version_number = (
+         SELECT MAX(version_number) FROM prompt_versions WHERE prompt_path = ?
+       )`,
+      [JSON.stringify(runConfig), relativePath, relativePath]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update prompt run config: ${err instanceof Error ? err.message : String(err)}` }
   }
 }
 
@@ -1586,6 +1929,7 @@ export async function cleanupExpiredTranslationCache(): Promise<Result<number>> 
 
 interface PromptRunRow {
   id: string
+  sync_id: string
   prompt_id: string
   prompt_path: string
   prompt_name: string
@@ -1609,8 +1953,9 @@ interface PromptRunRow {
 function rowToPromptRun(row: PromptRunRow): PromptRun {
   return {
     id: row.id,
+    syncId: row.sync_id,
     promptId: row.prompt_id,
-    promptPath: row.prompt_path,
+    promptPath: toAbsolutePath(row.prompt_path), // Convert relative to absolute
     promptName: row.prompt_name,
     launcherId: row.launcher_id as RunLauncher,
     status: row.status as RunStatus,
@@ -1639,21 +1984,24 @@ export async function createPromptRun(
   try {
     const database = await getDb()
     const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
     const now = new Date().toISOString()
+    const relativePath = toRelativePath(promptPath)
 
     await database.execute(
       `INSERT INTO prompt_runs
-       (id, prompt_id, prompt_path, prompt_name, launcher_id, status, started_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, promptId, promptPath, promptName, launcherId, 'pending', now, now]
+       (id, sync_id, prompt_id, prompt_path, prompt_name, launcher_id, status, started_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, syncId, promptId, relativePath, promptName, launcherId, 'pending', now, now]
     )
 
     return {
       ok: true,
       data: {
         id,
+        syncId,
         promptId,
-        promptPath,
+        promptPath, // Return the original absolute path to the caller
         promptName,
         launcherId,
         status: 'pending',
@@ -1948,6 +2296,9 @@ export async function getPromptAnalytics(
       error_count: number
       total_execution_time_ms: number
       avg_execution_time_ms: number
+      total_input_tokens: number
+      total_output_tokens: number
+      total_estimated_cost_usd: number
     }[]>(
       `SELECT * FROM run_analytics_daily
        WHERE prompt_id = ? AND date >= ?
@@ -1966,10 +2317,322 @@ export async function getPromptAnalytics(
         errorCount: row.error_count,
         totalExecutionTimeMs: row.total_execution_time_ms,
         avgExecutionTimeMs: row.avg_execution_time_ms,
+        totalInputTokens: row.total_input_tokens ?? 0,
+        totalOutputTokens: row.total_output_tokens ?? 0,
+        totalEstimatedCostUsd: row.total_estimated_cost_usd ?? 0,
       })),
     }
   } catch (err) {
     return { ok: false, error: `Failed to get analytics: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Run Feedback Operations
+// ============================================================================
+
+import type { RunFeedback, FeedbackFormData, FeedbackStats } from '../types/feedback'
+
+interface RunFeedbackRow {
+  id: string
+  run_id: string
+  rating: number | null
+  pass_fail: string | null
+  notes: string | null
+  tags: string | null
+  time_spent_ms: number | null
+  reviewed_at: string
+  created_at: string
+  updated_at: string
+}
+
+function rowToRunFeedback(row: RunFeedbackRow): RunFeedback {
+  return {
+    id: row.id,
+    runId: row.run_id,
+    rating: row.rating ?? undefined,
+    passFail: (row.pass_fail as 'pass' | 'fail') ?? undefined,
+    notes: row.notes ?? undefined,
+    tags: row.tags ? JSON.parse(row.tags) : undefined,
+    timeSpentMs: row.time_spent_ms ?? undefined,
+    reviewedAt: row.reviewed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function getRunFeedback(runId: string): Promise<Result<RunFeedback | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<RunFeedbackRow[]>(
+      'SELECT * FROM run_feedback WHERE run_id = ?',
+      [runId]
+    )
+    return { ok: true, data: result.length > 0 ? rowToRunFeedback(result[0]) : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get run feedback: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveRunFeedback(
+  runId: string,
+  data: FeedbackFormData,
+  timeSpentMs?: number
+): Promise<Result<RunFeedback>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    // Check if feedback already exists for this run
+    const existing = await database.select<{ id: string }[]>(
+      'SELECT id FROM run_feedback WHERE run_id = ?',
+      [runId]
+    )
+
+    const tagsJson = data.tags ? JSON.stringify(data.tags) : null
+
+    if (existing.length > 0) {
+      // Update existing feedback
+      await database.execute(
+        `UPDATE run_feedback SET
+         rating = ?, pass_fail = ?, notes = ?, tags = ?,
+         time_spent_ms = ?, reviewed_at = ?, updated_at = ?
+         WHERE run_id = ?`,
+        [
+          data.rating ?? null,
+          data.passFail ?? null,
+          data.notes ?? null,
+          tagsJson,
+          timeSpentMs ?? null,
+          now,
+          now,
+          runId,
+        ]
+      )
+
+      return {
+        ok: true,
+        data: {
+          id: existing[0].id,
+          runId,
+          rating: data.rating,
+          passFail: data.passFail,
+          notes: data.notes,
+          tags: data.tags,
+          timeSpentMs,
+          reviewedAt: now,
+          createdAt: now, // Will be overwritten by actual value
+          updatedAt: now,
+        },
+      }
+    } else {
+      // Create new feedback
+      const id = crypto.randomUUID()
+      await database.execute(
+        `INSERT INTO run_feedback
+         (id, run_id, rating, pass_fail, notes, tags, time_spent_ms, reviewed_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          runId,
+          data.rating ?? null,
+          data.passFail ?? null,
+          data.notes ?? null,
+          tagsJson,
+          timeSpentMs ?? null,
+          now,
+          now,
+          now,
+        ]
+      )
+
+      return {
+        ok: true,
+        data: {
+          id,
+          runId,
+          rating: data.rating,
+          passFail: data.passFail,
+          notes: data.notes,
+          tags: data.tags,
+          timeSpentMs,
+          reviewedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to save run feedback: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deleteRunFeedback(runId: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute('DELETE FROM run_feedback WHERE run_id = ?', [runId])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete run feedback: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getRunsWithFeedback(promptId?: string): Promise<Result<PromptRun[]>> {
+  try {
+    const database = await getDb()
+    let query = `
+      SELECT pr.* FROM prompt_runs pr
+      INNER JOIN run_feedback rf ON pr.id = rf.run_id
+    `
+    const params: string[] = []
+
+    if (promptId) {
+      query += ' WHERE pr.prompt_id = ?'
+      params.push(promptId)
+    }
+
+    query += ' ORDER BY rf.reviewed_at DESC'
+
+    const result = await database.select<PromptRunRow[]>(query, params)
+    return { ok: true, data: result.map(rowToPromptRun) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get runs with feedback: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getRunsWithoutFeedback(promptId?: string): Promise<Result<PromptRun[]>> {
+  try {
+    const database = await getDb()
+    let query = `
+      SELECT pr.* FROM prompt_runs pr
+      LEFT JOIN run_feedback rf ON pr.id = rf.run_id
+      WHERE rf.id IS NULL AND pr.status = 'completed'
+    `
+    const params: string[] = []
+
+    if (promptId) {
+      query += ' AND pr.prompt_id = ?'
+      params.push(promptId)
+    }
+
+    query += ' ORDER BY pr.completed_at DESC'
+
+    const result = await database.select<PromptRunRow[]>(query, params)
+    return { ok: true, data: result.map(rowToPromptRun) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get runs without feedback: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getFeedbackStats(promptId?: string): Promise<Result<FeedbackStats>> {
+  try {
+    const database = await getDb()
+
+    // Get total runs count
+    let totalQuery = 'SELECT COUNT(*) as count FROM prompt_runs WHERE status = ?'
+    const totalParams: string[] = ['completed']
+    if (promptId) {
+      totalQuery += ' AND prompt_id = ?'
+      totalParams.push(promptId)
+    }
+    const totalResult = await database.select<{ count: number }[]>(totalQuery, totalParams)
+    const totalRuns = totalResult[0]?.count ?? 0
+
+    // Get reviewed runs count
+    let reviewedQuery = `
+      SELECT COUNT(*) as count FROM prompt_runs pr
+      INNER JOIN run_feedback rf ON pr.id = rf.run_id
+    `
+    const reviewedParams: string[] = []
+    if (promptId) {
+      reviewedQuery += ' WHERE pr.prompt_id = ?'
+      reviewedParams.push(promptId)
+    }
+    const reviewedResult = await database.select<{ count: number }[]>(reviewedQuery, reviewedParams)
+    const reviewedRuns = reviewedResult[0]?.count ?? 0
+
+    // Get pass/fail counts
+    let passedQuery = `
+      SELECT COUNT(*) as count FROM run_feedback rf
+      INNER JOIN prompt_runs pr ON rf.run_id = pr.id
+      WHERE rf.pass_fail = 'pass'
+    `
+    let failedQuery = `
+      SELECT COUNT(*) as count FROM run_feedback rf
+      INNER JOIN prompt_runs pr ON rf.run_id = pr.id
+      WHERE rf.pass_fail = 'fail'
+    `
+    const passFailParams: string[] = []
+    if (promptId) {
+      passedQuery += ' AND pr.prompt_id = ?'
+      failedQuery += ' AND pr.prompt_id = ?'
+      passFailParams.push(promptId)
+    }
+
+    const [passedResult, failedResult] = await Promise.all([
+      database.select<{ count: number }[]>(passedQuery, passFailParams),
+      database.select<{ count: number }[]>(failedQuery, passFailParams),
+    ])
+    const passedRuns = passedResult[0]?.count ?? 0
+    const failedRuns = failedResult[0]?.count ?? 0
+
+    // Get average rating
+    let avgQuery = `
+      SELECT AVG(rating) as avg FROM run_feedback rf
+      INNER JOIN prompt_runs pr ON rf.run_id = pr.id
+      WHERE rf.rating IS NOT NULL
+    `
+    if (promptId) {
+      avgQuery += ' AND pr.prompt_id = ?'
+    }
+    const avgResult = await database.select<{ avg: number | null }[]>(
+      avgQuery,
+      promptId ? [promptId] : []
+    )
+    const averageRating = avgResult[0]?.avg ?? undefined
+
+    // Get top tags
+    let tagsQuery = `
+      SELECT rf.tags FROM run_feedback rf
+      INNER JOIN prompt_runs pr ON rf.run_id = pr.id
+      WHERE rf.tags IS NOT NULL
+    `
+    if (promptId) {
+      tagsQuery += ' AND pr.prompt_id = ?'
+    }
+    const tagsResult = await database.select<{ tags: string }[]>(
+      tagsQuery,
+      promptId ? [promptId] : []
+    )
+
+    // Count tag occurrences
+    const tagCounts = new Map<string, number>()
+    for (const row of tagsResult) {
+      const tags = JSON.parse(row.tags) as string[]
+      for (const tag of tags) {
+        tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
+      }
+    }
+
+    // Sort by count and take top 5
+    const topTags = Array.from(tagCounts.entries())
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    return {
+      ok: true,
+      data: {
+        totalRuns,
+        reviewedRuns,
+        passedRuns,
+        failedRuns,
+        averageRating,
+        topTags,
+      },
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get feedback stats: ${err instanceof Error ? err.message : String(err)}` }
   }
 }
 
@@ -1979,6 +2642,7 @@ export async function getPromptAnalytics(
 
 interface ChatSessionRow {
   id: string
+  sync_id: string
   agent_id: string
   title: string
   created_at: string
@@ -1988,6 +2652,7 @@ interface ChatSessionRow {
 function rowToChatSession(row: ChatSessionRow): ChatSession {
   return {
     id: row.id,
+    syncId: row.sync_id,
     agentId: row.agent_id,
     title: row.title,
     createdAt: row.created_at,
@@ -2002,17 +2667,18 @@ export async function createChatSession(
   try {
     const database = await getDb()
     const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
     const now = new Date().toISOString()
 
     await database.execute(
-      `INSERT INTO chat_sessions (id, agent_id, title, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)`,
-      [id, agentId, title, now, now]
+      `INSERT INTO chat_sessions (id, sync_id, agent_id, title, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, syncId, agentId, title, now, now]
     )
 
     return {
       ok: true,
-      data: { id, agentId, title, createdAt: now, updatedAt: now },
+      data: { id, syncId, agentId, title, createdAt: now, updatedAt: now },
     }
   } catch (err) {
     return { ok: false, error: `Failed to create chat session: ${err instanceof Error ? err.message : String(err)}` }
@@ -2194,6 +2860,7 @@ export interface FeatureFlags {
   mcpServerEnabled: boolean   // MCP integration configuration UI
   runsEnabled: boolean        // Run mode and run history
   gradersEnabled: boolean     // Graders for scoring prompt outputs (requires runsEnabled)
+  playbooksEnabled: boolean   // Playbooks for teaching AI behavior (requires runsEnabled)
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -2203,6 +2870,7 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   mcpServerEnabled: false,
   runsEnabled: false,
   gradersEnabled: false,
+  playbooksEnabled: false,
 }
 
 export async function getFeatureFlags(): Promise<Result<FeatureFlags>> {
@@ -2223,6 +2891,7 @@ export async function getFeatureFlags(): Promise<Result<FeatureFlags>> {
           mcpServerEnabled: parsed.mcpServerEnabled ?? DEFAULT_FEATURE_FLAGS.mcpServerEnabled,
           runsEnabled: parsed.runsEnabled ?? DEFAULT_FEATURE_FLAGS.runsEnabled,
           gradersEnabled: parsed.gradersEnabled ?? DEFAULT_FEATURE_FLAGS.gradersEnabled,
+          playbooksEnabled: parsed.playbooksEnabled ?? DEFAULT_FEATURE_FLAGS.playbooksEnabled,
         },
       }
     }
@@ -2313,6 +2982,119 @@ export async function saveAnalyticsSettings(settings: Partial<AnalyticsSettings>
 }
 
 // ============================================================================
+// Model Defaults Operations (Default Generator/Judge)
+// ============================================================================
+
+export interface ModelDefaults {
+  defaultGeneratorConfigId: string | null  // Provider config ID for generation
+  defaultJudgeConfigId: string | null      // Provider config ID for grading/judging
+}
+
+const DEFAULT_MODEL_DEFAULTS: ModelDefaults = {
+  defaultGeneratorConfigId: null,
+  defaultJudgeConfigId: null,
+}
+
+export async function getModelDefaults(): Promise<Result<ModelDefaults>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['model_defaults']
+    )
+    if (result.length > 0) {
+      const parsed = JSON.parse(result[0].value) as Partial<ModelDefaults>
+      return {
+        ok: true,
+        data: {
+          defaultGeneratorConfigId: parsed.defaultGeneratorConfigId ?? DEFAULT_MODEL_DEFAULTS.defaultGeneratorConfigId,
+          defaultJudgeConfigId: parsed.defaultJudgeConfigId ?? DEFAULT_MODEL_DEFAULTS.defaultJudgeConfigId,
+        },
+      }
+    }
+    return { ok: true, data: DEFAULT_MODEL_DEFAULTS }
+  } catch (err) {
+    return { ok: false, error: `Failed to get model defaults: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveModelDefaults(defaults: Partial<ModelDefaults>): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const currentResult = await getModelDefaults()
+    if (!currentResult.ok) return currentResult
+
+    const merged: ModelDefaults = {
+      ...currentResult.data,
+      ...defaults,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['model_defaults', JSON.stringify(merged)]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save model defaults: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Privacy Settings Operations (Context Limit)
+// ============================================================================
+
+export interface PrivacySettings {
+  contextLimitTokens: number | null  // null = no limit
+}
+
+const DEFAULT_PRIVACY_SETTINGS: PrivacySettings = {
+  contextLimitTokens: null,
+}
+
+export async function getPrivacySettings(): Promise<Result<PrivacySettings>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['privacy_settings']
+    )
+    if (result.length > 0) {
+      const parsed = JSON.parse(result[0].value) as Partial<PrivacySettings>
+      return {
+        ok: true,
+        data: {
+          contextLimitTokens: parsed.contextLimitTokens ?? DEFAULT_PRIVACY_SETTINGS.contextLimitTokens,
+        },
+      }
+    }
+    return { ok: true, data: DEFAULT_PRIVACY_SETTINGS }
+  } catch (err) {
+    return { ok: false, error: `Failed to get privacy settings: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function savePrivacySettings(settings: Partial<PrivacySettings>): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const currentResult = await getPrivacySettings()
+    if (!currentResult.ok) return currentResult
+
+    const merged: PrivacySettings = {
+      ...currentResult.data,
+      ...settings,
+    }
+
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['privacy_settings', JSON.stringify(merged)]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save privacy settings: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
 // Grader Operations
 // ============================================================================
 
@@ -2322,12 +3104,11 @@ import type {
   LLMJudgeGrader,
   GraderResult,
   GraderResultWithGrader,
-  PromptGrader,
-  GraderType,
 } from '../types/grader'
 
 interface GraderRow {
   id: string
+  sync_id: string
   name: string
   description: string | null
   type: string
@@ -2344,6 +3125,7 @@ function rowToGrader(row: GraderRow): Grader {
   if (row.type === 'assertion') {
     return {
       id: row.id,
+      syncId: row.sync_id,
       name: row.name,
       description: row.description ?? undefined,
       type: 'assertion',
@@ -2356,6 +3138,7 @@ function rowToGrader(row: GraderRow): Grader {
   } else {
     return {
       id: row.id,
+      syncId: row.sync_id,
       name: row.name,
       description: row.description ?? undefined,
       type: 'llm_judge',
@@ -2394,22 +3177,24 @@ export async function getGrader(id: string): Promise<Result<Grader | null>> {
 }
 
 export async function createGrader(
-  grader: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'> | Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>
+  grader: Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'> | Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>
 ): Promise<Result<Grader>> {
   try {
     const database = await getDb()
     const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
     const now = new Date().toISOString()
 
     const config = grader.type === 'assertion'
-      ? JSON.stringify((grader as Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>).logic)
-      : JSON.stringify((grader as Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>).config)
+      ? JSON.stringify((grader as Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>).logic)
+      : JSON.stringify((grader as Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>).config)
 
     await database.execute(
-      `INSERT INTO graders (id, name, description, type, config, is_builtin, enabled, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO graders (id, sync_id, name, description, type, config, is_builtin, enabled, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
+        syncId,
         grader.name,
         grader.description ?? null,
         grader.type,
@@ -2423,14 +3208,16 @@ export async function createGrader(
 
     const createdGrader: Grader = grader.type === 'assertion'
       ? {
-          ...(grader as Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>),
+          ...(grader as Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>),
           id,
+          syncId,
           createdAt: now,
           updatedAt: now,
         } as AssertionGrader
       : {
-          ...(grader as Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>),
+          ...(grader as Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>),
           id,
+          syncId,
           createdAt: now,
           updatedAt: now,
         } as LLMJudgeGrader
@@ -2665,7 +3452,7 @@ export async function seedBuiltinGraders(): Promise<Result<void>> {
     }
 
     // Built-in Assertion Graders
-    const assertionGraders: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'>[] = [
+    const assertionGraders: Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'Max Length (500)',
         description: 'Ensure output is at most 500 characters',
@@ -2693,7 +3480,7 @@ export async function seedBuiltinGraders(): Promise<Result<void>> {
     ]
 
     // Built-in LLM Judge Graders
-    const llmJudgeGraders: Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>[] = [
+    const llmJudgeGraders: Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'Tone Consistency',
         description: 'Check if the output maintains a consistent and appropriate tone',
@@ -2765,5 +3552,688 @@ Rate the empathy level and explain your reasoning.`,
     return { ok: true, data: undefined }
   } catch (err) {
     return { ok: false, error: `Failed to seed built-in graders: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Analytics Aggregation Functions
+// ============================================================================
+
+export interface PromptHealthStats {
+  passRate: number        // 0-100 percentage
+  totalRuns: number       // Total runs in period
+  passedRuns: number      // Runs where all graders passed
+  trend: number           // Percentage change from previous period (-100 to +100)
+  trendDirection: 'up' | 'down' | 'stable'
+  avgGraderScore: number  // 0-100 average across all grader results
+  runDates: string[]      // Last 7 days with runs for sparkline
+}
+
+export interface DailyPassRate {
+  date: string            // YYYY-MM-DD
+  passRate: number        // 0-100 percentage
+  runCount: number
+  passedCount: number
+}
+
+/**
+ * Get prompt health statistics for the PromptHealthCard component.
+ * Calculates pass rate based on grader results.
+ */
+export async function getPromptHealthStats(
+  promptId: string,
+  days: number = 7
+): Promise<Result<PromptHealthStats>> {
+  try {
+    const database = await getDb()
+    const now = new Date()
+    const startDate = new Date(now)
+    startDate.setDate(startDate.getDate() - days)
+    const previousStartDate = new Date(startDate)
+    previousStartDate.setDate(previousStartDate.getDate() - days)
+
+    // Get runs from current period
+    const currentRuns = await database.select<{ id: string; started_at: string }[]>(
+      `SELECT id, started_at FROM prompt_runs
+       WHERE prompt_id = ? AND started_at >= ? AND status = 'completed'
+       ORDER BY started_at DESC`,
+      [promptId, startDate.toISOString()]
+    )
+
+    // Get runs from previous period for trend comparison
+    const previousRuns = await database.select<{ id: string }[]>(
+      `SELECT id FROM prompt_runs
+       WHERE prompt_id = ? AND started_at >= ? AND started_at < ? AND status = 'completed'`,
+      [promptId, previousStartDate.toISOString(), startDate.toISOString()]
+    )
+
+    if (currentRuns.length === 0) {
+      return {
+        ok: true,
+        data: {
+          passRate: 0,
+          totalRuns: 0,
+          passedRuns: 0,
+          trend: 0,
+          trendDirection: 'stable',
+          avgGraderScore: 0,
+          runDates: [],
+        },
+      }
+    }
+
+    // Get grader results for current runs
+    const runIds = currentRuns.map(r => r.id)
+    const placeholders = runIds.map(() => '?').join(',')
+    const graderResults = await database.select<{ run_id: string; passed: number; score: number }[]>(
+      `SELECT run_id, passed, score FROM grader_results WHERE run_id IN (${placeholders})`,
+      runIds
+    )
+
+    // Calculate pass rate: a run passes if ALL its graders pass
+    const runPassStatus = new Map<string, boolean>()
+    const runHasGraders = new Set<string>()
+
+    for (const result of graderResults) {
+      runHasGraders.add(result.run_id)
+      const currentStatus = runPassStatus.get(result.run_id)
+      // A run fails if any grader fails
+      if (currentStatus === undefined) {
+        runPassStatus.set(result.run_id, result.passed === 1)
+      } else if (result.passed !== 1) {
+        runPassStatus.set(result.run_id, false)
+      }
+    }
+
+    // Only count runs that have grader results
+    const runsWithGraders = currentRuns.filter(r => runHasGraders.has(r.id))
+    const passedRuns = runsWithGraders.filter(r => runPassStatus.get(r.id) === true).length
+    const passRate = runsWithGraders.length > 0 ? (passedRuns / runsWithGraders.length) * 100 : 0
+
+    // Calculate previous period pass rate for trend
+    let previousPassRate = 0
+    if (previousRuns.length > 0) {
+      const prevRunIds = previousRuns.map(r => r.id)
+      const prevPlaceholders = prevRunIds.map(() => '?').join(',')
+      const prevGraderResults = await database.select<{ run_id: string; passed: number }[]>(
+        `SELECT run_id, passed FROM grader_results WHERE run_id IN (${prevPlaceholders})`,
+        prevRunIds
+      )
+
+      const prevRunPassStatus = new Map<string, boolean>()
+      const prevRunHasGraders = new Set<string>()
+
+      for (const result of prevGraderResults) {
+        prevRunHasGraders.add(result.run_id)
+        const currentStatus = prevRunPassStatus.get(result.run_id)
+        if (currentStatus === undefined) {
+          prevRunPassStatus.set(result.run_id, result.passed === 1)
+        } else if (result.passed !== 1) {
+          prevRunPassStatus.set(result.run_id, false)
+        }
+      }
+
+      const prevRunsWithGraders = previousRuns.filter(r => prevRunHasGraders.has(r.id))
+      const prevPassedRuns = prevRunsWithGraders.filter(r => prevRunPassStatus.get(r.id) === true).length
+      previousPassRate = prevRunsWithGraders.length > 0 ? (prevPassedRuns / prevRunsWithGraders.length) * 100 : 0
+    }
+
+    // Calculate trend
+    const trend = passRate - previousPassRate
+    const trendDirection: 'up' | 'down' | 'stable' =
+      Math.abs(trend) < 1 ? 'stable' : trend > 0 ? 'up' : 'down'
+
+    // Calculate average grader score
+    const avgGraderScore = graderResults.length > 0
+      ? (graderResults.reduce((sum, r) => sum + r.score, 0) / graderResults.length) * 100
+      : 0
+
+    // Get unique dates for sparkline
+    const runDates = [...new Set(currentRuns.map(r => r.started_at.split('T')[0]))].sort()
+
+    return {
+      ok: true,
+      data: {
+        passRate: Math.round(passRate * 10) / 10,
+        totalRuns: currentRuns.length,
+        passedRuns,
+        trend: Math.round(trend * 10) / 10,
+        trendDirection,
+        avgGraderScore: Math.round(avgGraderScore * 10) / 10,
+        runDates,
+      },
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt health stats: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+/**
+ * Get daily pass rates for sparkline visualization.
+ * Returns last N days of pass rate data.
+ */
+export async function getPromptPassRateTrend(
+  promptId: string,
+  days: number = 7
+): Promise<Result<DailyPassRate[]>> {
+  try {
+    const database = await getDb()
+    const now = new Date()
+    const startDate = new Date(now)
+    startDate.setDate(startDate.getDate() - days)
+
+    // Get all runs in the period
+    const runs = await database.select<{ id: string; started_at: string }[]>(
+      `SELECT id, started_at FROM prompt_runs
+       WHERE prompt_id = ? AND started_at >= ? AND status = 'completed'
+       ORDER BY started_at`,
+      [promptId, startDate.toISOString()]
+    )
+
+    if (runs.length === 0) {
+      return { ok: true, data: [] }
+    }
+
+    // Get grader results for all runs
+    const runIds = runs.map(r => r.id)
+    const placeholders = runIds.map(() => '?').join(',')
+    const graderResults = await database.select<{ run_id: string; passed: number }[]>(
+      `SELECT run_id, passed FROM grader_results WHERE run_id IN (${placeholders})`,
+      runIds
+    )
+
+    // Build run pass status map
+    const runPassStatus = new Map<string, boolean>()
+    const runHasGraders = new Set<string>()
+
+    for (const result of graderResults) {
+      runHasGraders.add(result.run_id)
+      const currentStatus = runPassStatus.get(result.run_id)
+      if (currentStatus === undefined) {
+        runPassStatus.set(result.run_id, result.passed === 1)
+      } else if (result.passed !== 1) {
+        runPassStatus.set(result.run_id, false)
+      }
+    }
+
+    // Group runs by date
+    const runsByDate = new Map<string, { total: number; passed: number }>()
+
+    for (const run of runs) {
+      const date = run.started_at.split('T')[0]
+      const stats = runsByDate.get(date) || { total: 0, passed: 0 }
+
+      if (runHasGraders.has(run.id)) {
+        stats.total++
+        if (runPassStatus.get(run.id)) {
+          stats.passed++
+        }
+      }
+
+      runsByDate.set(date, stats)
+    }
+
+    // Build daily pass rate array
+    const dailyRates: DailyPassRate[] = []
+    for (const [date, stats] of runsByDate.entries()) {
+      if (stats.total > 0) {
+        dailyRates.push({
+          date,
+          passRate: Math.round((stats.passed / stats.total) * 100 * 10) / 10,
+          runCount: stats.total,
+          passedCount: stats.passed,
+        })
+      }
+    }
+
+    // Sort by date
+    dailyRates.sort((a, b) => a.date.localeCompare(b.date))
+
+    return { ok: true, data: dailyRates }
+  } catch (err) {
+    return { ok: false, error: `Failed to get pass rate trend: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+/**
+ * Get aggregate grader stats for runs (for RunsTab enhancement).
+ */
+export interface RunsAggregateStats {
+  totalRuns: number
+  runsWithGraders: number
+  passedRuns: number
+  passRate: number          // 0-100 percentage
+  avgGraderScore: number    // 0-100 percentage
+  totalCost: number
+  costPerSuccessfulRun: number
+}
+
+export async function getRunsAggregateStats(
+  promptId: string,
+  limit: number = 50
+): Promise<Result<RunsAggregateStats>> {
+  try {
+    const database = await getDb()
+
+    // Get runs
+    const runs = await database.select<{ id: string; estimated_cost_usd: number | null }[]>(
+      `SELECT id, estimated_cost_usd FROM prompt_runs
+       WHERE prompt_id = ? AND status = 'completed'
+       ORDER BY created_at DESC
+       LIMIT ?`,
+      [promptId, limit]
+    )
+
+    if (runs.length === 0) {
+      return {
+        ok: true,
+        data: {
+          totalRuns: 0,
+          runsWithGraders: 0,
+          passedRuns: 0,
+          passRate: 0,
+          avgGraderScore: 0,
+          totalCost: 0,
+          costPerSuccessfulRun: 0,
+        },
+      }
+    }
+
+    // Get grader results
+    const runIds = runs.map(r => r.id)
+    const placeholders = runIds.map(() => '?').join(',')
+    const graderResults = await database.select<{ run_id: string; passed: number; score: number }[]>(
+      `SELECT run_id, passed, score FROM grader_results WHERE run_id IN (${placeholders})`,
+      runIds
+    )
+
+    // Calculate run pass status
+    const runPassStatus = new Map<string, boolean>()
+    const runHasGraders = new Set<string>()
+
+    for (const result of graderResults) {
+      runHasGraders.add(result.run_id)
+      const currentStatus = runPassStatus.get(result.run_id)
+      if (currentStatus === undefined) {
+        runPassStatus.set(result.run_id, result.passed === 1)
+      } else if (result.passed !== 1) {
+        runPassStatus.set(result.run_id, false)
+      }
+    }
+
+    const runsWithGraders = runs.filter(r => runHasGraders.has(r.id)).length
+    const passedRuns = runs.filter(r => runPassStatus.get(r.id) === true).length
+    const passRate = runsWithGraders > 0 ? (passedRuns / runsWithGraders) * 100 : 0
+
+    const avgGraderScore = graderResults.length > 0
+      ? (graderResults.reduce((sum, r) => sum + r.score, 0) / graderResults.length) * 100
+      : 0
+
+    const totalCost = runs.reduce((sum, r) => sum + (r.estimated_cost_usd || 0), 0)
+    const costPerSuccessfulRun = passedRuns > 0 ? totalCost / passedRuns : 0
+
+    return {
+      ok: true,
+      data: {
+        totalRuns: runs.length,
+        runsWithGraders,
+        passedRuns,
+        passRate: Math.round(passRate * 10) / 10,
+        avgGraderScore: Math.round(avgGraderScore * 10) / 10,
+        totalCost: Math.round(totalCost * 10000) / 10000,
+        costPerSuccessfulRun: Math.round(costPerSuccessfulRun * 10000) / 10000,
+      },
+    }
+  } catch (err) {
+    return { ok: false, error: `Failed to get runs aggregate stats: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Playbook Operations
+// ============================================================================
+
+export async function getAllPlaybooks(): Promise<Result<Playbook[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRow[]>(
+      'SELECT * FROM playbooks ORDER BY name ASC'
+    )
+    return { ok: true, data: result.map(rowToPlaybook) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get playbooks: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getPlaybook(id: string): Promise<Result<Playbook | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRow[]>(
+      'SELECT * FROM playbooks WHERE id = ?',
+      [id]
+    )
+    return { ok: true, data: result.length > 0 ? rowToPlaybook(result[0]) : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get playbook: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function createPlaybook(data: CreatePlaybookData): Promise<Result<Playbook>> {
+  try {
+    const database = await getDb()
+    const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    await database.execute(
+      `INSERT INTO playbooks (id, sync_id, name, description, enabled, rule_count, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
+      [
+        id,
+        syncId,
+        data.name.trim(),
+        data.description?.trim() ?? null,
+        data.enabled !== false ? 1 : 0,
+        now,
+        now,
+      ]
+    )
+
+    const playbook: Playbook = {
+      id,
+      syncId,
+      name: data.name.trim(),
+      description: data.description?.trim(),
+      enabled: data.enabled !== false,
+      ruleCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    return { ok: true, data: playbook }
+  } catch (err) {
+    return { ok: false, error: `Failed to create playbook: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function updatePlaybook(id: string, data: UpdatePlaybookData): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    const setClauses: string[] = ['updated_at = ?']
+    const params: (string | number | null)[] = [now]
+
+    if (data.name !== undefined) {
+      setClauses.push('name = ?')
+      params.push(data.name.trim())
+    }
+    if (data.description !== undefined) {
+      setClauses.push('description = ?')
+      params.push(data.description?.trim() ?? null)
+    }
+    if (data.enabled !== undefined) {
+      setClauses.push('enabled = ?')
+      params.push(data.enabled ? 1 : 0)
+    }
+
+    params.push(id)
+
+    await database.execute(
+      `UPDATE playbooks SET ${setClauses.join(', ')} WHERE id = ?`,
+      params
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update playbook: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deletePlaybook(id: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    // Cascade will handle playbook_rules and prompt_playbooks
+    await database.execute('DELETE FROM playbooks WHERE id = ?', [id])
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete playbook: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Playbook Rule Operations
+// ============================================================================
+
+export async function getPlaybookRules(playbookId: string): Promise<Result<PlaybookRule[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRuleRow[]>(
+      'SELECT * FROM playbook_rules WHERE playbook_id = ? ORDER BY priority DESC, created_at ASC',
+      [playbookId]
+    )
+    return { ok: true, data: result.map(rowToPlaybookRule) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get playbook rules: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function getPlaybookRule(id: string): Promise<Result<PlaybookRule | null>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRuleRow[]>(
+      'SELECT * FROM playbook_rules WHERE id = ?',
+      [id]
+    )
+    return { ok: true, data: result.length > 0 ? rowToPlaybookRule(result[0]) : null }
+  } catch (err) {
+    return { ok: false, error: `Failed to get playbook rule: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function createPlaybookRule(data: CreatePlaybookRuleData): Promise<Result<PlaybookRule>> {
+  try {
+    const database = await getDb()
+    const id = crypto.randomUUID()
+    const syncId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    await database.execute(
+      `INSERT INTO playbook_rules (
+        id, sync_id, playbook_id, trigger_context, instruction, bad_example_input,
+        bad_example_output, golden_output, source_run_id, priority, enabled, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        syncId,
+        data.playbookId,
+        data.triggerContext.trim(),
+        data.instruction.trim(),
+        data.badExampleInput?.trim() ?? null,
+        data.badExampleOutput?.trim() ?? null,
+        data.goldenOutput?.trim() ?? null,
+        data.sourceRunId ?? null,
+        data.priority ?? 100,
+        data.enabled !== false ? 1 : 0,
+        now,
+        now,
+      ]
+    )
+
+    // Update rule count on playbook
+    await database.execute(
+      'UPDATE playbooks SET rule_count = rule_count + 1, updated_at = ? WHERE id = ?',
+      [now, data.playbookId]
+    )
+
+    const rule: PlaybookRule = {
+      id,
+      syncId,
+      playbookId: data.playbookId,
+      triggerContext: data.triggerContext.trim(),
+      instruction: data.instruction.trim(),
+      badExampleInput: data.badExampleInput?.trim(),
+      badExampleOutput: data.badExampleOutput?.trim(),
+      goldenOutput: data.goldenOutput?.trim(),
+      sourceRunId: data.sourceRunId,
+      priority: data.priority ?? 100,
+      enabled: data.enabled !== false,
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    return { ok: true, data: rule }
+  } catch (err) {
+    return { ok: false, error: `Failed to create playbook rule: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function updatePlaybookRule(id: string, data: UpdatePlaybookRuleData): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    const setClauses: string[] = ['updated_at = ?']
+    const params: (string | number | null)[] = [now]
+
+    if (data.triggerContext !== undefined) {
+      setClauses.push('trigger_context = ?')
+      params.push(data.triggerContext.trim())
+    }
+    if (data.instruction !== undefined) {
+      setClauses.push('instruction = ?')
+      params.push(data.instruction.trim())
+    }
+    if (data.badExampleInput !== undefined) {
+      setClauses.push('bad_example_input = ?')
+      params.push(data.badExampleInput?.trim() ?? null)
+    }
+    if (data.badExampleOutput !== undefined) {
+      setClauses.push('bad_example_output = ?')
+      params.push(data.badExampleOutput?.trim() ?? null)
+    }
+    if (data.goldenOutput !== undefined) {
+      setClauses.push('golden_output = ?')
+      params.push(data.goldenOutput?.trim() ?? null)
+    }
+    if (data.priority !== undefined) {
+      setClauses.push('priority = ?')
+      params.push(data.priority)
+    }
+    if (data.enabled !== undefined) {
+      setClauses.push('enabled = ?')
+      params.push(data.enabled ? 1 : 0)
+    }
+
+    params.push(id)
+
+    await database.execute(
+      `UPDATE playbook_rules SET ${setClauses.join(', ')} WHERE id = ?`,
+      params
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to update playbook rule: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function deletePlaybookRule(id: string): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+
+    // Get the rule to find its playbook
+    const ruleResult = await database.select<PlaybookRuleRow[]>(
+      'SELECT playbook_id FROM playbook_rules WHERE id = ?',
+      [id]
+    )
+
+    if (ruleResult.length === 0) {
+      return { ok: false, error: 'Rule not found' }
+    }
+
+    const playbookId = ruleResult[0].playbook_id
+    const now = new Date().toISOString()
+
+    // Delete the rule
+    await database.execute('DELETE FROM playbook_rules WHERE id = ?', [id])
+
+    // Update rule count on playbook
+    await database.execute(
+      'UPDATE playbooks SET rule_count = rule_count - 1, updated_at = ? WHERE id = ?',
+      [now, playbookId]
+    )
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to delete playbook rule: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// ============================================================================
+// Prompt-Playbook Association Operations
+// ============================================================================
+
+export async function getPromptPlaybooks(promptId: string): Promise<Result<Playbook[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRow[]>(
+      `SELECT p.* FROM playbooks p
+       JOIN prompt_playbooks pp ON p.id = pp.playbook_id
+       WHERE pp.prompt_id = ? AND pp.enabled = 1
+       ORDER BY pp."order" ASC, p.name ASC`,
+      [promptId]
+    )
+    return { ok: true, data: result.map(rowToPlaybook) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get prompt playbooks: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function setPromptPlaybooks(promptId: string, playbookIds: string[]): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    const now = new Date().toISOString()
+
+    // Clear existing associations
+    await database.execute('DELETE FROM prompt_playbooks WHERE prompt_id = ?', [promptId])
+
+    // Add new associations with order
+    for (let i = 0; i < playbookIds.length; i++) {
+      const id = crypto.randomUUID()
+      await database.execute(
+        `INSERT INTO prompt_playbooks (id, prompt_id, playbook_id, "order", enabled, created_at)
+         VALUES (?, ?, ?, ?, 1, ?)`,
+        [id, promptId, playbookIds[i], i, now]
+      )
+    }
+
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to set prompt playbooks: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+/**
+ * Get all enabled rules for a prompt (from all attached enabled playbooks)
+ * Rules are ordered by playbook order, then by priority (desc), then by creation date
+ */
+export async function getActiveRulesForPrompt(promptId: string): Promise<Result<PlaybookRule[]>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<PlaybookRuleRow[]>(
+      `SELECT pr.* FROM playbook_rules pr
+       JOIN playbooks p ON pr.playbook_id = p.id
+       JOIN prompt_playbooks pp ON p.id = pp.playbook_id
+       WHERE pp.prompt_id = ?
+         AND pp.enabled = 1
+         AND p.enabled = 1
+         AND pr.enabled = 1
+       ORDER BY pp."order" ASC, pr.priority DESC, pr.created_at ASC`,
+      [promptId]
+    )
+    return { ok: true, data: result.map(rowToPlaybookRule) }
+  } catch (err) {
+    return { ok: false, error: `Failed to get active rules for prompt: ${err instanceof Error ? err.message : String(err)}` }
   }
 }

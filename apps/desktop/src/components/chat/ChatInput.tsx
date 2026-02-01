@@ -209,12 +209,14 @@ export const ChatInput = memo(function ChatInput({
             onClick={handleFileSelect}
             disabled={isLoading || isUploading}
             className="h-11 w-11 flex-shrink-0"
-            title="Attach files"
+            aria-label="Attach files"
           >
             <Paperclip className="h-4 w-4" />
           </Button>
           <Textarea
             ref={textareaRef}
+            name="message"
+            autoComplete="off"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -229,6 +231,7 @@ export const ChatInput = memo(function ChatInput({
               size="icon"
               onClick={onStop}
               className="h-11 w-11 flex-shrink-0"
+              aria-label="Stop generation"
             >
               <Square className="h-4 w-4" />
             </Button>
@@ -238,6 +241,7 @@ export const ChatInput = memo(function ChatInput({
               disabled={!value.trim() && pendingAttachments.length === 0}
               size="icon"
               className="h-11 w-11 flex-shrink-0"
+              aria-label="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>

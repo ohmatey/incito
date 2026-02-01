@@ -1,0 +1,82 @@
+{
+  "title": "Custom Run",
+  "newRun": "New Custom Run",
+  "defaultName": "Untitled Prompt",
+  "modeSelector": {
+    "title": "How would you like to start?",
+    "description": "Create a new prompt from scratch or build on an existing one.",
+    "scratch": {
+      "title": "Start from Scratch",
+      "description": "Create a new prompt template"
+    },
+    "existing": {
+      "title": "Start from Existing",
+      "description": "Use an existing prompt as a base"
+    },
+    "selectPrompt": "Select a prompt",
+    "selectPromptDescription": "Choose an existing prompt to use as your starting point.",
+    "searchPlaceholder": "Search prompts...",
+    "noPrompts": "No prompts found",
+    "back": "Back"
+  },
+  "editor": {
+    "name": "Name",
+    "namePlaceholder": "Enter prompt name",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe what this prompt does",
+    "template": "Template",
+    "templatePlaceholder": "Write your prompt template here...\n\nUse {{variable_name}} to create variables.",
+    "templateHint": "Use {{variable}} syntax to create dynamic placeholders",
+    "variablesCount": "{{count}} variable(s) detected",
+    "detectedVariables": "Detected Variables"
+  },
+  "config": {
+    "prompt": "Prompt Template",
+    "aiBehavior": "AI Behavior",
+    "agentHint": "Select an agent to use its system prompt, or leave empty to use a custom system prompt.",
+    "systemPrompt": "System Prompt",
+    "systemPromptPlaceholder": "Enter a custom system prompt for the AI...",
+    "temperature": "Temperature",
+    "temperatureHint": "Lower values make output more focused, higher values more creative",
+    "maxTokens": "Max Tokens",
+    "maxTokensPlaceholder": "Leave empty for default",
+    "provider": "Provider",
+    "selectProvider": "Select Provider",
+    "defaultProvider": "Use default provider",
+    "noProviders": "No providers configured. Add one in Settings.",
+    "evaluation": "Evaluation",
+    "selectGraders": "Select Graders"
+  },
+  "execution": {
+    "variables": "Variables",
+    "allFilled": "All required filled",
+    "requiredMissing": "{{count}} required missing",
+    "noVariables": "No variables defined in template",
+    "run": "Run",
+    "stop": "Stop",
+    "output": "Output",
+    "generating": "Generating...",
+    "completed": "Completed",
+    "error": "Error",
+    "noOutput": "Run the prompt to see output here",
+    "history": "Recent Runs"
+  },
+  "save": {
+    "button": "Save Prompt",
+    "title": "Save Prompt",
+    "description": "Save your custom run configuration as a prompt.",
+    "saveAsLabel": "Save as",
+    "asVersion": "New version of existing prompt",
+    "asNew": "New prompt",
+    "nameLabel": "Prompt Name",
+    "namePlaceholder": "Enter a name for your prompt",
+    "versionDescriptionLabel": "Version Description (optional)",
+    "versionDescriptionPlaceholder": "What changed in this version?",
+    "saveButton": "Save",
+    "saving": "Saving...",
+    "noFolder": "No prompts folder selected",
+    "newSuccess": "Created new prompt: {{name}}",
+    "versionSuccess": "Saved as new version",
+    "error": "Failed to save: {{message}}"
+  }
+}

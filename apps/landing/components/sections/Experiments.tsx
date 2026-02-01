@@ -5,6 +5,9 @@ import {
   Play,
   GitCompare,
   CheckCircle,
+  BookMarked,
+  Layers,
+  Wrench,
   Database,
   Plug,
   FlaskConical,
@@ -15,7 +18,7 @@ import { FadeIn } from '@/components/shared/FadeIn'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
-const experimentIcons: LucideIcon[] = [Bot, Play, GitCompare, CheckCircle, Database, Plug]
+const experimentIcons: LucideIcon[] = [Bot, Play, GitCompare, CheckCircle, BookMarked, Layers, Wrench, Database, Plug]
 
 export function Experiments() {
   const { t } = useLanguage()

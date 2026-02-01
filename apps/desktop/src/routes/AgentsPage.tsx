@@ -1,10 +1,10 @@
 import { Outlet, useParams } from '@tanstack/react-router'
 import { AgentList } from '@/components/AgentList'
-import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
 
 export function AgentsPage() {
   const { agentId } = useParams({ strict: false })
-  const { listPanelCollapsed } = useAppContext()
+  const { listPanelCollapsed } = useLayout()
 
   // Show list panel when not collapsed OR when no agent is selected
   const showListPanel = !listPanelCollapsed || !agentId

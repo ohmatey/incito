@@ -10,6 +10,7 @@ import { PlatformProvider } from './context/PlatformContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { PostHogProvider } from './context/PostHogContext'
+import { FeatureFlagsProvider } from './context/FeatureFlagsContext'
 import { RunModeProvider } from './context/RunModeContext'
 import { AddonProvider } from './context/AddonContext'
 import { UpdateProvider } from './context/UpdateContext'
@@ -24,13 +25,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <LanguageProvider>
           <PostHogProvider>
             <PlatformProvider>
-              <RunModeProvider>
-                <AddonProvider>
-                  <UpdateProvider>
-                    <RouterProvider router={router} />
-                  </UpdateProvider>
-                </AddonProvider>
-              </RunModeProvider>
+              <FeatureFlagsProvider>
+                <RunModeProvider>
+                  <AddonProvider>
+                    <UpdateProvider>
+                      <RouterProvider router={router} />
+                    </UpdateProvider>
+                  </AddonProvider>
+                </RunModeProvider>
+              </FeatureFlagsProvider>
             </PlatformProvider>
           </PostHogProvider>
         </LanguageProvider>

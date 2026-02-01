@@ -20,7 +20,10 @@
     "agentCreated": "Created new agent",
     "agentDeleted": "Deleted agent",
     "agentDuplicated": "Duplicated agent",
-    "agentSaved": "Saved agent"
+    "agentSaved": "Saved agent",
+    "settingsSaved": "Settings saved",
+    "feedbackSaved": "Feedback saved",
+    "promptCopied": "Copied prompt"
   },
   "error": {
     "copyFailed": "Failed to copy",
@@ -46,6 +49,7 @@
     "fillRequired": "Please fill in all required fields",
     "notesSaveFailed": "Failed to save notes",
     "launchersSaveFailed": "Failed to save default launchers",
+    "defaultAgentSaveFailed": "Failed to save default agent",
     "variantCreateFailed": "Failed to create variant",
     "invalidName": "Invalid name",
     "agentCreateFailed": "Failed to create agent",

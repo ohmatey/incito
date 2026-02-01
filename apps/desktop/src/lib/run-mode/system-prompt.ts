@@ -2,6 +2,8 @@
 // Generates the system prompt for guiding users through prompt variables
 
 import type { PromptFile, Variable } from '@/types/prompt'
+import type { PlaybookRule } from '@/types/playbook'
+import { formatRulesAsContext, limitRules } from './playbook-injection'
 
 /**
  * Build a description of a variable for the AI
@@ -40,17 +42,54 @@ function describeVariable(variable: Variable): string {
   return parts.join('\n')
 }
 
+interface BuildRunModeSystemPromptOptions {
+  customInstructions?: string
+  agentSystemPrompt?: string
+  agentName?: string
+  /** Playbook rules to inject as behavior guidelines */
+  playbookRules?: PlaybookRule[]
+  /** Maximum number of rules to inject (token budget control) */
+  maxPlaybookRules?: number
+}
+
 /**
  * Build the system prompt for run mode
  */
 export function buildRunModeSystemPrompt(
   prompt: PromptFile,
-  customInstructions?: string
+  optionsOrCustomInstructions?: string | BuildRunModeSystemPromptOptions
 ): string {
+  // Handle legacy string argument for backward compatibility
+  const options: BuildRunModeSystemPromptOptions = typeof optionsOrCustomInstructions === 'string'
+    ? { customInstructions: optionsOrCustomInstructions }
+    : optionsOrCustomInstructions ?? {}
+
+  const { customInstructions, agentSystemPrompt, agentName, playbookRules, maxPlaybookRules } = options
+
   const requiredVars = prompt.variables.filter((v) => v.required)
   const optionalVars = prompt.variables.filter((v) => !v.required)
 
   const sections: string[] = []
+
+  // If agent is selected, prepend its persona
+  if (agentSystemPrompt) {
+    sections.push(`## Agent Persona: ${agentName || 'Selected Agent'}`)
+    sections.push(agentSystemPrompt)
+    sections.push('')
+    sections.push('---')
+    sections.push('')
+  }
+
+  // Inject playbook rules if provided
+  if (playbookRules && playbookRules.length > 0) {
+    const rulesToInject = limitRules(playbookRules, maxPlaybookRules)
+    const rulesContext = formatRulesAsContext(rulesToInject)
+    if (rulesContext) {
+      sections.push(rulesContext)
+      sections.push('---')
+      sections.push('')
+    }
+  }
 
   // Core identity
   sections.push(`You are a helpful assistant guiding a user through filling out a prompt template called "${prompt.name}".`)

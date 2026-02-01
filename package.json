@@ -14,6 +14,14 @@
     "build:tauri": "cd apps/desktop/src-tauri && cargo build",
     "build:landing": "pnpm --filter @incito/landing build",
     "rebuild": "pnpm build:claude-code-server && pnpm build:tauri",
-    "tauri": "pnpm --filter @incito/desktop tauri"
+    "tauri": "pnpm --filter @incito/desktop tauri",
+    "test": "pnpm --filter @incito/desktop test:run",
+    "test:e2e": "pnpm --filter @incito/desktop test:e2e"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.2.48",
+      "@types/react-dom": "^18.2.18"
+    }
   }
 }

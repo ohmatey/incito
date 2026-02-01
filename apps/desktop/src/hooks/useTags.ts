@@ -11,13 +11,14 @@ import { toast } from 'sonner'
 import i18n from '@/i18n'
 
 interface UseTagsOptions {
+  folderPath: string | null
   prompts: PromptFile[]
   setPrompts: React.Dispatch<React.SetStateAction<PromptFile[]>>
   selectedPrompt: PromptFile | null
   setSelectedPrompt: (prompt: PromptFile | null) => void
 }
 
-export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt }: UseTagsOptions) {
+export function useTags({ folderPath, prompts, setPrompts, selectedPrompt, setSelectedPrompt }: UseTagsOptions) {
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null)
 
@@ -59,7 +60,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
       )
 
       // Update prompts that use this tag (in memory and files)
-      if (oldName && oldName !== name) {
+      if (oldName && oldName !== name && folderPath) {
         const updatedPrompts = await Promise.all(
           prompts.map(async (p) => {
             if (p.tags?.includes(oldName)) {
@@ -67,7 +68,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
                 ...p,
                 tags: p.tags.map((t) => (t === oldName ? name : t)),
               }
-              await savePrompt(updatedPrompt)
+              await savePrompt(updatedPrompt, folderPath)
               return updatedPrompt
             }
             return p
@@ -99,6 +100,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
       setTags((prev) => prev.filter((t) => t.id !== id))
 
       // Remove tag from all prompts
+      if (!folderPath) return false
       const updatedPrompts = await Promise.all(
         prompts.map(async (p) => {
           if (p.tags?.includes(tagToDelete.name)) {
@@ -106,7 +108,7 @@ export function useTags({ prompts, setPrompts, selectedPrompt, setSelectedPrompt
               ...p,
               tags: p.tags.filter((t) => t !== tagToDelete.name),
             }
-            await savePrompt(updatedPrompt)
+            await savePrompt(updatedPrompt, folderPath)
             return updatedPrompt
           }
           return p

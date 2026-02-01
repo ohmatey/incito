@@ -22,14 +22,16 @@ export interface UseTagManagerResult {
     prompts: PromptFile[],
     setPrompts: React.Dispatch<React.SetStateAction<PromptFile[]>>,
     selectedPrompt: PromptFile | null,
-    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>
+    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>,
+    folderPath: string
   ) => Promise<boolean>
   deleteTag: (
     id: string,
     prompts: PromptFile[],
     setPrompts: React.Dispatch<React.SetStateAction<PromptFile[]>>,
     selectedPrompt: PromptFile | null,
-    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>
+    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>,
+    folderPath: string
   ) => Promise<boolean>
 }
 
@@ -72,7 +74,8 @@ export function useTagManager(): UseTagManagerResult {
     prompts: PromptFile[],
     setPrompts: React.Dispatch<React.SetStateAction<PromptFile[]>>,
     selectedPrompt: PromptFile | null,
-    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>
+    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>,
+    folderPath: string
   ): Promise<boolean> => {
     try {
       const result = await updateTagInDb(id, name, color)
@@ -97,7 +100,7 @@ export function useTagManager(): UseTagManagerResult {
                   ...p,
                   tags: p.tags.map((t) => (t === oldName ? name : t)),
                 }
-                await savePrompt(updatedPrompt)
+                await savePrompt(updatedPrompt, folderPath)
                 return updatedPrompt
               }
               return p
@@ -130,7 +133,8 @@ export function useTagManager(): UseTagManagerResult {
     prompts: PromptFile[],
     setPrompts: React.Dispatch<React.SetStateAction<PromptFile[]>>,
     selectedPrompt: PromptFile | null,
-    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>
+    setSelectedPrompt: React.Dispatch<React.SetStateAction<PromptFile | null>>,
+    folderPath: string
   ): Promise<boolean> => {
     try {
       const tagToDelete = tags.find((t) => t.id === id)
@@ -146,7 +150,7 @@ export function useTagManager(): UseTagManagerResult {
                 ...p,
                 tags: p.tags.filter((t) => t !== tagToDelete.name),
               }
-              await savePrompt(updatedPrompt)
+              await savePrompt(updatedPrompt, folderPath)
               return updatedPrompt
             }
             return p

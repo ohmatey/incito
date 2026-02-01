@@ -5,7 +5,8 @@
     "agents": "เอเจนต์",
     "resources": "ทรัพยากร",
     "runs": "การรัน",
-    "graders": "ตัวให้คะแนน",
+    "graders": "การตรวจสอบคุณภาพ",
+    "playbooks": "Playbooks",
     "tags": "แท็ก",
     "settings": "ตั้งค่า",
     "keyboardShortcuts": "แป้นพิมพ์ลัด",
@@ -25,7 +26,10 @@
     "configure": "ตั้งค่า",
     "remove": "ลบออก",
     "run": "รัน",
-    "done": "เสร็จสิ้น"
+    "done": "เสร็จสิ้น",
+    "stop": "หยุด",
+    "send": "ส่ง",
+    "closePanel": "ปิดแผง"
   },
   "labels": {
     "loading": "กำลังโหลด...",
@@ -91,12 +95,15 @@
     "instructions": "คำแนะนำ",
     "preview": "ตัวอย่าง",
     "variables": "ตัวแปร",
-    "runs": "การรัน"
+    "runs": "การรัน",
+    "settings": "การตั้งค่า",
+    "feedback": "ข้อเสนอแนะ"
   },
   "rightPanel": {
     "panelOptions": "ตัวเลือกแผง",
     "openMenu": "เปิดเมนู",
     "closePanel": "ปิดแผง",
+    "openPrompt": "เปิดพรอมต์",
     "addNote": "เพิ่มบันทึก",
     "writeNote": "เขียนบันทึก...",
     "addNoteButton": "เพิ่มบันทึก",
@@ -138,7 +145,31 @@
     "runCancelled": "ยกเลิก",
     "duration": "ระยะเวลา",
     "totalTokens": "โทเค็นทั้งหมด",
-    "totalCost": "ค่าใช้จ่ายทั้งหมด"
+    "totalCost": "ค่าใช้จ่ายทั้งหมด",
+    "passRate": "อัตราผ่าน",
+    "passRateTooltip": "{{passed}} จาก {{total}} การรันผ่านการตรวจสอบทั้งหมด",
+    "avgScore": "คะแนนเฉลี่ย",
+    "avgScoreTooltip": "คะแนนคุณภาพเฉลี่ยจากการตรวจสอบทั้งหมด",
+    "perSuccess": "/สำเร็จ",
+    "costPerSuccessTooltip": "ค่าใช้จ่ายเฉลี่ยต่อการรันที่สำเร็จ",
+    "compare": "เปรียบเทียบ",
+    "versionCount": "{{count}} เวอร์ชัน",
+    "selectFirstVersion": "เลือกเวอร์ชันแรก",
+    "selectSecondVersion": "เลือกเวอร์ชันที่สอง",
+    "diffReady": "กำลังเปรียบเทียบเวอร์ชัน"
+  },
+  "analytics": {
+    "promptHealth": "ตรวจสอบคุณภาพ",
+    "lastNDays": "{{days}} วันที่ผ่านมา",
+    "noRunsYet": "ยังไม่มีการรันพร้อมการตรวจสอบ",
+    "passRateTooltip": "{{passed}} จาก {{total}} การรันผ่านการตรวจสอบทั้งหมด",
+    "runs": "การรัน",
+    "passed": "ผ่าน",
+    "failed": "ไม่ผ่าน",
+    "totalRunsTooltip": "การรันที่เสร็จสิ้นทั้งหมด",
+    "passedTooltip": "การรันที่ผ่านการตรวจสอบทั้งหมด",
+    "failedTooltip": "การรันที่มีการตรวจสอบไม่ผ่านอย่างน้อยหนึ่งรายการ",
+    "avgScore": "คะแนนคุณภาพเฉลี่ย"
   },
   "ai": {
     "disclaimer": "AI อาจผิดพลาดได้ กรุณาตรวจสอบเนื้อหาที่สร้าง",

@@ -107,6 +107,21 @@
         "benefit": "Measure prompt quality automatically"
       },
       {
+        "title": "Playbooks",
+        "description": "Create teaching rules to guide AI behavior. Define triggers, instructions, and golden examples. Build consistent AI responses across your team.",
+        "benefit": "Teach AI how to respond correctly"
+      },
+      {
+        "title": "Batch Runs",
+        "description": "Execute prompts across multiple input variations simultaneously. Test edge cases, compare outputs in a grid, identify variance across scenarios.",
+        "benefit": "Test at scale in one click"
+      },
+      {
+        "title": "Custom Runs",
+        "description": "Create runs from scratch or modify existing prompts on the fly. Edit templates, adjust variables, configure providers—all in one flexible workspace.",
+        "benefit": "Iterate faster without saving"
+      },
+      {
         "title": "Resources & RAG",
         "description": "Upload documents and images to your resource library. Semantic search with embeddings. Build context-aware prompts from your knowledge base.",
         "benefit": "Ground prompts in your own data"

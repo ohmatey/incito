@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRunMode } from '@/context/RunModeContext'
+import { useAppContext } from '@/context/AppContext'
+import { useFeatureFlags } from '@/context/FeatureFlagsContext'
 import { RunModeFieldCard } from './RunModeFieldCard'
+import { AgentSelectorDropdown } from '@/components/AgentSelectorDropdown'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Progress } from '@/components/ui/progress'
 import {
   X,
   Send,
@@ -23,6 +25,8 @@ interface RunModeChatProps {
 
 export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
   const { t } = useTranslation(['runMode', 'common'])
+  const { agentManager } = useAppContext()
+  const { featureFlags } = useFeatureFlags()
   const {
     prompt,
     messages,
@@ -31,11 +35,20 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
     isLoading,
     currentDisplayField,
     isFinished,
+    selectedAgentId,
+    agents,
+    setSelectedAgentId,
+    setAgents,
     sendMessage,
     submitFieldValue,
     stopGeneration,
     exitRunMode,
   } = useRunMode()
+
+  // Sync agents from AppContext to RunModeContext
+  useEffect(() => {
+    setAgents(agentManager.agents)
+  }, [agentManager.agents, setAgents])
 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -57,12 +70,10 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
 
   if (!prompt) return null
 
-  const totalFields = prompt.variables.length
   const requiredFields = prompt.variables.filter((v) => v.required).length
   const completedRequired = prompt.variables.filter(
     (v) => v.required && completedFields.includes(v.key)
   ).length
-  const progress = totalFields > 0 ? (completedFields.length / totalFields) * 100 : 0
 
   function handleSend() {
     if (!input.trim() || isLoading) return
@@ -98,37 +109,29 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              {t('runMode:title')}
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {prompt.name}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Progress */}
-          <div className="flex items-center gap-2">
-            <Progress value={progress} className="h-2 w-24" />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {t('runMode:fieldsProgress', {
-                completed: completedFields.length,
-                total: totalFields,
-              })}
-            </span>
-          </div>
-          <Button variant="ghost" size="icon" onClick={exitRunMode}>
+      {/* Minimal Header */}
+      <div className="flex h-12 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          {prompt.name}
+        </span>
+        <div className="flex items-center gap-2">
+          {/* Agent selector - only show if agents feature is enabled and agents exist */}
+          {featureFlags.agentsEnabled && agents.length > 0 && (
+            <AgentSelectorDropdown
+              selectedId={selectedAgentId}
+              onSelectionChange={setSelectedAgentId}
+              agents={agents}
+              disabled={isLoading}
+            />
+          )}
+          <Button variant="ghost" size="icon" onClick={exitRunMode} className="h-8 w-8" aria-label={t('common:buttons.close')}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4" ref={scrollRef} role="log" aria-live="polite" aria-label={t('runMode:chatMessages', 'Chat messages')}>
         <div className="mx-auto max-w-2xl space-y-4">
           {messages.map((message) => (
             <div
@@ -153,9 +156,9 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
 
           {/* Loading indicator */}
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
-            <div className="flex justify-start">
+            <div className="flex justify-start" role="status" aria-label={t('common:labels.loading')}>
               <div className="rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-800">
-                <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                <Loader2 className="h-4 w-4 animate-spin text-gray-500" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -177,7 +180,7 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
           {isFinished && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
               <div className="mb-3 flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <Check className="h-5 w-5 text-green-600 dark:text-green-400" aria-hidden="true" />
                 <h3 className="font-medium text-green-800 dark:text-green-200">
                   {t('runMode:complete')}
                 </h3>
@@ -190,7 +193,7 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
               </p>
               <div className="flex gap-2">
                 <Button onClick={handleCopy} className="gap-2">
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-4 w-4" aria-hidden="true" />
                   {t('common:buttons.copy')}
                 </Button>
                 <Button variant="outline" onClick={handleComplete}>
@@ -208,6 +211,8 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
           <div className="mx-auto flex max-w-2xl gap-2">
             <Input
               ref={inputRef}
+              name="run-mode-message"
+              autoComplete="off"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -216,7 +221,7 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
               className="flex-1"
             />
             {isLoading ? (
-              <Button variant="outline" size="icon" onClick={stopGeneration}>
+              <Button variant="outline" size="icon" onClick={stopGeneration} aria-label={t('common:buttons.stop')}>
                 <Square className="h-4 w-4" />
               </Button>
             ) : (
@@ -224,6 +229,7 @@ export function RunModeChat({ onComplete, onCopy }: RunModeChatProps) {
                 size="icon"
                 onClick={handleSend}
                 disabled={!input.trim()}
+                aria-label={t('common:buttons.send')}
               >
                 <Send className="h-4 w-4" />
               </Button>

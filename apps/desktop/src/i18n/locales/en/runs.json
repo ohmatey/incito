@@ -2,7 +2,15 @@
   "title": "Run History",
   "empty": {
     "title": "No runs yet",
-    "description": "Your prompt run history will appear here when you copy or launch prompts."
+    "description": "Your prompt run history will appear here when you copy or launch prompts.",
+    "selectTitle": "Select a run",
+    "selectDescription": "Choose a run from the list to view its details and output."
+  },
+  "list": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "older": "Older",
+    "empty": "No runs yet"
   },
   "status": {
     "completed": "Completed",
@@ -10,5 +18,42 @@
     "pending": "Pending",
     "inProgress": "In Progress",
     "cancelled": "Cancelled"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "tab": "Feedback",
+    "notConfigured": "Feedback not configured for this prompt",
+    "configureHint": "Enable feedback in the prompt's Settings tab",
+    "rating": {
+      "title": "Quality Rating",
+      "scale5": "{{value}}/5",
+      "scale10": "{{value}}/10"
+    },
+    "passFail": {
+      "title": "Pass / Fail",
+      "pass": "Pass",
+      "fail": "Fail"
+    },
+    "notes": {
+      "title": "Notes",
+      "placeholder": "Add observations..."
+    },
+    "tags": {
+      "title": "Tags"
+    },
+    "save": "Save Feedback",
+    "saving": "Saving...",
+    "saved": "Feedback saved",
+    "lastSaved": "Last saved: {{time}}",
+    "reviewed": "Reviewed",
+    "notReviewed": "Not reviewed",
+    "keyboardHints": "1-5 rating • p pass • f fail • Ctrl+S save"
+  },
+  "filter": {
+    "all": "All",
+    "reviewed": "Reviewed",
+    "notReviewed": "Not reviewed",
+    "passed": "Passed",
+    "failed": "Failed"
   }
 }

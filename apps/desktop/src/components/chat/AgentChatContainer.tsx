@@ -15,7 +15,7 @@ import {
 import { streamAgentChat } from '@/lib/mastra-client'
 import { toast } from 'sonner'
 import { LANGUAGES } from '@/i18n/types'
-import { useAppContext } from '@/context/AppContext'
+import { useLayout } from '@/context/LayoutContext'
 
 function buildSystemPromptWithLanguage(basePrompt: string, languageCode?: string, translationEnabled?: boolean): string {
   if (!translationEnabled || !languageCode) return basePrompt
@@ -34,7 +34,7 @@ interface AgentChatContainerProps {
 
 export function AgentChatContainer({ agent, onEdit }: AgentChatContainerProps) {
   const { t } = useTranslation('agents')
-  const { listPanelCollapsed, toggleListPanelCollapsed } = useAppContext()
+  const { listPanelCollapsed, toggleListPanelCollapsed } = useLayout()
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])

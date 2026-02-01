@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useAppContext } from '@/context/AppContext'
+import { usePromptSession } from '@/context/PromptSessionContext'
 import { useRunMode } from '@/context/RunModeContext'
 import { SearchPage as SearchPageComponent } from '@/components/SearchPage'
 import type { PromptFile } from '@/types/prompt'
@@ -14,10 +15,9 @@ export function SearchPage() {
     agentManager,
     handleDuplicatePrompt,
     handleDeletePrompt,
-    pinnedPromptIds,
-    togglePinPrompt,
     searchFocusTrigger,
   } = useAppContext()
+  const { pinnedPromptIds, togglePinPrompt } = usePromptSession()
 
   // UX FIX: On search page, never show a prompt as selected
   // Selection is only relevant on the prompts page

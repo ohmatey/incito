@@ -5,7 +5,6 @@ import type { Variable, LanguageCode, TranslationConfidence } from '@/types/prom
 import type { ChatMessage, AgentSettings, ChatAttachment } from '@/types/agent'
 
 export type { GeneratedPrompt, GeneratePromptResult, RefineTemplateResult, SummarizeChangesResult, FillFieldsResult, FillSingleFieldResult, TranslatePromptResult }
-export type { TokenUsage }
 
 export async function generatePromptTemplate(
   description: string,

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { PromptFile } from '@/types/prompt'
+import type { AgentFile } from '@/types/agent'
 import type {
   RunModeMessage,
   DisplayFieldTool,
@@ -15,8 +16,9 @@ import type {
   AskFollowUpTool,
   ProviderRunResult,
 } from '@/types/run.ts'
-import type { Grader, GraderResult, GraderResultWithGrader } from '@/types/grader'
+import type { Grader, GraderResultWithGrader } from '@/types/grader'
 import { isAssertionGrader } from '@/types/grader'
+import type { BatchRunResult } from '@/components/run-mode/BatchResultsGrid'
 import { getRunModeTools, parseToolCallArgs } from '@/lib/run-mode/tools'
 import {
   buildRunModeSystemPrompt,
@@ -24,7 +26,8 @@ import {
 } from '@/lib/run-mode/system-prompt'
 import { streamChat, type StreamChatMessage } from '@/lib/mastra-client'
 import { executeAssertionGrader } from '@/lib/grader-executor'
-import { getPromptGraders, getGrader, saveGraderResults } from '@/lib/store'
+import { getPromptGraders, getGrader, saveGraderResults, getLatestPromptRunConfig, getActiveRulesForPrompt } from '@/lib/store'
+import type { PlaybookRule } from '@/types/playbook'
 import { toast } from 'sonner'
 
 interface RunModeContextValue {
@@ -37,6 +40,8 @@ interface RunModeContextValue {
   isLoading: boolean
   currentDisplayField: DisplayFieldTool | null
   isFinished: boolean
+  selectedAgentId: string | null
+  agents: AgentFile[]
 
   // Multi-provider state
   selectedProviderIds: string[]
@@ -48,8 +53,17 @@ interface RunModeContextValue {
   graderResults: GraderResultWithGrader[]
   isRunningGraders: boolean
 
+  // Batch run state
+  batchResults: BatchRunResult[]
+  isBatchRunning: boolean
+  batchProgress: number
+  currentBatchRun: number
+  totalBatchRuns: number
+
   // Actions
-  startRunMode: (prompt: PromptFile, customInstructions?: string) => void
+  setSelectedAgentId: (id: string | null) => void
+  setAgents: (agents: AgentFile[]) => void
+  startRunMode: (prompt: PromptFile, options?: { customInstructions?: string; agentId?: string }) => Promise<void>
   exitRunMode: () => void
   sendMessage: (content: string) => Promise<void>
   submitFieldValue: (key: string, value: unknown) => Promise<void>
@@ -59,6 +73,8 @@ interface RunModeContextValue {
   updateProviderResult: (providerId: string, update: Partial<ProviderRunResult>) => void
   setSelectedGraderIds: (ids: string[]) => void
   runGraders: (input: string, output: string, runId?: string) => Promise<GraderResultWithGrader[]>
+  runBatch: (count: number, input: string) => Promise<void>
+  clearBatchResults: () => void
 }
 
 const RunModeContext = createContext<RunModeContextValue | null>(null)
@@ -86,6 +102,8 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
   const [isFinished, setIsFinished] = useState(false)
   const [customInstructions, setCustomInstructions] = useState<string | undefined>()
   const [shouldStartConversation, setShouldStartConversation] = useState(false)
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
+  const [agents, setAgents] = useState<AgentFile[]>([])
 
   // Multi-provider state
   const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([])
@@ -96,6 +114,13 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
   const [availableGraders, setAvailableGraders] = useState<Grader[]>([])
   const [graderResults, setGraderResults] = useState<GraderResultWithGrader[]>([])
   const [isRunningGraders, setIsRunningGraders] = useState(false)
+
+  // Batch run state
+  const [batchResults, setBatchResults] = useState<BatchRunResult[]>([])
+  const [isBatchRunning, setIsBatchRunning] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(0)
+  const [currentBatchRun, setCurrentBatchRun] = useState(0)
+  const [totalBatchRuns, setTotalBatchRuns] = useState(0)
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -162,7 +187,30 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
       abortControllerRef.current = new AbortController()
 
       try {
-        const systemPrompt = buildRunModeSystemPrompt(prompt, customInstructions)
+        // Find selected agent and get its system prompt
+        const selectedAgent = selectedAgentId ? agents.find(a => a.id === selectedAgentId) : null
+
+        // Fetch playbook rules for this prompt
+        let playbookRules: PlaybookRule[] = []
+        let maxPlaybookRules: number | undefined
+        const rulesResult = await getActiveRulesForPrompt(prompt.id)
+        if (rulesResult.ok) {
+          playbookRules = rulesResult.data
+        }
+
+        // Check if prompt config has max rules setting
+        const configResult = await getLatestPromptRunConfig(prompt.id)
+        if (configResult.ok && configResult.data?.playbooks?.maxRulesToInject) {
+          maxPlaybookRules = configResult.data.playbooks.maxRulesToInject
+        }
+
+        const systemPrompt = buildRunModeSystemPrompt(prompt, {
+          customInstructions,
+          agentSystemPrompt: selectedAgent?.systemPrompt,
+          agentName: selectedAgent?.name,
+          playbookRules,
+          maxPlaybookRules,
+        })
         const progressContext = buildProgressContext(
           prompt.variables,
           completedFields,
@@ -226,7 +274,7 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
         abortControllerRef.current = null
       }
     },
-    [prompt, customInstructions, completedFields, fieldValues, processToolCalls]
+    [prompt, customInstructions, completedFields, fieldValues, processToolCalls, selectedAgentId, agents]
   )
 
   // Effect to start the conversation after state is fully reset
@@ -380,16 +428,27 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
   )
 
   const startRunMode = useCallback(
-    (newPrompt: PromptFile, instructions?: string) => {
+    async (newPrompt: PromptFile, options?: { customInstructions?: string; agentId?: string }) => {
       setPrompt(newPrompt)
       setMessages([])
       setCompletedFields([])
       setFieldValues({})
       setCurrentDisplayField(null)
       setIsFinished(false)
-      setCustomInstructions(instructions)
+      setCustomInstructions(options?.customInstructions)
       setProviderResults({})
       setGraderResults([])
+
+      // Load the run config to get the configured agent
+      let configuredAgentId: string | undefined
+      const configResult = await getLatestPromptRunConfig(newPrompt.path)
+      if (configResult.ok && configResult.data?.aiPrompt?.agentId) {
+        configuredAgentId = configResult.data.aiPrompt.agentId
+      }
+
+      // Priority: options.agentId > runConfig.aiPrompt.agentId > prompt.defaultAgentId
+      setSelectedAgentId(options?.agentId ?? configuredAgentId ?? newPrompt.defaultAgentId ?? null)
+
       setIsActive(true)
       setShouldStartConversation(true)
     },
@@ -407,6 +466,7 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     setIsFinished(false)
     setCustomInstructions(undefined)
     setShouldStartConversation(false)
+    setSelectedAgentId(null)
     setSelectedProviderIds([])
     setProviderResults({})
     setSelectedGraderIds([])
@@ -474,6 +534,120 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     []
   )
 
+  // Batch run execution
+  const runBatch = useCallback(
+    async (count: number, input: string) => {
+      if (!prompt || selectedProviderIds.length === 0) {
+        toast.error('No prompt or provider selected')
+        return
+      }
+
+      setIsBatchRunning(true)
+      setTotalBatchRuns(count)
+      setCurrentBatchRun(0)
+      setBatchProgress(0)
+
+      // Initialize batch results
+      const initialResults: BatchRunResult[] = Array.from({ length: count }, (_, i) => ({
+        id: crypto.randomUUID(),
+        runNumber: i + 1,
+        status: 'pending' as const,
+        content: '',
+        graderResults: [],
+        allGradersPassed: false,
+        avgGraderScore: 0,
+      }))
+      setBatchResults(initialResults)
+
+      // Execute runs sequentially to avoid rate limits and provide progress feedback
+      for (let i = 0; i < count; i++) {
+        setCurrentBatchRun(i + 1)
+        setBatchProgress(((i) / count) * 100)
+
+        // Update status to running
+        setBatchResults(prev => prev.map((r, idx) =>
+          idx === i ? { ...r, status: 'running' as const } : r
+        ))
+
+        try {
+          // Use first selected provider for batch runs
+          const providerId = selectedProviderIds[0]
+
+          // Make API call to generate content
+          const response = await fetch('http://localhost:3457/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              providerId,
+              messages: [{ role: 'user', content: input }],
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`)
+          }
+
+          const data = await response.json()
+          const content = data.content || data.text || ''
+          const tokens = data.usage || {}
+
+          // Run graders on the output
+          const graderResultsForRun = await runGraders(input, content)
+          const allPassed = graderResultsForRun.every(r => r.passed)
+          const avgScore = graderResultsForRun.length > 0
+            ? graderResultsForRun.reduce((sum, r) => sum + r.score, 0) / graderResultsForRun.length
+            : 1
+
+          // Update result
+          setBatchResults(prev => prev.map((r, idx) =>
+            idx === i
+              ? {
+                  ...r,
+                  status: 'completed' as const,
+                  content,
+                  graderResults: graderResultsForRun,
+                  allGradersPassed: allPassed,
+                  avgGraderScore: avgScore,
+                  inputTokens: tokens.inputTokens,
+                  outputTokens: tokens.outputTokens,
+                  totalTokens: tokens.totalTokens,
+                  estimatedCostUsd: tokens.estimatedCostUsd,
+                }
+              : r
+          ))
+        } catch (error) {
+          // Update with error
+          setBatchResults(prev => prev.map((r, idx) =>
+            idx === i
+              ? {
+                  ...r,
+                  status: 'error' as const,
+                  error: error instanceof Error ? error.message : 'Unknown error',
+                }
+              : r
+          ))
+        }
+
+        // Small delay between runs to avoid rate limits
+        if (i < count - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+
+      setBatchProgress(100)
+      setIsBatchRunning(false)
+      toast.success(`Batch run completed: ${count} runs`)
+    },
+    [prompt, selectedProviderIds, runGraders]
+  )
+
+  const clearBatchResults = useCallback(() => {
+    setBatchResults([])
+    setBatchProgress(0)
+    setCurrentBatchRun(0)
+    setTotalBatchRuns(0)
+  }, [])
+
   const value: RunModeContextValue = {
     isActive,
     prompt,
@@ -483,12 +657,21 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     isLoading,
     currentDisplayField,
     isFinished,
+    selectedAgentId,
+    agents,
     selectedProviderIds,
     providerResults,
     selectedGraderIds,
     availableGraders,
     graderResults,
     isRunningGraders,
+    batchResults,
+    isBatchRunning,
+    batchProgress,
+    currentBatchRun,
+    totalBatchRuns,
+    setSelectedAgentId,
+    setAgents,
     startRunMode,
     exitRunMode,
     sendMessage,
@@ -499,6 +682,8 @@ export function RunModeProvider({ children }: RunModeProviderProps) {
     updateProviderResult,
     setSelectedGraderIds,
     runGraders,
+    runBatch,
+    clearBatchResults,
   }
 
   return (

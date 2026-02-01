@@ -12,14 +12,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Code, Brain, Loader2 } from 'lucide-react'
+import { CheckCircle2, Sparkles, Loader2 } from 'lucide-react'
 import type { AssertionGrader, LLMJudgeGrader, GraderType } from '@/types/grader'
 
 interface CreateGraderDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (grader: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'> | Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'>) => void
+  onCreate: (grader: Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'> | Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'>) => void
 }
 
 export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGraderDialogProps) {
@@ -42,7 +43,7 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
     setIsCreating(true)
 
     if (type === 'assertion') {
-      const grader: Omit<AssertionGrader, 'id' | 'createdAt' | 'updatedAt'> = {
+      const grader: Omit<AssertionGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'> = {
         name: name.trim(),
         description: description.trim() || undefined,
         type: 'assertion',
@@ -55,7 +56,7 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
       }
       onCreate(grader)
     } else {
-      const grader: Omit<LLMJudgeGrader, 'id' | 'createdAt' | 'updatedAt'> = {
+      const grader: Omit<LLMJudgeGrader, 'id' | 'syncId' | 'createdAt' | 'updatedAt'> = {
         name: name.trim(),
         description: description.trim() || undefined,
         type: 'llm_judge',
@@ -76,7 +77,7 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>{t('create.title')}</DialogTitle>
           <DialogDescription>
@@ -90,6 +91,8 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
             <Label htmlFor="grader-name">{t('create.nameLabel')}</Label>
             <Input
               id="grader-name"
+              name="grader-name"
+              autoComplete="off"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('create.namePlaceholder')}
@@ -101,6 +104,8 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
             <Label htmlFor="grader-description">{t('create.descriptionLabel')}</Label>
             <Textarea
               id="grader-description"
+              name="grader-description"
+              autoComplete="off"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t('create.descriptionPlaceholder')}
@@ -108,7 +113,7 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
             />
           </div>
 
-          {/* Type Selection */}
+          {/* Type Selection - Goal-based with cost indicators */}
           <div className="space-y-2">
             <Label>{t('create.typeLabel')}</Label>
             <RadioGroup
@@ -116,40 +121,52 @@ export function CreateGraderDialog({ open, onOpenChange, onCreate }: CreateGrade
               onValueChange={(value) => setType(value as GraderType)}
               className="grid grid-cols-1 gap-3"
             >
+              {/* Quick Check (Assertion) */}
               <Label
                 htmlFor="type-assertion"
-                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-150 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary-500 [&:has([data-state=checked])]:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:[&:has([data-state=checked])]:bg-primary-900/20"
+                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 cursor-pointer transition-colors duration-150 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary-500 [&:has([data-state=checked])]:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:[&:has([data-state=checked])]:bg-primary-900/20"
               >
                 <RadioGroupItem value="assertion" id="type-assertion" className="mt-0.5" />
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
-                    <Code className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
+                    <CheckCircle2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                      {t('create.types.assertion.label')}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                        {t('create.types.assertion.label')}
+                      </p>
+                      <Badge variant="secondary" className="h-5 text-[10px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        {t('create.types.assertion.badge')}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                       {t('create.types.assertion.description')}
                     </p>
                   </div>
                 </div>
               </Label>
 
+              {/* AI Review (LLM Judge) */}
               <Label
                 htmlFor="type-llm-judge"
-                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-150 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary-500 [&:has([data-state=checked])]:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:[&:has([data-state=checked])]:bg-primary-900/20"
+                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 cursor-pointer transition-colors duration-150 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary-500 [&:has([data-state=checked])]:bg-primary-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:[&:has([data-state=checked])]:bg-primary-900/20"
               >
                 <RadioGroupItem value="llm_judge" id="type-llm-judge" className="mt-0.5" />
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                    <Brain className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                      {t('create.types.llm_judge.label')}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                        {t('create.types.llm_judge.label')}
+                      </p>
+                      <Badge variant="secondary" className="h-5 text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                        {t('create.types.llm_judge.badge')}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                       {t('create.types.llm_judge.description')}
                     </p>
                   </div>

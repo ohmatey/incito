@@ -5,7 +5,8 @@
     "agents": "Agents",
     "resources": "Resources",
     "runs": "Runs",
-    "graders": "Graders",
+    "graders": "Quality Checks",
+    "playbooks": "Playbooks",
     "tags": "Tags",
     "settings": "Settings",
     "keyboardShortcuts": "Keyboard Shortcuts",
@@ -25,7 +26,10 @@
     "configure": "Configure",
     "remove": "Remove",
     "run": "Run",
-    "done": "Done"
+    "done": "Done",
+    "stop": "Stop",
+    "send": "Send",
+    "closePanel": "Close panel"
   },
   "labels": {
     "loading": "Loading...",
@@ -91,12 +95,15 @@
     "instructions": "Instructions",
     "preview": "Preview",
     "variables": "Variables",
-    "runs": "Runs"
+    "runs": "Runs",
+    "settings": "Settings",
+    "feedback": "Feedback"
   },
   "rightPanel": {
     "panelOptions": "Panel options",
     "openMenu": "Open menu",
     "closePanel": "Close panel",
+    "openPrompt": "Open prompt",
     "addNote": "Add note",
     "writeNote": "Write a note...",
     "addNoteButton": "Add Note",
@@ -138,7 +145,31 @@
     "runCancelled": "Cancelled",
     "duration": "Duration",
     "totalTokens": "Total Tokens",
-    "totalCost": "Total Cost"
+    "totalCost": "Total Cost",
+    "passRate": "pass rate",
+    "passRateTooltip": "{{passed}} of {{total}} runs passed all checks",
+    "avgScore": "Avg Score",
+    "avgScoreTooltip": "Average quality score across all checks",
+    "perSuccess": "/success",
+    "costPerSuccessTooltip": "Average cost per successful run",
+    "compare": "Compare",
+    "versionCount": "{{count}} versions",
+    "selectFirstVersion": "Select first version",
+    "selectSecondVersion": "Select second version",
+    "diffReady": "Comparing versions"
+  },
+  "analytics": {
+    "promptHealth": "Quality Check",
+    "lastNDays": "Last {{days}} days",
+    "noRunsYet": "No runs with checks yet",
+    "passRateTooltip": "{{passed}} of {{total}} runs passed all checks",
+    "runs": "Runs",
+    "passed": "Passed",
+    "failed": "Failed",
+    "totalRunsTooltip": "Total completed runs",
+    "passedTooltip": "Runs where all checks passed",
+    "failedTooltip": "Runs where at least one check failed",
+    "avgScore": "Avg. Quality Score"
   },
   "ai": {
     "disclaimer": "AI can make mistakes. Please review generated content.",

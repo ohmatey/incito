@@ -60,7 +60,13 @@ Incito is a Tauri v2 desktop application for managing prompt templates. Security
 
 ### Audit Reports
 
-1. **[Claude Code Server Prompts API Audit - 2026-01-30](./audit-reports/audit-claude-code-server-prompts-api-2026-01-30.md)** (NEW)
+1. **[Tauri Desktop & Next.js Landing Full Audit - 2026-01-30](./audit-reports/audit-tauri-desktop-nextjs-landing-2026-01-30.md)** (NEW)
+   - Comprehensive security review of Tauri v2 configuration, frontend security, and file operations
+   - 0 CRITICAL, 0 HIGH, 3 MEDIUM, 3 LOW findings
+   - Focus: API key storage, filesystem permissions, executable path validation
+   - **Priority**: Implement secure API key storage, restrict filesystem capabilities
+
+2. **[Claude Code Server Prompts API Audit - 2026-01-30](./audit-reports/audit-claude-code-server-prompts-api-2026-01-30.md)**
    - Security audit of new prompts HTTP API endpoints
    - 1 CRITICAL, 3 HIGH, 4 MEDIUM, 2 LOW findings
    - Focus: CORS misconfiguration, authentication, rate limiting, template injection

@@ -2,7 +2,8 @@ import { useRef, useEffect } from 'react'
 import type { ChatMessage } from '@/types/agent'
 import { ChatMessageBubble } from './ChatMessageBubble'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Loader2 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Loader2, MessageCircle } from 'lucide-react'
 
 interface ChatMessagesProps {
   messages: ChatMessage[]
@@ -21,11 +22,12 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Start a conversation...
-        </p>
-      </div>
+      <EmptyState
+        variant="inline"
+        icon={MessageCircle}
+        title="Start a conversation..."
+        className="flex-1"
+      />
     )
   }
 

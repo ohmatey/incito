@@ -1,5 +1,23 @@
 {
   "title": "โหมดรัน",
+  "tabs": {
+    "prompt": "พรอมต์",
+    "output": "ผลลัพธ์",
+    "feedback": "ข้อเสนอแนะ",
+    "config": "การตั้งค่า"
+  },
+  "config": {
+    "saveAsNewVersion": "บันทึกเป็นเวอร์ชันใหม่",
+    "saving": "กำลังบันทึก...",
+    "versionCreated": "สร้างเวอร์ชันใหม่พร้อมการตั้งค่าที่อัปเดต",
+    "noChanges": "ไม่มีการเปลี่ยนแปลงที่ต้องบันทึก",
+    "iterateDescription": "ปรับแต่งการตั้งค่าและบันทึกเพื่อสร้างเวอร์ชันพรอมต์ใหม่"
+  },
+  "agent": {
+    "label": "เอเจนต์",
+    "none": "ไม่มีเอเจนต์",
+    "noneDescription": "ดำเนินการโดยไม่มีบุคลิกเอเจนต์"
+  },
   "fieldsProgress": "{{completed}} จาก {{total}} ฟิลด์",
   "typeMessage": "พิมพ์ข้อความ...",
   "complete": "กรอกครบทุกฟิลด์แล้ว!",
@@ -8,11 +26,18 @@
   "suggested": "แนะนำ",
   "selectOption": "เลือกตัวเลือก",
   "onePerLine": "หนึ่งรายการต่อบรรทัด",
-  "execute": "รันและคัดลอก",
+  "execute": "รันพรอมต์",
   "preview": "ตัวอย่าง",
   "output": "ผลลัพธ์",
   "noVariablesTitle": "ไม่มีตัวแปรที่ต้องกำหนดค่า",
-  "noVariablesDescription": "พรอมต์นี้ไม่มีตัวแปร คลิก รันและคัดลอก เพื่อคัดลอกเทมเพลตโดยตรง",
+  "noVariablesDescription": "พรอมต์นี้ไม่มีตัวแปร คลิก รันพรอมต์ เพื่อคัดลอกเทมเพลตโดยตรง",
+  "outputEmpty": {
+    "title": "ยังไม่มีผลลัพธ์",
+    "description": "กรอกตัวแปรและรันพรอมต์เพื่อดูผลลัพธ์"
+  },
+  "chatMessages": "ข้อความแชท",
+  "openPanel": "เปิดแผง {{tab}}",
+  "switchTab": "สลับแท็บ",
   "comparison": {
     "noProviders": "ไม่ได้เลือกผู้ให้บริการ",
     "waiting": "รอเริ่มต้น...",
@@ -24,5 +49,32 @@
       "completed": "เสร็จสิ้น",
       "error": "ผิดพลาด"
     }
+  },
+  "batch": {
+    "title": "รันหลายครั้ง",
+    "description": "รันพรอมต์เดียวกันหลายครั้งเพื่อตรวจสอบความสม่ำเสมอของผลลัพธ์ การรันทุกครั้งใช้ค่าตัวแปรเดียวกัน",
+    "runMultiple": "รันหลายครั้ง",
+    "running": "กำลังรัน {{current}}/{{total}}",
+    "start": "เริ่มรัน",
+    "starting": "กำลังเริ่ม...",
+    "progressLabel": "กำลังรัน {{current}} จาก {{total}}...",
+    "noResults": "ยังไม่มีผลลัพธ์",
+    "passRate": "อัตราผ่าน",
+    "veryConsistent": "สม่ำเสมอมาก",
+    "consistent": "สม่ำเสมอ",
+    "moderate": "ปานกลาง",
+    "variable": "แปรปรวน",
+    "consistencyTooltip": "ความคล้ายคลึงของผลลัพธ์จากการรันหลายครั้ง",
+    "status": {
+      "pending": "รอดำเนินการ",
+      "running": "กำลังรัน",
+      "passed": "ผ่าน",
+      "partialPass": "ผ่านบางส่วน",
+      "error": "ผิดพลาด"
+    },
+    "waitingToRun": "รอการรัน...",
+    "generating": "กำลังสร้าง...",
+    "bestResult": "ผลลัพธ์ดีที่สุด",
+    "worstResult": "คะแนนต่ำสุด"
   }
 }

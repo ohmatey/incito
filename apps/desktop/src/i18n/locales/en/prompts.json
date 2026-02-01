@@ -149,6 +149,8 @@
     "editDescription": "Modify the template, variables, and metadata",
     "quickLaunch": "Quick Launch",
     "quickLaunchDescription": "Select default apps to show as quick-access buttons",
+    "defaultAgent": "Default Agent",
+    "defaultAgentDescription": "Agent to use when running this prompt",
     "deletePrompt": "Delete Prompt",
     "deleteDescription": "Permanently delete this prompt file",
     "deleteConfirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
@@ -218,6 +220,69 @@
       "loading": "Loading...",
       "loadError": "Failed to load image",
       "replace": "Replace"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tab": "Settings",
+    "saveButton": "Save Settings",
+    "saveDescription": "Changes will be saved as a new version",
+    "provider": {
+      "title": "Provider",
+      "defaultProvider": "Default Provider",
+      "allowOverride": "Allow user to override at runtime",
+      "noProvider": "No provider configured"
+    },
+    "aiBehavior": {
+      "title": "AI Behavior",
+      "promptSource": "System Prompt Source",
+      "useAgent": "Use Agent",
+      "useCustomPrompt": "Custom Prompt",
+      "selectAgent": "Select Agent",
+      "selectAgentPlaceholder": "Choose an agent...",
+      "agentSystemPrompt": "System prompt:",
+      "noAgentsAvailable": "No agents available. Create an agent first.",
+      "systemPrompt": "System Prompt",
+      "systemPromptPlaceholder": "Instructions for the AI...",
+      "temperature": "Temperature",
+      "maxTokens": "Max Tokens"
+    },
+    "humanFeedback": {
+      "title": "Human Feedback",
+      "enabled": "Enable human feedback",
+      "feedbackTypes": "Feedback Types",
+      "rating": {
+        "label": "Rating scale",
+        "scale": "Scale",
+        "scale5": "1-5",
+        "scale10": "1-10",
+        "minLabel": "Min label",
+        "maxLabel": "Max label"
+      },
+      "passFail": {
+        "label": "Pass / Fail",
+        "passLabel": "Pass label",
+        "failLabel": "Fail label"
+      },
+      "notes": {
+        "label": "Notes",
+        "required": "Required",
+        "placeholder": "Placeholder"
+      },
+      "tags": {
+        "label": "Tags",
+        "options": "Tag options",
+        "addTag": "Add tag",
+        "removeTag": "Remove"
+      },
+      "instructions": "Reviewer Instructions",
+      "instructionsPlaceholder": "Guidance for reviewers..."
+    },
+    "evals": {
+      "title": "Automated Quality Checks",
+      "activeGraders": "Quality Checks",
+      "runOnComplete": "Run automatically on completion",
+      "noGraders": "No quality checks selected"
     }
   },
   "variableConfig": {

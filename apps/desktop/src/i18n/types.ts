@@ -8,5 +8,5 @@ export const LANGUAGES: { code: Language; name: string; nativeName: string; flag
 export const DEFAULT_LANGUAGE: Language = 'en'
 
 // Translation namespace keys
-export const NAMESPACES = ['common', 'settings', 'prompts', 'toasts', 'tags', 'search', 'translation', 'agents', 'runMode', 'resources', 'runs', 'updates', 'graders'] as const
+export const NAMESPACES = ['common', 'settings', 'prompts', 'toasts', 'tags', 'search', 'translation', 'agents', 'runMode', 'resources', 'runs', 'updates', 'graders', 'customRun', 'playbooks'] as const
 export type Namespace = (typeof NAMESPACES)[number]

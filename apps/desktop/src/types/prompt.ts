@@ -34,8 +34,11 @@ export interface Variable {
 
 export interface Tag {
   id: string
+  syncId: string  // Immutable UUID for sync
   name: string
   color: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Note {
@@ -51,6 +54,8 @@ export interface PromptVersion {
   content: string
   createdAt: string
   description?: string
+  /** Run configuration saved with this version */
+  runConfig?: import('./prompt-config').PromptRunConfig
 }
 
 export interface ParseError {
@@ -98,6 +103,7 @@ export interface PromptFile {
   variables: Variable[]
   notes: Note[]
   defaultLaunchers?: string[]
+  defaultAgentId?: string   // Agent to pre-select when running this prompt
   template: string
   rawContent: string
   isValid: boolean
@@ -109,6 +115,8 @@ export interface PromptFile {
   sourceLanguage?: LanguageCode          // Auto-detected or manually set
   translationEnabled?: boolean           // Per-prompt override
   lastTranslation?: TranslationResult    // Most recent translation result
+  // Run configuration (from latest version)
+  runConfig?: import('./prompt-config').PromptRunConfig
 }
 
 export interface AppState {

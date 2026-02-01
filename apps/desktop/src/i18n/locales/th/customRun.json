@@ -1,0 +1,82 @@
+{
+  "title": "รันแบบกำหนดเอง",
+  "newRun": "สร้างรันใหม่",
+  "defaultName": "พรอมต์ไม่มีชื่อ",
+  "modeSelector": {
+    "title": "คุณต้องการเริ่มต้นอย่างไร?",
+    "description": "สร้างพรอมต์ใหม่ตั้งแต่ต้น หรือสร้างจากพรอมต์ที่มีอยู่",
+    "scratch": {
+      "title": "เริ่มจากศูนย์",
+      "description": "สร้างเทมเพลตพรอมต์ใหม่"
+    },
+    "existing": {
+      "title": "เริ่มจากที่มีอยู่",
+      "description": "ใช้พรอมต์ที่มีอยู่เป็นฐาน"
+    },
+    "selectPrompt": "เลือกพรอมต์",
+    "selectPromptDescription": "เลือกพรอมต์ที่มีอยู่เพื่อใช้เป็นจุดเริ่มต้น",
+    "searchPlaceholder": "ค้นหาพรอมต์...",
+    "noPrompts": "ไม่พบพรอมต์",
+    "back": "กลับ"
+  },
+  "editor": {
+    "name": "ชื่อ",
+    "namePlaceholder": "ป้อนชื่อพรอมต์",
+    "description": "คำอธิบาย",
+    "descriptionPlaceholder": "อธิบายว่าพรอมต์นี้ทำอะไร",
+    "template": "เทมเพลต",
+    "templatePlaceholder": "เขียนเทมเพลตพรอมต์ของคุณที่นี่...\n\nใช้ {{variable_name}} เพื่อสร้างตัวแปร",
+    "templateHint": "ใช้ไวยากรณ์ {{variable}} เพื่อสร้างตัวยึดตำแหน่งแบบไดนามิก",
+    "variablesCount": "ตรวจพบ {{count}} ตัวแปร",
+    "detectedVariables": "ตัวแปรที่ตรวจพบ"
+  },
+  "config": {
+    "prompt": "เทมเพลตพรอมต์",
+    "aiBehavior": "พฤติกรรม AI",
+    "agentHint": "เลือกเอเจนต์เพื่อใช้ system prompt หรือปล่อยว่างเพื่อใช้ system prompt ที่กำหนดเอง",
+    "systemPrompt": "System Prompt",
+    "systemPromptPlaceholder": "ป้อน system prompt ที่กำหนดเองสำหรับ AI...",
+    "temperature": "อุณหภูมิ",
+    "temperatureHint": "ค่าต่ำทำให้ผลลัพธ์มุ่งเน้นมากขึ้น ค่าสูงทำให้สร้างสรรค์มากขึ้น",
+    "maxTokens": "โทเค็นสูงสุด",
+    "maxTokensPlaceholder": "ปล่อยว่างสำหรับค่าเริ่มต้น",
+    "provider": "ผู้ให้บริการ",
+    "selectProvider": "เลือกผู้ให้บริการ",
+    "defaultProvider": "ใช้ผู้ให้บริการเริ่มต้น",
+    "noProviders": "ไม่มีผู้ให้บริการที่กำหนดค่าไว้ เพิ่มในการตั้งค่า",
+    "evaluation": "การประเมิน",
+    "selectGraders": "เลือกตัวให้คะแนน"
+  },
+  "execution": {
+    "variables": "ตัวแปร",
+    "allFilled": "กรอกที่จำเป็นทั้งหมดแล้ว",
+    "requiredMissing": "ขาด {{count}} ที่จำเป็น",
+    "noVariables": "ไม่มีตัวแปรที่กำหนดในเทมเพลต",
+    "run": "รัน",
+    "stop": "หยุด",
+    "output": "ผลลัพธ์",
+    "generating": "กำลังสร้าง...",
+    "completed": "เสร็จสิ้น",
+    "error": "ข้อผิดพลาด",
+    "noOutput": "รันพรอมต์เพื่อดูผลลัพธ์ที่นี่",
+    "history": "รันล่าสุด"
+  },
+  "save": {
+    "button": "บันทึกพรอมต์",
+    "title": "บันทึกพรอมต์",
+    "description": "บันทึกการกำหนดค่ารันแบบกำหนดเองเป็นพรอมต์",
+    "saveAsLabel": "บันทึกเป็น",
+    "asVersion": "เวอร์ชันใหม่ของพรอมต์ที่มีอยู่",
+    "asNew": "พรอมต์ใหม่",
+    "nameLabel": "ชื่อพรอมต์",
+    "namePlaceholder": "ป้อนชื่อสำหรับพรอมต์ของคุณ",
+    "versionDescriptionLabel": "คำอธิบายเวอร์ชัน (ไม่บังคับ)",
+    "versionDescriptionPlaceholder": "มีอะไรเปลี่ยนแปลงในเวอร์ชันนี้?",
+    "saveButton": "บันทึก",
+    "saving": "กำลังบันทึก...",
+    "noFolder": "ไม่ได้เลือกโฟลเดอร์พรอมต์",
+    "newSuccess": "สร้างพรอมต์ใหม่: {{name}}",
+    "versionSuccess": "บันทึกเป็นเวอร์ชันใหม่แล้ว",
+    "error": "บันทึกไม่สำเร็จ: {{message}}"
+  }
+}

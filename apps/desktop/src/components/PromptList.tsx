@@ -11,7 +11,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Filter, Plus } from 'lucide-react'
+import { Filter, Plus, FileText } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import { cn } from '@/lib/utils'
 
 interface PromptListProps {
   prompts: PromptFile[]
@@ -115,7 +117,10 @@ export function PromptList({
               <Button
                 size="icon"
                 variant="ghost"
-                className={`relative h-8 w-8 ${selectedTags.length > 0 ? 'text-blue-600 dark:text-blue-400' : ''}`}
+                className={cn(
+                  "relative h-8 w-8",
+                  selectedTags.length > 0 && "text-blue-600 dark:text-blue-400"
+                )}
                 aria-label={t('tags.filterByTag')}
               >
                 <Filter className="h-4 w-4" />
@@ -172,9 +177,11 @@ export function PromptList({
       <ScrollArea className="flex-1 [&>div>div]:!block">
         <div className="space-y-0.5 px-2 py-2">
           {filteredCount === 0 ? (
-            <p className="px-2 py-2 text-xs text-gray-500 dark:text-gray-400">
-              {selectedTags.length > 0 ? t('list.filtered') : t('list.empty')}
-            </p>
+            <EmptyState
+              variant="inline"
+              icon={FileText}
+              title={selectedTags.length > 0 ? t('list.filtered') : t('list.empty')}
+            />
           ) : (
             <>
               {pinnedPrompts.length > 0 && (

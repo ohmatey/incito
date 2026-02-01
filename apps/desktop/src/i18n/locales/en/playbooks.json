@@ -1,0 +1,101 @@
+{
+  "title": "Playbooks",
+  "description": "Teach AI behavior through curated corrections",
+  "emptyState": {
+    "title": "No playbook selected",
+    "description": "Select a playbook from the list to view or edit its rules"
+  },
+  "list": {
+    "title": "Playbooks",
+    "searchPlaceholder": "Search playbooks...",
+    "empty": "No playbooks found",
+    "createFirst": "Create a playbook to start teaching AI behavior",
+    "filter": {
+      "title": "Filter",
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "create": {
+    "title": "Create Playbook",
+    "button": "New Playbook",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g., Customer Support Guidelines",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What behavior does this playbook teach?"
+  },
+  "detail": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this playbook?",
+    "deleteWarning": "This will delete all rules in this playbook and remove it from all prompts.",
+    "enabled": "Active",
+    "disabled": "Inactive",
+    "rulesCount": "{{count}} rule",
+    "rulesCountPlural": "{{count}} rules",
+    "noRules": "No rules yet",
+    "addFirstRule": "Add your first rule to start teaching the AI"
+  },
+  "rules": {
+    "title": "Rules",
+    "addRule": "Add Rule",
+    "editRule": "Edit Rule",
+    "deleteRule": "Delete Rule",
+    "deleteRuleConfirm": "Delete this rule?",
+    "deleteRuleWarning": "This action cannot be undone.",
+    "triggerContext": "When this applies",
+    "triggerContextPlaceholder": "e.g., When responding to complaints...",
+    "instruction": "What AI should do",
+    "instructionPlaceholder": "e.g., Always acknowledge the issue first...",
+    "badExampleInput": "Example input (optional)",
+    "badExampleInputPlaceholder": "The prompt that caused a bad response",
+    "badExampleOutput": "Bad response to avoid (optional)",
+    "badExampleOutputPlaceholder": "The response that was incorrect",
+    "goldenOutput": "Correct response example (optional)",
+    "goldenOutputPlaceholder": "How the AI should respond instead",
+    "priority": "Priority",
+    "priorityHint": "Higher priority rules are applied first",
+    "enabled": "Enabled",
+    "createFromFeedback": "Create from feedback",
+    "sourceRun": "Created from run"
+  },
+  "selector": {
+    "title": "Attach Playbooks",
+    "description": "Select playbooks to apply to this prompt",
+    "selectAll": "Select All",
+    "clearAll": "Clear All",
+    "selected": "{{count}} selected",
+    "noPlaybooks": "No playbooks available. Create one in the Playbooks section.",
+    "rulesCount": "{{count}} rules"
+  },
+  "badge": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "rules": "{{count}} rules"
+  },
+  "injection": {
+    "mode": "Injection Mode",
+    "prepend": "Before system prompt",
+    "append": "After system prompt",
+    "maxRules": "Max rules to inject",
+    "maxRulesHint": "Leave empty for no limit"
+  },
+  "errors": {
+    "createFailed": "Failed to create playbook",
+    "updateFailed": "Failed to update playbook",
+    "deleteFailed": "Failed to delete playbook",
+    "loadFailed": "Failed to load playbooks",
+    "createRuleFailed": "Failed to create rule",
+    "updateRuleFailed": "Failed to update rule",
+    "deleteRuleFailed": "Failed to delete rule"
+  },
+  "success": {
+    "created": "Playbook created",
+    "updated": "Playbook updated",
+    "deleted": "Playbook deleted",
+    "ruleCreated": "Rule created",
+    "ruleUpdated": "Rule updated",
+    "ruleDeleted": "Rule deleted"
+  }
+}

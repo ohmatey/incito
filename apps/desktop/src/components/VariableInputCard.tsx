@@ -107,6 +107,7 @@ export const VariableInputCard = memo(function VariableInputCard({
         return (
           <textarea
             id={id}
+            name={`var-${variable.key}`}
             value={(value as string) ?? ''}
             placeholder={variable.placeholder || t('variableInput.enterPlaceholder', { label: variable.label.toLowerCase() })}
             onChange={(e) => onValueChange(e.target.value)}
@@ -144,6 +145,7 @@ export const VariableInputCard = memo(function VariableInputCard({
                 step={step}
                 onValueChange={(vals) => onValueChange(vals[0])}
                 className="flex-1"
+                aria-label={`${variable.label}: ${min} to ${max}`}
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-12 text-right">
                 {currentValue}
@@ -351,7 +353,7 @@ export const VariableInputCard = memo(function VariableInputCard({
             </Label>
             {isAiFilled && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
-                <Sparkles className="h-2.5 w-2.5" />
+                <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
                 AI
               </span>
             )}
@@ -367,8 +369,9 @@ export const VariableInputCard = memo(function VariableInputCard({
               }}
               className="h-6 w-6 p-0 text-gray-400 hover:text-secondary-500"
               title={t('variableInput.generateWithAI')}
+              aria-label={t('variableInput.generateWithAI')}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           )}
         </div>

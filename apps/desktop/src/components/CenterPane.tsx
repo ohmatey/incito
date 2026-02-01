@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAppContext } from '@/context/AppContext'
+import { useFeatureFlags } from '@/context/FeatureFlagsContext'
 import type { PromptFile, Tag, LanguageCode } from '@/types/prompt'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -110,7 +110,7 @@ export function CenterPane({
   onFillWithAI,
 }: CenterPaneProps) {
   const { t } = useTranslation(['prompts', 'common', 'toasts', 'translation'])
-  const { featureFlags } = useAppContext()
+  const { featureFlags } = useFeatureFlags()
   const [copied, setCopied] = useState(false)
   const [aiInstruction, setAiInstruction] = useState('')
   const [isRefining, setIsRefining] = useState(false)

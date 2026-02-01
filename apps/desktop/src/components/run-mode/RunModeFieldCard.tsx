@@ -57,23 +57,23 @@ export function RunModeFieldCard({
       case 'text':
         return (
           <Input
+            name={`field-${variable.key}`}
             value={String(value)}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={variable.placeholder}
             disabled={disabled}
-            autoFocus
           />
         )
 
       case 'textarea':
         return (
           <Textarea
+            name={`field-${variable.key}`}
             value={String(value)}
             onChange={(e) => setValue(e.target.value)}
             placeholder={variable.placeholder}
             disabled={disabled}
-            autoFocus
             rows={4}
           />
         )
@@ -81,6 +81,7 @@ export function RunModeFieldCard({
       case 'number':
         return (
           <Input
+            name={`field-${variable.key}`}
             type="number"
             value={String(value)}
             onChange={(e) => setValue(Number(e.target.value))}
@@ -90,7 +91,6 @@ export function RunModeFieldCard({
             step={variable.step}
             placeholder={variable.placeholder}
             disabled={disabled}
-            autoFocus
           />
         )
 
@@ -104,6 +104,7 @@ export function RunModeFieldCard({
               max={variable.max || 100}
               step={variable.step || 1}
               disabled={disabled}
+              aria-label={`${variable.label}: ${variable.min || 0} to ${variable.max || 100}`}
             />
             <div className="flex justify-between text-xs text-gray-500">
               <span>{variable.min || 0}</span>
@@ -145,6 +146,7 @@ export function RunModeFieldCard({
               >
                 <input
                   type="checkbox"
+                  name={`field-${variable.key}`}
                   checked={selectedValues.includes(option.value)}
                   onChange={(e) => {
                     if (e.target.checked) {
@@ -169,11 +171,11 @@ export function RunModeFieldCard({
         return (
           <div className="space-y-1">
             <Textarea
+              name={`field-${variable.key}`}
               value={arrayValue}
               onChange={(e) => setValue(e.target.value.split('\n').filter(Boolean))}
               placeholder={variable.placeholder || t('onePerLine')}
               disabled={disabled}
-              autoFocus
               rows={4}
             />
             <p className="text-xs text-gray-500">{t('onePerLine')}</p>
@@ -184,12 +186,12 @@ export function RunModeFieldCard({
       default:
         return (
           <Input
+            name={`field-${variable.key}`}
             value={String(value)}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={variable.placeholder}
             disabled={disabled}
-            autoFocus
           />
         )
     }
@@ -211,7 +213,7 @@ export function RunModeFieldCard({
         </div>
         {displayInfo.suggestedValue && (
           <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-            <Sparkles className="h-3 w-3" />
+            <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span>{t('suggested')}</span>
           </div>
         )}
@@ -231,7 +233,7 @@ export function RunModeFieldCard({
           disabled={disabled || (variable.required && !value)}
           className="w-full gap-2"
         >
-          <Check className="h-4 w-4" />
+          <Check className="h-4 w-4" aria-hidden="true" />
           {t('submit')}
         </Button>
       </div>

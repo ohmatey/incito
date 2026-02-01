@@ -7,6 +7,7 @@ export type RunLauncher = 'copy' | 'run_mode' | 'agent' | 'api' | string
 
 export interface PromptRun {
   id: string
+  syncId: string  // Immutable UUID for sync
   promptId: string
   promptPath: string
   promptName: string

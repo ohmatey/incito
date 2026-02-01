@@ -67,8 +67,9 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
   }, [folderPath, prompts, onPromptCreated])
 
   const handleDeletePrompt = useCallback(async (prompt: PromptFile) => {
+    if (!folderPath) return
     try {
-      await deletePrompt(prompt)
+      await deletePrompt(prompt, folderPath)
       setPrompts((prev) => prev.filter((p) => p.path !== prompt.path))
 
       if (selectedPrompt?.path === prompt.path) {
@@ -82,11 +83,12 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
       toast.error(i18n.t('toasts:error.promptDeleteFailed'))
       throw err
     }
-  }, [prompts, selectedPrompt, onPromptDeleted])
+  }, [folderPath, prompts, selectedPrompt, onPromptDeleted])
 
   const handleSavePrompt = useCallback(async (updatedPrompt: PromptFile) => {
+    if (!folderPath) throw new Error('No folder path set')
     try {
-      await savePrompt(updatedPrompt)
+      await savePrompt(updatedPrompt, folderPath)
       setPrompts((prev) =>
         prev
           .map((p) => (p.path === updatedPrompt.path ? updatedPrompt : p))
@@ -99,7 +101,7 @@ export function usePrompts({ folderPath, onPromptCreated, onPromptDeleted }: Use
       toast.error(i18n.t('toasts:error.promptSaveFailed'))
       throw err
     }
-  }, [])
+  }, [folderPath])
 
   const updatePromptInMemory = useCallback((updatedPrompt: PromptFile) => {
     setSelectedPrompt(updatedPrompt)

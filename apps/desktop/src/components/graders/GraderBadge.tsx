@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, XCircle, Code, Brain } from 'lucide-react'
+import { CheckCircle2, XCircle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { GraderType } from '@/types/grader'
 
@@ -27,7 +27,7 @@ export function GraderBadge({
   reason,
   className,
 }: GraderBadgeProps) {
-  const { t } = useTranslation('graders')
+  const { t: _t } = useTranslation('graders')
 
   // Determine color based on score (for LLM judges)
   const getScoreColor = () => {
@@ -50,10 +50,9 @@ export function GraderBadge({
         className
       )}
     >
-      {type === 'assertion' ? (
-        <Code className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-      ) : (
-        <Brain className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+      {/* Show AI sparkle icon for LLM judges, no icon for quick checks */}
+      {type === 'llm_judge' && (
+        <Sparkles className="h-3 w-3 text-purple-500 dark:text-purple-400" />
       )}
       <span className="max-w-[80px] truncate">{name}</span>
       {passed ? (
