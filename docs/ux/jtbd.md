@@ -95,6 +95,63 @@ This document tracks the jobs users are hiring Incito to do.
 - Store example outputs (NOT YET SUPPORTED)
 
 ---
+### Job: Create Effective Prompts Without Engineering Help
+
+**Job Statement:**
+> When I need to build or improve a prompt for my work, I want step-by-step guidance and safe defaults, so that I can produce reliable results without technical help.
+
+**Context:**
+- **When:** During new projects or when results are inconsistent
+- **Trigger:** Need a new prompt but unsure of best practices or syntax
+- **Outcome:** A working prompt with confidence and minimal trial-and-error
+
+**Functional Needs:**
+- Guided prompt builder with clear steps
+- Examples and templates by use case
+- Variable setup without syntax knowledge
+- Prompt linting or warnings for ambiguity
+- Preview with sample inputs and expected output format
+
+**Emotional Needs:**
+- Confidence that the prompt is "correct"
+- Reduced fear of breaking something
+- Feeling supported, not overwhelmed
+
+**Social Needs:**
+- Output aligns with team standards or brand voice
+- Shareable prompts that others can use without explanation
+
+**Current UX Support:** 3/10 - No guided creation flow or guardrails
+
+---
+
+### Job: Validate Prompt Quality and Improve Safely
+
+**Job Statement:**
+> When I tweak a prompt, I want to compare outputs and capture why a change worked, so that I can improve quality without losing what was good.
+
+**Context:**
+- **When:** After receiving inconsistent or low-quality outputs
+- **Trigger:** Experimenting with tone, structure, or constraints
+- **Outcome:** Clear evidence of improvement and a safe rollback option
+
+**Functional Needs:**
+- Side-by-side output comparison (NOT YET SUPPORTED)
+- Simple rating and notes per run (NOT YET SUPPORTED)
+- Version annotations explaining intent
+- Easy rollback to a previous version
+
+**Emotional Needs:**
+- Confidence in iteration
+- Reduced anxiety about "breaking" a good prompt
+
+**Social Needs:**
+- Documented rationale for changes
+- Shareable results for stakeholders
+
+**Current UX Support:** 4/10 - Versions exist, but no evaluation tooling
+
+---
 
 ## Jobs We Don't Serve (Yet)
 
@@ -160,4 +217,4 @@ As Incito matures, we'll refine these JTBDs based on:
 3. **Feature requests** - What jobs are we not serving?
 4. **Market changes** - How is the AI landscape evolving?
 
-Last updated: 2026-01-19
+Last updated: 2026-02-05

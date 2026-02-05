@@ -24,6 +24,10 @@ Security audits, vulnerability assessments, and compliance documentation.
 
 ---
 
+## User-Facing Docs
+
+User-facing documentation lives in the Docusaurus site at `apps/docs`. The `/docs` folder is for internal product, UX, security, and testing references.
+
 ## Quick Navigation
 
 ### For New Contributors
@@ -86,4 +90,4 @@ All documentation should include:
 
 ---
 
-Last updated: 2026-01-19
+Last updated: 2026-02-05

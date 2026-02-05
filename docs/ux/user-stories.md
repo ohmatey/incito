@@ -193,6 +193,99 @@ Acceptance Criteria:
 
 ---
 
+## Epic: Guided Prompting for Non-Technical Users
+
+### Story 4.3: Guided Prompt Builder
+
+**As a** non-technical user,
+**I want to** create a prompt using a guided step-by-step flow,
+**So that** I can build a reliable prompt without learning syntax.
+
+**Acceptance Criteria:**
+- [ ] “Guided Builder” option on new prompt flow
+- [ ] Steps: intent, audience, constraints, output format
+- [ ] Examples shown for each step
+- [ ] Generates a draft template with variables filled in
+- [ ] User can edit before saving
+
+**Priority:** HIGH
+**Persona:** Maya (Domain Expert Operator)
+**JTBD:** Create effective prompts without engineering help
+
+---
+
+### Story 4.4: Inline Variable Wizard
+
+**As a** non-technical user,
+**I want to** configure variables without editing template syntax,
+**So that** I can set up prompts safely and quickly.
+
+**Acceptance Criteria:**
+- [ ] Variables detected and listed with friendly names
+- [ ] Wizard explains each variable and asks for type
+- [ ] Example values and validation shown
+- [ ] No requirement to edit `{{variable}}` syntax
+
+**Priority:** HIGH
+**Persona:** Maya (Domain Expert Operator)
+**JTBD:** Create effective prompts without engineering help
+
+---
+
+### Story 4.5: Prompt Quality Checks
+
+**As a** user,
+**I want to** see simple checks before saving a prompt,
+**So that** I can avoid common mistakes and ambiguity.
+
+**Acceptance Criteria:**
+- [ ] Warnings for missing context or unclear instructions
+- [ ] Check for missing variables or unused variables
+- [ ] Suggestions for output format clarity
+- [ ] Ability to ignore with “Save Anyway”
+
+**Priority:** MEDIUM
+**Persona:** Maya (Domain Expert Operator)
+**JTBD:** Create effective prompts without engineering help
+
+---
+
+### Story 4.6: Sample Input Preview
+
+**As a** user,
+**I want to** preview a prompt with sample inputs,
+**So that** I can sanity-check before using it live.
+
+**Acceptance Criteria:**
+- [ ] “Preview with Sample Input” button in edit mode
+- [ ] Sample inputs auto-filled or user-provided
+- [ ] Preview shows final prompt text (no highlights)
+- [ ] Optional expected output example field
+
+**Priority:** MEDIUM
+**Persona:** Maya (Domain Expert Operator)
+**JTBD:** Validate prompt quality and improve safely
+
+---
+
+### Story 4.7: Output Comparison and Notes
+
+**As a** user,
+**I want to** compare outputs between versions and note what changed,
+**So that** I can improve prompts safely.
+
+**Acceptance Criteria:**
+- [ ] Side-by-side output comparison view
+- [ ] Ability to rate output quality (1-5)
+- [ ] Notes field for why the change was made
+- [ ] Links back to the prompt version
+
+**Priority:** MEDIUM
+**Persona:** Maya (Domain Expert Operator)
+**JTBD:** Validate prompt quality and improve safely
+
+---
+
 ## Epic: Organization & Discovery
 
 ### Story 5.1: Inline Prompt List Search
@@ -401,4 +494,4 @@ Acceptance Criteria:
 
 ---
 
-Last updated: 2026-01-19
+Last updated: 2026-02-05

@@ -1,0 +1,22 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#FAFAF9" />
+  <rect x="60" y="60" width="1080" height="510" rx="48" fill="url(#bg)" />
+  <g transform="translate(120 140)">
+    <svg width="120" height="120" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M33.346 427.526L253.376 84.4732L478.654 427.527M33.346 427.526L478.654 427.527M33.346 427.526L253.274 339.649L478.654 427.527M253.274 92.0396V339.882" stroke="#FF6B5B" stroke-width="31.3647" />
+    </svg>
+  </g>
+  <text x="260" y="220" font-family="IBM Plex Sans, Arial, sans-serif" font-size="44" fill="#1C1917">Incito Docs</text>
+  <text x="260" y="275" font-family="IBM Plex Sans, Arial, sans-serif" font-size="26" fill="#57534E">Prompt engineering for non-technical teams</text>
+  <g>
+    <rect x="260" y="320" width="680" height="120" rx="24" fill="#FFFFFF" stroke="rgba(28,25,23,0.08)" />
+    <text x="300" y="365" font-family="IBM Plex Sans, Arial, sans-serif" font-size="22" fill="#1C1917">Guided creation - Safe iteration - Consistent outputs</text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="60" y1="60" x2="1140" y2="570" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF5F3" />
+      <stop offset="55%" stop-color="#F7F4FF" />
+      <stop offset="100%" stop-color="#E7F7F5" />
+    </linearGradient>
+  </defs>
+</svg>

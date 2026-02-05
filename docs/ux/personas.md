@@ -155,6 +155,76 @@ Sarah uses AI to help with literature reviews, data analysis, and drafting resea
 
 ---
 
+## Secondary Persona: "The Domain Expert Operator"
+
+### Profile
+
+**Name:** Maya Rodriguez
+**Age:** 30-45
+**Role:** Marketing Manager / HR Lead / Customer Support Manager
+**Tech Savvy:** Low to Medium (not a developer, prefers guided tools)
+**AI Experience:** Beginner to Intermediate (uses AI weekly, not daily)
+
+### Background
+
+Maya needs reliable prompts to create content, summarize feedback, or draft policies. She understands her domain well but does not want to learn prompt engineering theory or syntax. She needs:
+- Step-by-step guidance to build prompts
+- Examples that match her use case
+- Guardrails to avoid inconsistent or off-brand outputs
+- A way to improve prompts without fear of breaking them
+
+### Goals
+
+**Primary Goal:**
+- Create effective prompts independently without engineering help
+
+**Secondary Goals:**
+- Standardize outputs for her team
+- Iterate safely with clear evidence of improvement
+- Share prompts with coworkers who are also non-technical
+
+### Pain Points
+
+- **Uncertainty:** "I don't know if my prompt is good or just lucky"
+- **Syntax confusion:** "I see {{variables}} but don't know what to do"
+- **Inconsistency:** "Two runs give different results"
+- **Dependence:** "I always have to ask engineering to help tune prompts"
+
+### Behavior Patterns
+
+**Tool Usage:**
+- Primarily uses ChatGPT or Claude
+- Mouse-first workflow
+- Wants clear buttons and step-by-step flows
+
+**Work Style:**
+- Methodical and cautious
+- Values examples and checklists
+- Optimizes for team consistency, not speed
+
+### Needs from Incito
+
+**Must Have:**
+- ✅ Guided prompt creation
+- ✅ Safe defaults and examples
+- ✅ Clear variable configuration (no syntax required)
+- ✅ Preview and validation before using
+
+**Should Have:**
+- ✅ Side-by-side output comparison
+- ✅ Simple rating and notes
+- ✅ Brand/style presets
+
+**Could Have:**
+- Auto-suggestions for improvements
+- Team sharing and approval flow
+
+### Quote
+
+> "I know what I want the AI to do, but I need a simple way to build and improve prompts without relying on engineering."
+
+---
+
 ## Anti-Persona: "The Casual AI User"
 
 ### Profile
@@ -195,9 +265,13 @@ Understanding who Incito is NOT for helps us:
 ### When Making UX Decisions
 
 Ask:
-1. **Which persona is this for?** (Primary: Alex, Secondary: Sarah)
+1. **Which persona is this for?** (Primary: Alex, Secondary: Sarah or Maya)
 2. **What job are they hiring Incito to do?** (See jtbd.md)
 3. **What's their context?** (Busy work day, needs speed)
+
+---
+
+Last updated: 2026-02-05
 4. **What's their skill level?** (High for Alex, Medium for Sarah)
 
 ### Prioritization
