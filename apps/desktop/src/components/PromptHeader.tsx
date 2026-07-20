@@ -15,12 +15,13 @@ import {
 import { Save, Play, PanelLeft, PanelLeftClose } from 'lucide-react'
 import { TabsDropdown } from '@/components/TabsDropdown'
 
-export type RightPanelTab = 'preview' | 'history' | 'notes' | 'config' | 'instructions' | 'runs' | 'settings'
+export type RightPanelTab = 'history' | 'notes' | 'config' | 'instructions' | 'runs' | 'settings'
 
 interface PromptHeaderProps {
   prompt: PromptFile | null
   isEditMode: boolean
   isRunMode?: boolean
+  isUseMode?: boolean
   rightPanelOpen: boolean
   activeTab: RightPanelTab
   hasUnsavedChanges: boolean
@@ -40,6 +41,7 @@ export function PromptHeader({
   prompt,
   isEditMode,
   isRunMode = false,
+  isUseMode = false,
   rightPanelOpen,
   activeTab,
   hasUnsavedChanges,
@@ -133,8 +135,8 @@ export function PromptHeader({
           </>
         )}
 
-        {/* Run button - prominent, show when not in edit or run mode, and runs feature is enabled */}
-        {runsEnabled && !isEditMode && !isRunMode && onRun && prompt.variables.length > 0 && (
+        {/* Run button - prominent, show when not in edit/run/use mode, and runs feature is enabled */}
+        {runsEnabled && !isEditMode && !isRunMode && !isUseMode && onRun && prompt.variables.length > 0 && (
           <Button
             size="sm"
             onClick={onRun}
@@ -145,8 +147,8 @@ export function PromptHeader({
           </Button>
         )}
 
-        {/* Tabs dropdown - show when not in run mode and sidebar is closed */}
-        {!isRunMode && !rightPanelOpen && (
+        {/* Tabs dropdown - authoring only; hidden in use mode. Show when not in run mode and sidebar is closed */}
+        {!isRunMode && !isUseMode && !rightPanelOpen && (
           <TabsDropdown
             activeTab={activeTab}
             isEditMode={isEditMode}

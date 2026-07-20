@@ -1580,11 +1580,13 @@ export async function deletePromptDraft(promptId: string): Promise<Result<void>>
 export interface PanelWidths {
   promptList: number
   rightPanel: number
+  preview: number
 }
 
 const DEFAULT_PANEL_WIDTHS: PanelWidths = {
   promptList: 200,
   rightPanel: 300,
+  preview: 400,
 }
 
 // List panel collapsed state
@@ -1615,6 +1617,65 @@ export async function saveListPanelCollapsed(collapsed: boolean): Promise<Result
   }
 }
 
+// App mode: 'use' (stripped consumer view) vs 'author' (full authoring surface)
+
+export type AppMode = 'use' | 'author'
+
+export async function getAppMode(): Promise<Result<AppMode>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['app_mode']
+    )
+    const value = result.length > 0 ? result[0].value : 'use'
+    return { ok: true, data: value === 'author' ? 'author' : 'use' }
+  } catch (err) {
+    return { ok: false, error: `Failed to get app mode: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function saveAppMode(mode: AppMode): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['app_mode', mode]
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save app mode: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+// Preview column collapsed state
+
+export async function getPreviewCollapsed(): Promise<Result<boolean>> {
+  try {
+    const database = await getDb()
+    const result = await database.select<{ value: string }[]>(
+      'SELECT value FROM settings WHERE key = ?',
+      ['preview_collapsed']
+    )
+    return { ok: true, data: result.length > 0 ? result[0].value === 'true' : false }
+  } catch (err) {
+    return { ok: false, error: `Failed to get preview collapsed: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+export async function savePreviewCollapsed(collapsed: boolean): Promise<Result<void>> {
+  try {
+    const database = await getDb()
+    await database.execute(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      ['preview_collapsed', collapsed ? 'true' : 'false']
+    )
+    return { ok: true, data: undefined }
+  } catch (err) {
+    return { ok: false, error: `Failed to save preview collapsed: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
 export async function getPanelWidths(): Promise<Result<PanelWidths>> {
   try {
     const database = await getDb()
@@ -1629,6 +1690,7 @@ export async function getPanelWidths(): Promise<Result<PanelWidths>> {
         data: {
           promptList: parsed.promptList ?? DEFAULT_PANEL_WIDTHS.promptList,
           rightPanel: parsed.rightPanel ?? DEFAULT_PANEL_WIDTHS.rightPanel,
+          preview: parsed.preview ?? DEFAULT_PANEL_WIDTHS.preview,
         },
       }
     }
@@ -2932,8 +2994,11 @@ export interface AnalyticsSettings {
   distinctId: string | null  // Anonymous ID, generated on first enable
 }
 
+// Opt-in (default OFF): the landing page publicly promises "Zero telemetry" and
+// "privacy by default", so the shipped app must not initialize PostHog or phone home
+// until the user explicitly enables analytics in Settings → Privacy.
 const DEFAULT_ANALYTICS_SETTINGS: AnalyticsSettings = {
-  enabled: true,
+  enabled: false,
   distinctId: null,
 }
 

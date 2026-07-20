@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { FileText, Settings, Search, Keyboard, Bot, Play, FolderArchive, CheckCircle2, Tags, BookOpen } from 'lucide-react'
+import { FileText, Settings, Search, Keyboard, Bot, Play, FolderArchive, CheckCircle2, Tags, BookOpen, PenLine, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
@@ -21,6 +21,8 @@ interface NavSidebarProps {
   runsEnabled?: boolean
   gradersEnabled?: boolean
   playbooksEnabled?: boolean
+  isAuthorMode?: boolean
+  onToggleAppMode?: () => void
 }
 
 export function NavSidebar({
@@ -31,6 +33,8 @@ export function NavSidebar({
   runsEnabled = false,
   gradersEnabled = false,
   playbooksEnabled = false,
+  isAuthorMode = false,
+  onToggleAppMode,
 }: NavSidebarProps) {
   const { t } = useTranslation('common')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -117,7 +121,7 @@ export function NavSidebar({
             </TooltipContent>
           </Tooltip>
 
-          {agentsEnabled && (
+          {isAuthorMode && agentsEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -140,7 +144,7 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          {runsEnabled && (
+          {isAuthorMode && runsEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -163,7 +167,7 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          {gradersEnabled && runsEnabled && (
+          {isAuthorMode && gradersEnabled && runsEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -186,7 +190,7 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          {playbooksEnabled && runsEnabled && (
+          {isAuthorMode && playbooksEnabled && runsEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -209,7 +213,7 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          {resourcesEnabled && (
+          {isAuthorMode && resourcesEnabled && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -232,30 +236,51 @@ export function NavSidebar({
             </Tooltip>
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onViewChange('tags')}
-                aria-label={t('navigation.tags')}
-                className={cn(
-                  'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
-                  currentView === 'tags' &&
-                    'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-                )}
-              >
-                <Tags className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{t('navigation.tags')}</p>
-            </TooltipContent>
-          </Tooltip>
+          {isAuthorMode && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onViewChange('tags')}
+                  aria-label={t('navigation.tags')}
+                  className={cn(
+                    'h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100',
+                    currentView === 'tags' &&
+                      'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  )}
+                >
+                  <Tags className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{t('navigation.tags')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
-        {/* Bottom - Shortcuts & Settings */}
+        {/* Bottom - Mode toggle, Shortcuts & Settings */}
         <div className="flex flex-col items-center gap-1 border-t border-gray-200 py-3 dark:border-gray-700">
+          {onToggleAppMode && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggleAppMode}
+                  aria-label={isAuthorMode ? t('navigation.switchToUseMode') : t('navigation.switchToAuthorMode')}
+                  className="h-10 w-10 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                >
+                  {isAuthorMode ? <Eye className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{isAuthorMode ? t('navigation.switchToUseMode') : t('navigation.switchToAuthorMode')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

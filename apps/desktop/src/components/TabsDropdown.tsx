@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { RightPanelTab } from '@/components/PromptHeader'
-import { ChevronDown, Eye, History, Settings2, StickyNote, List, Clock, Pencil, Sliders } from 'lucide-react'
+import { ChevronDown, History, Settings2, StickyNote, List, Clock, Pencil, Sliders } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,6 @@ import {
 
 // Hoisted outside component to avoid recreation on each render
 const tabIcons: Record<RightPanelTab, React.ReactNode> = {
-  preview: <Eye className="h-4 w-4" aria-hidden="true" />,
   history: <History className="h-4 w-4" aria-hidden="true" />,
   notes: <StickyNote className="h-4 w-4" aria-hidden="true" />,
   config: <Settings2 className="h-4 w-4" aria-hidden="true" />,
@@ -43,7 +42,6 @@ export function TabsDropdown({
 
   // Labels need to be inside component for i18n reactivity
   const tabLabels: Record<RightPanelTab, string> = {
-    preview: t('tabs.prompt'),
     history: t('tabs.history'),
     notes: t('tabs.notes'),
     config: t('tabs.config'),
@@ -54,10 +52,10 @@ export function TabsDropdown({
 
   // Tabs available depends on edit mode and feature flags
   const availableTabs: RightPanelTab[] = isEditMode
-    ? ['preview', 'instructions', 'settings', 'notes', 'history', 'config']
+    ? ['instructions', 'settings', 'notes', 'history', 'config']
     : runsEnabled
-      ? ['preview', 'runs', 'settings', 'notes', 'history', 'config']
-      : ['preview', 'settings', 'notes', 'history', 'config']
+      ? ['runs', 'settings', 'notes', 'history', 'config']
+      : ['settings', 'notes', 'history', 'config']
 
   return (
     <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md" role="group" aria-label={t('rightPanel.panelOptions')}>
@@ -65,7 +63,7 @@ export function TabsDropdown({
       <button
         type="button"
         className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-l-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1 transition-colors cursor-pointer"
-        onClick={() => onTabChange('preview')}
+        onClick={() => onTabChange(activeTab)}
       >
         {tabIcons[activeTab]}
         <span>{tabLabels[activeTab]}</span>

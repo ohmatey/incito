@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { PromptFile, Variable } from '@/types/prompt'
-import { getDefaultValues } from '@/lib/interpolate'
+import { getDefaultValues, getPreviewValues } from '@/lib/interpolate'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { isDisplayNameUnique } from '@/lib/prompts'
 import { getPromptDraft, savePromptDraft, deletePromptDraft } from '@/lib/store'
+import { useAppMode } from '@/context/AppModeContext'
 import { useFormHistory, type ChangeSource } from './useFormHistory'
 
 export interface UsePromptEditStateResult {
@@ -67,6 +68,13 @@ export function usePromptEditState(
   selectedPrompt: PromptFile | null,
   prompts: PromptFile[]
 ): UsePromptEditStateResult {
+  // App mode — in 'use' mode, seed empty forms with example (preview) values so
+  // non-technical users see a filled example, not raw {{placeholders}}. Held in a
+  // ref so toggling mode doesn't re-trigger the prompt-sync effect.
+  const { isUseMode } = useAppMode()
+  const isUseModeRef = useRef(isUseMode)
+  isUseModeRef.current = isUseMode
+
   // Edit mode
   const [isEditMode, setIsEditMode] = useState(false)
 
@@ -176,7 +184,10 @@ export function usePromptEditState(
           }
           replaceVariableValues(filteredDraftValues)
         } else {
-          replaceVariableValues(defaultValues)
+          // No saved draft: in use mode, seed example (preview) values; otherwise defaults.
+          replaceVariableValues(
+            isUseModeRef.current ? getPreviewValues(selectedPrompt.variables) : defaultValues
+          )
         }
       })
     } else {

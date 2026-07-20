@@ -10,7 +10,9 @@
     "tags": "แท็ก",
     "settings": "ตั้งค่า",
     "keyboardShortcuts": "แป้นพิมพ์ลัด",
-    "goToPrompts": "ไปที่พรอมต์"
+    "goToPrompts": "ไปที่พรอมต์",
+    "switchToAuthorMode": "สลับไปโหมดผู้สร้าง",
+    "switchToUseMode": "สลับไปโหมดใช้งาน"
   },
   "buttons": {
     "cancel": "ยกเลิก",

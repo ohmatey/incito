@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { PromptFile, Variable, Note } from '@/types/prompt'
 import type { AgentFile } from '@/types/agent'
 import { getSavedFolderPath, saveFolderPath, clearFolderPath, getTranslationSettings } from '@/lib/store'
-import { savePrompt, createVariant } from '@/lib/prompts'
+import { savePrompt, createVariant, addStarterTemplates } from '@/lib/prompts'
 import { syncVariablesWithTemplate } from '@/lib/parser'
 import { usePromptManager, useTagManager, usePromptEditState } from '@/lib/hooks'
 import { useAgentManager } from '@/lib/hooks/useAgentManager'
@@ -42,6 +42,7 @@ interface AppContextValue {
 
   // Prompt operations
   handleCreatePrompt: () => Promise<PromptFile | null>
+  handleAddStarterTemplates: () => Promise<number>
   handleSelectPrompt: (prompt: PromptFile) => void
   handleDuplicatePrompt: (prompt: PromptFile) => Promise<PromptFile | null>
   handleDeletePrompt: (prompt: PromptFile) => Promise<void>
@@ -206,6 +207,17 @@ export function AppProvider({ children }: AppProviderProps) {
     return newPrompt
   }
 
+  // Copy the bundled starter templates into the user's folder, then reload the list.
+  // Returns how many were actually written (existing files are skipped).
+  async function handleAddStarterTemplates(): Promise<number> {
+    if (!folderPath) return 0
+    const count = await addStarterTemplates(folderPath)
+    if (count > 0) {
+      await promptManager.loadPromptsFromFolder(folderPath)
+    }
+    return count
+  }
+
   async function handleSelectPrompt(prompt: PromptFile) {
     promptManager.selectPrompt(prompt)
     editState.setIsEditMode(false)
@@ -261,9 +273,9 @@ export function AppProvider({ children }: AppProviderProps) {
 
   function handleExitEditMode() {
     editState.exitEditMode()
-    // 'instructions' tab is only available in edit mode, switch to preview if needed
+    // 'instructions' tab is only available in edit mode, switch to config if needed
     if (layout.rightPanelTab === 'instructions') {
-      layout.setRightPanelTab('preview')
+      layout.setRightPanelTab('config')
     }
   }
 
@@ -531,6 +543,7 @@ export function AppProvider({ children }: AppProviderProps) {
 
     // Prompt operations
     handleCreatePrompt,
+    handleAddStarterTemplates,
     handleSelectPrompt,
     handleDuplicatePrompt,
     handleDeletePrompt,

@@ -2,6 +2,27 @@
 
 All notable changes to Incito will be documented in this file.
 
+> Note: this file was maintained through 0.2.0 and then lapsed. Releases 0.3.x–0.14.0
+> shipped without changelog entries and are not reconstructed here — see the git
+> history for that range. Maintenance resumes with the Unreleased section below.
+
+## [Unreleased]
+
+### Added
+
+#### Consumer "Use" mode
+- **App modes** — a `use` / `author` mode toggle in the nav rail, persisted to SQLite (`app_mode`, default `use`). Use mode hides all authoring chrome (edit, variable config, right-panel tabs, new-prompt, tags) so non-technical teammates get a form + preview + Copy only.
+- **Permanent live preview column** — the interpolated prompt now sits in its own always-visible, resizable column beside the form (previously a closed-by-default right-panel tab). Hover/click still syncs the active variable between form and preview.
+- **Example-seeded forms** — in use mode, opening a prompt with no saved draft seeds the form from each variable's `preview` value, so users see a filled example rather than raw `{{placeholders}}`.
+- **Starter templates** — 8 ready-made prompts (rewrite email, summarize document, meeting notes → actions, and more) offered on the empty state; one click copies them into the user's folder as ordinary, editable `.md` files.
+
+### Changed
+- Extracted the preview renderer into a reusable `PromptPreview` component; `PreviewTab` is now a thin wrapper around it.
+- Removed the `preview` right-panel tab (superseded by the permanent column); default right-panel tab is now `config`.
+
+### Fixed
+- **Analytics now opt-in (default off).** Anonymous analytics previously defaulted to ON, auto-initializing PostHog on launch — inconsistent with the "Zero telemetry / privacy by default" promise. The app no longer initializes telemetry until the user enables it in Settings → Privacy.
+
 ## [0.2.0] - 2026-01-18
 
 ### Added

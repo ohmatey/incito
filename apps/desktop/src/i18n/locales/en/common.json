@@ -10,7 +10,9 @@
     "tags": "Tags",
     "settings": "Settings",
     "keyboardShortcuts": "Keyboard Shortcuts",
-    "goToPrompts": "Go to prompts"
+    "goToPrompts": "Go to prompts",
+    "switchToAuthorMode": "Switch to Author mode",
+    "switchToUseMode": "Switch to Use mode"
   },
   "buttons": {
     "cancel": "Cancel",

@@ -1,8 +1,9 @@
-import { readDir, readTextFile, writeTextFile, remove } from '@tauri-apps/plugin-fs'
+import { readDir, readTextFile, writeTextFile, remove, exists } from '@tauri-apps/plugin-fs'
 import { join, resolve } from '@tauri-apps/api/path'
 import { parsePromptFile, serializePrompt } from './parser'
 import { syncPromptTags, createPromptVersion, deletePromptVersions, hasAIConfigured, setBaseFolderPath } from './store'
 import { summarizePromptChanges } from './mastra-client'
+import { STARTER_TEMPLATES } from './starters'
 import type { PromptFile, Variable } from '../types/prompt'
 
 export interface InitialPromptContent {
@@ -39,6 +40,23 @@ export async function loadPrompts(folderPath: string): Promise<PromptFile[]> {
   await Promise.all(prompts.map(p => syncPromptTags(p.path, p.tags || [])))
 
   return prompts.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * Write the bundled starter templates into the user's prompts folder as ordinary
+ * .md files. Skips any whose file name already exists so it never clobbers a user's
+ * prompt. Returns the number of files actually written. Callers should reload the
+ * folder afterwards to pick up the new prompts.
+ */
+export async function addStarterTemplates(folderPath: string): Promise<number> {
+  let written = 0
+  for (const starter of STARTER_TEMPLATES) {
+    const path = await join(folderPath, starter.fileName)
+    if (await exists(path)) continue
+    await writeTextFile(path, starter.content)
+    written++
+  }
+  return written
 }
 
 export async function savePrompt(prompt: PromptFile, folderPath: string, skipVersion = false): Promise<void> {

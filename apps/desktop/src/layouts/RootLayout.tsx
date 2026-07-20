@@ -4,6 +4,7 @@ import { AppProvider, useAppContext } from '@/context/AppContext'
 import { LayoutProvider, useLayout } from '@/context/LayoutContext'
 import { PromptSessionProvider } from '@/context/PromptSessionContext'
 import { useFeatureFlags } from '@/context/FeatureFlagsContext'
+import { useAppMode } from '@/context/AppModeContext'
 import { FolderSelect } from '@/components/FolderSelect'
 import { NavSidebar, type NavView } from '@/components/NavSidebar'
 import { NewPromptDialog } from '@/components/NewPromptDialog'
@@ -26,6 +27,7 @@ function RootLayoutInner() {
   } = useAppContext()
   const { rightPanelOpen, setRightPanelOpen } = useLayout()
   const { featureFlags } = useFeatureFlags()
+  const { isAuthorMode, toggleAppMode } = useAppMode()
 
   // Redirect if user is on a disabled feature route
   useEffect(() => {
@@ -56,10 +58,10 @@ function RootLayoutInner() {
         navigate({ to: '/search' })
         triggerSearchFocus()
       }
-      // Cmd+N / Ctrl+N - Open new prompt dialog
+      // Cmd+N / Ctrl+N - Open new prompt dialog (authoring only)
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault()
-        if (folderPath) {
+        if (folderPath && isAuthorMode) {
           setShowNewPromptDialog(true)
         }
       }
@@ -72,7 +74,7 @@ function RootLayoutInner() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [folderPath, navigate, triggerSearchFocus, setShowNewPromptDialog, rightPanelOpen, setRightPanelOpen])
+  }, [folderPath, isAuthorMode, navigate, triggerSearchFocus, setShowNewPromptDialog, rightPanelOpen, setRightPanelOpen])
 
   // Loading state
   if (isLoading) {
@@ -167,6 +169,8 @@ function RootLayoutInner() {
           runsEnabled={featureFlags.runsEnabled}
           gradersEnabled={featureFlags.gradersEnabled}
           playbooksEnabled={featureFlags.playbooksEnabled}
+          isAuthorMode={isAuthorMode}
+          onToggleAppMode={toggleAppMode}
         />
         <Outlet />
       </div>

@@ -32,34 +32,53 @@ cd apps/desktop && npx shadcn-ui@latest add <component-name>
 
 ### Desktop App (`apps/desktop`)
 
-Incito is a Tauri v2 desktop application for managing markdown-based prompt templates with variable interpolation.
+Incito is a Tauri v2 desktop application for authoring, running, and sharing
+markdown-based prompt templates. It has grown well past a simple template manager
+into a platform (prompts, runs, graders, playbooks, agents, analytics) — several
+surfaces are gated behind experimental feature flags (see `FeatureFlagsContext`).
 
 **Tech Stack:**
 - **Desktop Framework:** Tauri v2
 - **Frontend:** React + TypeScript + Vite
+- **Routing:** TanStack Router (hash history, for Tauri `file://` compat)
 - **Styling:** Tailwind CSS + shadcn/ui
 - **Markdown:** gray-matter for frontmatter parsing
+- **Persistence:** SQLite via `@tauri-apps/plugin-sql` (all app state — drafts, runs,
+  settings, panel layout, feature flags, app mode). `lib/store.ts` is the (large)
+  data-access layer.
 
-**Project Structure:**
+**Project Structure (indicative — the app has ~30 top-level components):**
 ```
 apps/desktop/
-├── src/                    # React frontend
+├── src/
+│   ├── main.tsx            # Provider stack + RouterProvider
+│   ├── router.tsx          # TanStack Router route tree
+│   ├── layouts/RootLayout  # Nav rail + <Outlet/>; renders FolderSelect until a folder is chosen
+│   ├── routes/             # Page components (PromptsPage, PromptDetail, SearchPage, SettingsPage, …)
+│   ├── context/            # AppContext, LayoutContext, FeatureFlagsContext, AppModeContext, RunModeContext, …
 │   ├── components/
-│   │   ├── ui/            # shadcn components
-│   │   ├── FolderSelect   # Initial folder picker
-│   │   ├── PromptList     # Left sidebar (250px)
-│   │   ├── PromptEditor   # Center panel (flex)
-│   │   └── VariablesPanel # Right sidebar (300px)
+│   │   ├── ui/             # shadcn components
+│   │   ├── NavSidebar      # 60px left icon rail
+│   │   ├── PromptList      # Prompt list column (resizable)
+│   │   ├── CenterPane      # Variable form (center)
+│   │   ├── preview/        # PromptPreview — live interpolated preview (permanent column)
+│   │   └── RightPanel      # Authoring tabs: history, notes, config, instructions, runs, settings
 │   ├── lib/
-│   │   ├── prompts.ts     # CRUD operations via Tauri fs API
-│   │   ├── parser.ts      # Frontmatter parsing with gray-matter
-│   │   ├── interpolate.ts # Variable substitution
-│   │   └── store.ts       # localStorage for folder path
-│   └── types/prompt.ts    # TypeScript interfaces
-└── src-tauri/             # Tauri backend (Rust)
+│   │   ├── prompts.ts      # File CRUD via Tauri fs API
+│   │   ├── parser.ts       # Frontmatter parsing (gray-matter)
+│   │   ├── interpolate.ts  # Handlebars variable substitution
+│   │   ├── store.ts        # SQLite data-access layer
+│   │   └── starters/       # Bundled starter templates (Vite ?raw)
+│   └── types/prompt.ts     # TypeScript interfaces
+└── src-tauri/              # Tauri backend (Rust)
     ├── src/main.rs
     └── tauri.conf.json
 ```
+
+**App modes:** `AppModeContext` toggles `use` (stripped consumer view — form + live
+preview + Copy, all authoring chrome hidden) vs `author` (full surface). Default is
+`use`; persisted to SQLite. This is the author→consumer adoption bet — see
+`docs/product/product-strategy.md`.
 
 ### Landing Page (`apps/landing`)
 
@@ -98,12 +117,12 @@ description: "Description"
 variables:
   - key: topic
     label: "Topic"
-    type: text          # text | textarea | select | number | checkbox
+    type: text          # text | textarea | select | number | slider | array | multi-select | image | datetime
     required: true
     placeholder: "..."
     preview: "Example value for preview mode"
     default: "..."
-    options: []         # for select type only
+    options: []         # for select / multi-select types only
 ---
 Template content with {{topic}} placeholders
 {{#if optional_var}}Conditional content{{/if}}

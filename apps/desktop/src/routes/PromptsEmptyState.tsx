@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useAppContext } from '@/context/AppContext'
 import { usePromptSession } from '@/context/PromptSessionContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileText, Sparkles, Clock, PlayCircle, X, Pin } from 'lucide-react'
+import { FileText, Sparkles, Clock, PlayCircle, X, Pin, Wand2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { hasAIConfigured, type PromptDraft } from '@/lib/store'
 import type { PromptFile } from '@/types/prompt'
 import { getDefaultValues } from '@/lib/interpolate'
@@ -16,10 +17,24 @@ export function PromptsEmptyState() {
     promptManager,
     openNewPromptDialog,
     handleCreatePrompt,
+    handleAddStarterTemplates,
   } = useAppContext()
   const { recentPromptIds, pinnedPromptIds, inProgressPrompts, clearDraftById } = usePromptSession()
 
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
+  const [addingStarters, setAddingStarters] = useState(false)
+
+  const folderIsEmpty = promptManager.prompts.length === 0
+
+  async function handleAddStarters() {
+    setAddingStarters(true)
+    try {
+      const count = await handleAddStarterTemplates()
+      toast.success(count > 0 ? t('emptyState.startersAdded', { count }) : t('emptyState.startersExist'))
+    } finally {
+      setAddingStarters(false)
+    }
+  }
 
   // Check if AI is configured
   useEffect(() => {
@@ -84,6 +99,33 @@ export function PromptsEmptyState() {
       <ScrollArea className="flex-1">
         <div className="p-6">
           <div className="mx-auto max-w-2xl space-y-8">
+            {/* Starter templates - only when the folder has no prompts yet */}
+            {folderIsEmpty && (
+              <div className="rounded-lg border border-primary-200 bg-primary-50 p-5 dark:border-primary-800 dark:bg-primary-900/20">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-800/40">
+                    <Wand2 className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-800 dark:text-gray-100">
+                      {t('emptyState.starterTitle')}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {t('emptyState.starterDescription')}
+                    </p>
+                    <button
+                      onClick={handleAddStarters}
+                      disabled={addingStarters}
+                      className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-60"
+                    >
+                      <Wand2 className="h-4 w-4" />
+                      {addingStarters ? t('emptyState.addingStarters') : t('emptyState.addStarters')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Create New Section */}
             <div className="space-y-4">
               <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">

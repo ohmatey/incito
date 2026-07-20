@@ -3,7 +3,6 @@ import type { PromptFile, Note, Variable } from '@/types/prompt'
 import type { AgentFile } from '@/types/agent'
 import type { RightPanelTab } from './PromptHeader'
 import { RightPanelHeader } from './right-panel/RightPanelHeader'
-import { PreviewTab } from './right-panel/PreviewTab'
 import { HistoryTab } from './right-panel/HistoryTab'
 import { NotesTab } from './right-panel/NotesTab'
 import { ConfigTab } from './right-panel/ConfigTab'
@@ -13,7 +12,6 @@ import { PromptSettingsTab } from './prompt-settings'
 
 interface RightPanelProps {
   prompt: PromptFile | null
-  allPrompts: PromptFile[]
   agents: AgentFile[]
   agentsEnabled?: boolean
   playbooksEnabled?: boolean
@@ -34,14 +32,11 @@ interface RightPanelProps {
   onVariableMove?: (fromIndex: number, toIndex: number) => void
   onDefaultLaunchersChange: (launchers: string[]) => void
   onDefaultAgentChange: (agentId: string | null) => void
-  onSelectVariant?: (prompt: PromptFile) => void
-  onNewVariant?: () => void
   width?: number
 }
 
 export function RightPanel({
   prompt,
-  allPrompts,
   agents,
   agentsEnabled = false,
   playbooksEnabled = false,
@@ -62,8 +57,6 @@ export function RightPanel({
   onVariableMove,
   onDefaultLaunchersChange,
   onDefaultAgentChange,
-  onSelectVariant,
-  onNewVariant,
   width = 300,
 }: RightPanelProps) {
   const [isAddingNote, setIsAddingNote] = useState(false)
@@ -83,17 +76,6 @@ export function RightPanel({
         runsEnabled={runsEnabled}
       />
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'preview' && (
-          <PreviewTab
-            prompt={prompt}
-            allPrompts={allPrompts}
-            values={values}
-            activeVariableKey={activeVariableKey}
-            onActiveVariableChange={onActiveVariableChange}
-            onSelectVariant={onSelectVariant}
-            onNewVariant={onNewVariant}
-          />
-        )}
         {activeTab === 'history' && <HistoryTab prompt={prompt} onRestore={onRestoreVersion} />}
         {activeTab === 'notes' && (
           <NotesTab

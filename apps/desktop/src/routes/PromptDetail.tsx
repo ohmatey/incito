@@ -5,10 +5,13 @@ import { useAppContext } from '@/context/AppContext'
 import { useLayout } from '@/context/LayoutContext'
 import { usePromptSession } from '@/context/PromptSessionContext'
 import { useFeatureFlags } from '@/context/FeatureFlagsContext'
+import { useAppMode } from '@/context/AppModeContext'
 import { useRunMode } from '@/context/RunModeContext'
 import { PromptHeader } from '@/components/PromptHeader'
 import { CenterPane } from '@/components/CenterPane'
 import { RightPanel } from '@/components/RightPanel'
+import { PreviewTab } from '@/components/right-panel/PreviewTab'
+import { PromptPreview } from '@/components/preview/PromptPreview'
 import { ResizeHandle } from '@/components/ui/resize-handle'
 import { PromptEditorDialog } from '@/components/PromptEditorDialog'
 import { RunModeChat } from '@/components/run-mode/RunModeChat'
@@ -55,12 +58,15 @@ export function PromptDetail() {
     setRightPanelOpen,
     panelWidths,
     handleRightPanelResize,
+    handlePreviewResize,
     handlePanelResizeEnd,
     listPanelCollapsed,
     toggleListPanelCollapsed,
+    previewCollapsed,
   } = useLayout()
   const { pinnedPromptIds, refreshDrafts } = usePromptSession()
   const { featureFlags } = useFeatureFlags()
+  const { isUseMode, isAuthorMode } = useAppMode()
 
   // Get selected prompt from URL param
   // First try the prompts array, then fall back to selectedPrompt (handles race condition after creation)
@@ -149,6 +155,7 @@ export function PromptDetail() {
           prompt={selectedPrompt}
           isEditMode={editState.isEditMode}
           isRunMode={runMode.isActive}
+          isUseMode={isUseMode}
           rightPanelOpen={rightPanelOpen}
           activeTab={rightPanelTab}
           hasUnsavedChanges={editState.hasUnsavedChanges}
@@ -221,8 +228,42 @@ export function PromptDetail() {
         )}
       </div>
 
-      {/* Right Panel */}
-      {rightPanelOpen && (
+      {/* Permanent Preview Column - live interpolated prompt beside the form */}
+      {!runMode.isActive && !previewCollapsed && (
+        <>
+          <ResizeHandle
+            side="right"
+            onResize={handlePreviewResize}
+            onResizeEnd={handlePanelResizeEnd}
+          />
+          <div
+            className="flex h-full flex-col border-l border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+            style={{ width: `${panelWidths.preview}px`, minWidth: '240px', maxWidth: '640px' }}
+          >
+            {isAuthorMode ? (
+              <PreviewTab
+                prompt={selectedPrompt}
+                allPrompts={promptManager.prompts}
+                values={editState.variableValues}
+                activeVariableKey={editState.activeVariableKey}
+                onActiveVariableChange={editState.setActiveVariableKey}
+                onSelectVariant={handleVariantSelect}
+                onNewVariant={handleOpenVariantEditor}
+              />
+            ) : (
+              <PromptPreview
+                prompt={selectedPrompt}
+                values={editState.variableValues}
+                activeVariableKey={editState.activeVariableKey}
+                onActiveVariableChange={editState.setActiveVariableKey}
+              />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Right Panel - authoring only */}
+      {rightPanelOpen && isAuthorMode && (
         <>
           <ResizeHandle
             side="right"
@@ -231,7 +272,6 @@ export function PromptDetail() {
           />
           <RightPanel
             prompt={selectedPrompt}
-            allPrompts={promptManager.prompts}
             agents={agentManager.agents}
             agentsEnabled={featureFlags.agentsEnabled}
             playbooksEnabled={featureFlags.playbooksEnabled}
@@ -252,8 +292,6 @@ export function PromptDetail() {
             onVariableMove={handleVariableMove}
             onDefaultLaunchersChange={handleDefaultLaunchersChange}
             onDefaultAgentChange={handleDefaultAgentChange}
-            onSelectVariant={handleVariantSelect}
-            onNewVariant={handleOpenVariantEditor}
             width={panelWidths.rightPanel}
           />
         </>

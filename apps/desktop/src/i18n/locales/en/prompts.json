@@ -194,6 +194,12 @@
   },
   "emptyState": {
     "createNewPrompt": "Create New Prompt",
+    "starterTitle": "New here? Start with a few ready-made prompts",
+    "starterDescription": "We'll add 8 example prompts to your folder — for everyday tasks like rewriting emails, summarizing documents, and turning notes into action items. You can edit or delete them anytime.",
+    "addStarters": "Add starter templates",
+    "addingStarters": "Adding…",
+    "startersAdded": "Added {{count}} starter templates",
+    "startersExist": "Starter templates are already in this folder",
     "inProgress": "In Progress",
     "clearAll": "Clear all",
     "variablesFilled": "{{filled}} of {{total}} required variables filled",

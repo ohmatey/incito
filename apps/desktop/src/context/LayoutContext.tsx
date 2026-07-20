@@ -4,6 +4,8 @@ import {
   savePanelWidths,
   getListPanelCollapsed,
   saveListPanelCollapsed,
+  getPreviewCollapsed,
+  savePreviewCollapsed,
   type PanelWidths,
 } from '@/lib/store'
 import type { RightPanelTab } from '@/components/PromptHeader'
@@ -13,11 +15,16 @@ interface LayoutContextValue {
   panelWidths: PanelWidths
   handlePromptListResize: (delta: number) => void
   handleRightPanelResize: (delta: number) => void
+  handlePreviewResize: (delta: number) => void
   handlePanelResizeEnd: () => void
 
   // List panel collapse state
   listPanelCollapsed: boolean
   toggleListPanelCollapsed: () => void
+
+  // Preview column collapse state
+  previewCollapsed: boolean
+  togglePreviewCollapsed: () => void
 
   // Right panel state
   rightPanelTab: RightPanelTab
@@ -42,21 +49,25 @@ interface LayoutProviderProps {
 
 export function LayoutProvider({ children }: LayoutProviderProps) {
   // Panel widths state
-  const [panelWidths, setPanelWidths] = useState<PanelWidths>({ promptList: 200, rightPanel: 300 })
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>({ promptList: 200, rightPanel: 300, preview: 400 })
 
   // List panel collapsed state
   const [listPanelCollapsed, setListPanelCollapsed] = useState(false)
 
+  // Preview column collapsed state
+  const [previewCollapsed, setPreviewCollapsed] = useState(false)
+
   // Right panel state
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('preview')
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('config')
   const [rightPanelOpen, setRightPanelOpen] = useState(false)
 
   // Load persisted layout settings on mount
   useEffect(() => {
     async function loadLayoutSettings() {
-      const [panelWidthsResult, collapsedResult] = await Promise.all([
+      const [panelWidthsResult, collapsedResult, previewCollapsedResult] = await Promise.all([
         getPanelWidths(),
         getListPanelCollapsed(),
+        getPreviewCollapsed(),
       ])
 
       if (panelWidthsResult.ok) {
@@ -64,6 +75,9 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
       }
       if (collapsedResult.ok) {
         setListPanelCollapsed(collapsedResult.data)
+      }
+      if (previewCollapsedResult.ok) {
+        setPreviewCollapsed(previewCollapsedResult.data)
       }
     }
     loadLayoutSettings()
@@ -84,6 +98,13 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
     }))
   }
 
+  function handlePreviewResize(delta: number) {
+    setPanelWidths((prev) => ({
+      ...prev,
+      preview: Math.min(640, Math.max(240, prev.preview + delta)),
+    }))
+  }
+
   async function handlePanelResizeEnd() {
     await savePanelWidths(panelWidths)
   }
@@ -98,13 +119,26 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
     })
   }
 
+  // Preview column collapse toggle
+  function togglePreviewCollapsed() {
+    setPreviewCollapsed((prev) => {
+      const newCollapsed = !prev
+      // Fire and forget - don't block UI for persistence
+      savePreviewCollapsed(newCollapsed)
+      return newCollapsed
+    })
+  }
+
   const value: LayoutContextValue = {
     panelWidths,
     handlePromptListResize,
     handleRightPanelResize,
+    handlePreviewResize,
     handlePanelResizeEnd,
     listPanelCollapsed,
     toggleListPanelCollapsed,
+    previewCollapsed,
+    togglePreviewCollapsed,
     rightPanelTab,
     setRightPanelTab,
     rightPanelOpen,
