@@ -9,7 +9,6 @@ import { router } from './router'
 import { PlatformProvider } from './context/PlatformContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
-import { PostHogProvider } from './context/PostHogContext'
 import { FeatureFlagsProvider } from './context/FeatureFlagsContext'
 import { RunModeProvider } from './context/RunModeContext'
 import { AddonProvider } from './context/AddonContext'
@@ -23,19 +22,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <LanguageProvider>
-          <PostHogProvider>
-            <PlatformProvider>
-              <FeatureFlagsProvider>
-                <RunModeProvider>
-                  <AddonProvider>
-                    <UpdateProvider>
-                      <RouterProvider router={router} />
-                    </UpdateProvider>
-                  </AddonProvider>
-                </RunModeProvider>
-              </FeatureFlagsProvider>
-            </PlatformProvider>
-          </PostHogProvider>
+          <PlatformProvider>
+            <FeatureFlagsProvider>
+              <RunModeProvider>
+                <AddonProvider>
+                  <UpdateProvider>
+                    <RouterProvider router={router} />
+                  </UpdateProvider>
+                </AddonProvider>
+              </RunModeProvider>
+            </FeatureFlagsProvider>
+          </PlatformProvider>
         </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>
