@@ -26,12 +26,6 @@
     "contextLimitPlaceholder": "Leave empty for no limit",
     "contextLimitHint": "Recommended: 100,000 tokens"
   },
-  "analytics": {
-    "title": "Anonymous Analytics",
-    "description": "Help improve Incito by sharing anonymous usage data. No personal information or prompt content is ever collected.",
-    "enable": "Enable Analytics",
-    "privacy": "We only track feature usage, not your content."
-  },
   "appearance": {
     "title": "Appearance",
     "description": "Choose your preferred color theme.",

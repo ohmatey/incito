@@ -2924,64 +2924,6 @@ export async function saveFeatureFlags(flags: Partial<FeatureFlags>): Promise<Re
 }
 
 // ============================================================================
-// Analytics Settings Operations
-// ============================================================================
-
-export interface AnalyticsSettings {
-  enabled: boolean
-  distinctId: string | null  // Anonymous ID, generated on first enable
-}
-
-const DEFAULT_ANALYTICS_SETTINGS: AnalyticsSettings = {
-  enabled: true,
-  distinctId: null,
-}
-
-export async function getAnalyticsSettings(): Promise<Result<AnalyticsSettings>> {
-  try {
-    const database = await getDb()
-    const result = await database.select<{ value: string }[]>(
-      'SELECT value FROM settings WHERE key = ?',
-      ['analytics_settings']
-    )
-    if (result.length > 0) {
-      const parsed = JSON.parse(result[0].value) as Partial<AnalyticsSettings>
-      return {
-        ok: true,
-        data: {
-          enabled: parsed.enabled ?? DEFAULT_ANALYTICS_SETTINGS.enabled,
-          distinctId: parsed.distinctId ?? DEFAULT_ANALYTICS_SETTINGS.distinctId,
-        },
-      }
-    }
-    return { ok: true, data: DEFAULT_ANALYTICS_SETTINGS }
-  } catch (err) {
-    return { ok: false, error: `Failed to get analytics settings: ${err instanceof Error ? err.message : String(err)}` }
-  }
-}
-
-export async function saveAnalyticsSettings(settings: Partial<AnalyticsSettings>): Promise<Result<void>> {
-  try {
-    const database = await getDb()
-    const currentResult = await getAnalyticsSettings()
-    if (!currentResult.ok) return currentResult
-
-    const merged: AnalyticsSettings = {
-      ...currentResult.data,
-      ...settings,
-    }
-
-    await database.execute(
-      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
-      ['analytics_settings', JSON.stringify(merged)]
-    )
-    return { ok: true, data: undefined }
-  } catch (err) {
-    return { ok: false, error: `Failed to save analytics settings: ${err instanceof Error ? err.message : String(err)}` }
-  }
-}
-
-// ============================================================================
 // Model Defaults Operations (Default Generator/Judge)
 // ============================================================================
 
